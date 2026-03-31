@@ -1,0 +1,74 @@
+#! /bin/sh
+# This script tests: pampick
+# Also requires: ppmmake
+
+tmpdir=${tmpdir:-/tmp}
+image0_ppm=${tmpdir}/image0.ppm
+image1_ppm=${tmpdir}/image1.ppm
+image2_ppm=${tmpdir}/image2.ppm
+mult_ppm=${tmpdir}/mult.ppm
+
+ppmmake rgb:0/0/0 1 1 > ${image0_ppm}
+ppmmake rgb:0/1/1 2 2 > ${image1_ppm}
+ppmmake rgb:2/2/0 3 3 > ${image2_ppm}
+
+cat ${image0_ppm} ${image1_ppm} ${image2_ppm} > ${mult_ppm}
+
+echo "Test 1.  Should print match four times"
+
+pampick 0 < ${mult_ppm} | cmp -s - ${image0_ppm} && echo "match" || echo "no match"
+pampick 1 < ${mult_ppm} | cmp -s - ${image1_ppm} && echo "match" || echo "no match"
+pampick 2 < ${mult_ppm} | cmp -s - ${image2_ppm} && echo "match" || echo "no match"
+
+pampick 0 1 2 < ${mult_ppm} | cmp -s - < ${mult_ppm} && echo "match" || echo "no match"
+
+
+echo "Test 2.  Should print no match three times"
+
+pampick 0 < ${mult_ppm} | cmp -s - ${image1_ppm} && echo "match" || echo "no match"
+pampick 1 < ${mult_ppm} | cmp -s - ${image2_ppm} && echo "match" || echo "no match"
+pampick 2 < ${mult_ppm} | cmp -s - ${image1_ppm} && echo "match" || echo "no match"
+
+
+echo "Test 3.  Should print match five times"
+
+mult_pnm=${tmpdir}/mult.pnm
+
+cat ${image0_ppm} testgrid.pbm ${image1_ppm} maze.pbm ${image2_ppm} > ${mult_pnm}
+
+pampick 0 < ${mult_pnm} | cmp -s - ${image0_ppm} && echo "match" || echo "no match"
+pampick 1 < ${mult_pnm} | cmp -s - testgrid.pbm  && echo "match" || echo "no match"
+pampick 2 < ${mult_pnm} | cmp -s - ${image1_ppm} && echo "match" || echo "no match"
+pampick 3 < ${mult_pnm} | cmp -s - maze.pbm      && echo "match" || echo "no match"
+pampick 4 < ${mult_pnm} | cmp -s - ${image2_ppm} && echo "match" || echo "no match"
+
+
+echo "Test 4.  Should print four times"
+
+pampick 0 2 4 < ${mult_pnm} | \
+  cmp -s - ${mult_ppm} && echo "match" || echo "no match"
+pampick 0 2 3 4 < ${mult_pnm} | pampick 0 1 3 | \
+  cmp -s - ${mult_ppm} && echo "match" || echo "no match"
+pampick 0 1 2 3 4 < ${mult_pnm} | \
+  cmp -s - ${mult_pnm} && echo "match" || echo "no match"
+pampick 1 2 3 < ${mult_pnm} | cat ${image0_ppm} - ${image2_ppm} | \
+  cmp -s - ${mult_pnm} && echo "match" || echo "no match"
+
+
+echo "Test 5.  Should print 0"
+
+pampick < ${mult_pnm} | wc -c
+
+rm ${image0_ppm} ${image1_ppm} ${image2_ppm}
+rm ${mult_ppm}
+
+echo "Test Invalid"
+
+. ${srcdir}/test-invalid.inc
+
+invCmd "pampick 6 < ${mult_pnm}"
+invCmd "pampick -1 < ${mult_pnm}"
+invCmd "pampick 2.1 < ${mult_pnm}"
+invCmd "pampick < ${mult_pnm} | pampick 0"
+
+rm ${mult_pnm}

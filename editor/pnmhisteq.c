@@ -94,7 +94,7 @@ computeLuminosityHistogram(xel * const *   const xels,
                            unsigned int    const cols,
                            xelval          const maxval,
                            int             const format,
-                           bool            const monoOnly,
+                           bool            const doingOnlyGray,
                            unsigned int ** const lumahistP,
                            unsigned int *  const pixelCountP) {
 /*----------------------------------------------------------------------------
@@ -146,7 +146,10 @@ computeLuminosityHistogram(xel * const *   const xels,
             unsigned int col;
             for (col = 0; col < cols; ++col) {
                 xel const thisXel = xels[row][col];
-                if (!monoOnly || PPM_ISGRAY(thisXel)) {
+
+                if (doingOnlyGray && !PPM_ISGRAY(thisXel)) {
+                    /* Ignore this color pixel; won't be part of the remap */
+                } else {
                     xelval const l = ppm_luminosity(thisXel);
 
                     lmin = MIN(lmin, l);
@@ -440,7 +443,7 @@ remap(xel **       const xels,
       unsigned int const rows,
       xelval       const maxval,
       int          const format,
-      bool         const monoOnly,
+      bool         const doingOnlyGray,
       const gray * const lumamap) {
 /*----------------------------------------------------------------------------
    Update the array 'xels' to have the new intensities.
@@ -452,7 +455,7 @@ remap(xel **       const xels,
             unsigned int col;
             for (col = 0; col < cols; ++col) {
                 xel const thisXel = xels[row][col];
-                if (monoOnly && !PPM_ISGRAY(thisXel)) {
+                if (doingOnlyGray && !PPM_ISGRAY(thisXel)) {
                     /* Leave this pixel alone */
                 } else {
                     xels[row][col] = remapRgbValue(xels[row][col],

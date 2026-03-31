@@ -4,34 +4,40 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-26.03.30 BJH  Release 11.13.04
+26.03.31 BJH  Release 11.14.00
 
               pcxtoppm: fix determination that palette in image is all one
               color (so probably in error) based on random memory access.
               Always broken (all-one-color feature was added in July 1995).
 
-26.02.12 BJH  Release 11.13.03
+              pbmtext: fix crash when input text contains a character with
+              code >127.  Broken in Netpbm 10.82 (March 2018).
 
               pnmhisteq: fix incorrect output with -gray: color pixels
               changed, gray pixels left alone.  Broken in Netpbm 10.30
               (October 2005).
 
-26.01.28 BJH  Release 11.13.02
-
-              pbmtext: fix crash when input text contains a character with
-              code >127.  Broken in Netpbm 10.82 (March 2018).
+              asciitopgm: fix crash with missing height or width argument.
+              Always broken (asciitopgm was new in the 1994 Netpbm release).
 
               asciitopgm: fix crash with zero divisor.
               Always broken (asciitopgm was new in the 1994 Netpbm release).
 
-26.01.13 BJH  Release 11.13.01
+              libnetpbm: fix crash when caller of pm_selector_mark attempts to
+              mark or test mark of out-of-bounds code point.  Abort program
+              with error message instead.  Broken since Netpbm 10.91 (June
+              2020).
 
-              asciitopgm: fix crash with missing height or width argument.
-              Always broken (asciitopgm was new in the 1994 Netpbm release).
+              build: remove ancient non-prototype function declarations; C23
+              doesn't have them, so compilation fails with modern compilers.
+
+              build: fix compile failure of libjasper with -DDEBUG .  Broken
+              some time in Netpbm 10.27 (March 2005) through 10.35 (August
+              2006)).
 
 25.12.29 BJH  Release 11.13.00
 
-              pnmmargin: improve error messages
+              pnmmargin: improve error messages.
 
 25.09.27 BJH  Release 11.12.00
 

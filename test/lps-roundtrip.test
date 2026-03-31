@@ -7,6 +7,9 @@
 # it touches are set to black if the output is PBM.  To work around this,
 # we tell pstopnm to output PGM at a high resolution (=large dpi value).
 
+# Failure message
+## This test fails when ghostscript is not available.
+
 tmpdir=${tmpdir:-/tmp}
 test_pgm=${tmpdir}/test.pgm
 test_ps=${tmpdir}/test.ps

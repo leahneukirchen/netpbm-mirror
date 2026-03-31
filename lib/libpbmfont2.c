@@ -129,7 +129,7 @@ pm_selector_copy(unsigned int               const max,
     struct pm_selector * destSelectorP;
 
     if (max < srcSelectorP->max)
-        pm_error("internal error: attempt to copy a selector as "
+        pm_error("INTERNAL_ERROR: attempt to copy a selector as "
                  "another with a smaller max value %u -> %u",
                  srcSelectorP->max, max);
 
@@ -179,6 +179,10 @@ pm_selector_mark(struct pm_selector * const selectorP,
     if (!selectorP->localRecord)
         pm_error("INTERNAL ERROR: attempt to mark in a fixed pm_selector");
 
+    if (index > selectorP->maxmax)
+        pm_error("INTERNAL ERROR: attempt to mark code point %u in a "
+                 "selector with maximum index %u", index, selectorP->maxmax);
+
     if ((selectorP->localRecord[byteIndex] & mask) == 0x00) {
         /* if bit is not already set */
 
@@ -211,6 +215,8 @@ pm_selector_is_marked(const struct pm_selector * const selectorP,
         unsigned int  const byteIndex = index / 8;
         unsigned int  const bitIndex  = index % 8;
         unsigned char const mask = (0x01 <<7) >> bitIndex;
+
+        assert(index <= selectorP->maxmax);
 
         if ( index < selectorP->min || index > selectorP->max)
             retval = false;
@@ -706,7 +712,7 @@ validateFontLimits(const struct font2 * const font2P) {
     }
 
     if (font2P->maxglyph > PM_FONT2_MAXGLYPH)
-        pm_error("Internal error.  Glyph table too large: %u glyphs; "
+        pm_error("INTERNAL ERROR.  Glyph table too large: %u glyphs; "
                  "Maximum possible in Netpbm is %u",
                  (unsigned int) font2P->maxglyph, PM_FONT2_MAXGLYPH);
 }

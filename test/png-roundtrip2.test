@@ -3,7 +3,7 @@
 # Also requires:
 
 # Failure message
-## If this test fails and pnm-roundtrip.test succeeds, it indicates
+## If this test fails and png-roundtrip.test succeeds, it indicates
 ## some problem with pamtopng.
 ##
 ## If both tests fail, the likely cause is a problem with pngtopam.

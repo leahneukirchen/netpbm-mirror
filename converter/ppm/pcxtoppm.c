@@ -33,6 +33,7 @@
  */
 #include <stdbool.h>
 #include <limits.h>
+#include <assert.h>
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
@@ -51,6 +52,8 @@ static unsigned char const StdGreen[] = { 0, 255, 170, 170,   0,   0, 170, 170, 
 static unsigned char const StdBlue[]  = { 0, 255,   0, 170,   0, 170,   0, 170, 85, 255,  85, 255,  85, 255,  85, 255 };
 
 static pixel stdPalette[16];
+
+
 
 static void
 generateStdPalette(void) {
@@ -120,27 +123,38 @@ parseCommandLine(int argc, const char ** argv,
 
 
 struct PcxHeader {
-    int Version;
+    int version;
     /* Xmin, Ymin, Xmax, and Ymax are positions in some field (in units of
        pixels) of the edges of the image.  They may be negative.  You can
        derive the image width and height from these.
     */
-    short Xmin;
-    short Ymin;
-    short Xmax;
-    short Ymax;
-    short Encoding;
-    short Planes;
-    short BitsPerPixel;
-    short BytesPerLine;
+    short xmin;
+    short ymin;
+    short xmax;
+    short ymax;
+    short encoding;
+    short planeCt;
+    short bitsPerPixel;
+    short bytesPerLine;
         /* Number of decompressed bytes each plane of each row of the image
            takes.  Because of padding (this is always an even number), there
            may be garbage on the right end that isn't part of the image.
         */
-    short PaletteInfo;
-    short HorizontalResolution;
-    short VerticalResolution;
+    short paletteInfo;
+    short horizontalResolution;
+    short verticalResolution;
+    bool  hasCmap16;
     pixel cmap16[16];
+        /* This is the palette used if it is a 16-color PCX image, except that
+           if it is all black, that means to use the standard palette.  It
+           is meaningless for a 256-color PCX image (in which the palette is
+           at the end of the image) and a true color image (which does not use
+           a palette).
+
+           It is a common error for a 16-color image that is supposed to use
+           the standard palette to have junk here (maybe because there was
+           a time when only this field didn't exist?)
+        */
 };
 
 
@@ -158,6 +172,26 @@ getByte(FILE * const fp) {
 
 
 
+static bool
+allBlackPalette(pixel const cmap16[]) {
+
+    unsigned int colorIndex;
+    bool allBlack;
+
+    for (colorIndex = 0, allBlack = true; colorIndex < 16; ++colorIndex) {
+        pixel const p = cmap16[colorIndex];
+
+        if (PPM_GETR(p) != 0 ||
+            PPM_GETG(p) != 0 ||
+            PPM_GETB(p) != 0)
+
+            allBlack = false;
+    }
+    return allBlack;
+}
+
+
+
 static void
 readPcxHeader(FILE *             const ifP,
               struct PcxHeader * const pcxHeaderP) {
@@ -167,29 +201,29 @@ readPcxHeader(FILE *             const ifP,
     if (getByte(ifP) != PCX_MAGIC)
         pm_error("bad magic number - not a PCX file");
 
-    pcxHeaderP->Version = getByte(ifP);  /* get version # */
+    pcxHeaderP->version = getByte(ifP);  /* get version # */
 
-    pcxHeaderP->Encoding = getByte(ifP);
-    if (pcxHeaderP->Encoding != 1)    /* check for PCX run length encoding   */
-        pm_error("unknown encoding scheme: %d", pcxHeaderP->Encoding);
+    pcxHeaderP->encoding = getByte(ifP);
+    if (pcxHeaderP->encoding != 1)    /* check for PCX run length encoding   */
+        pm_error("unknown encoding scheme: %d", pcxHeaderP->encoding);
 
-    pcxHeaderP->BitsPerPixel= getByte(ifP);
-    pm_readlittleshort(ifP, &pcxHeaderP->Xmin);
-    pm_readlittleshort(ifP, &pcxHeaderP->Ymin);
-    pm_readlittleshort(ifP, &pcxHeaderP->Xmax);
-    pm_readlittleshort(ifP, &pcxHeaderP->Ymax);
+    pcxHeaderP->bitsPerPixel= getByte(ifP);
+    pm_readlittleshort(ifP, &pcxHeaderP->xmin);
+    pm_readlittleshort(ifP, &pcxHeaderP->ymin);
+    pm_readlittleshort(ifP, &pcxHeaderP->xmax);
+    pm_readlittleshort(ifP, &pcxHeaderP->ymax);
 
-    if (pcxHeaderP->Xmax < pcxHeaderP->Xmin)
+    if (pcxHeaderP->xmax < pcxHeaderP->xmin)
         pm_error("Invalid PCX input:  minimum X value (%d) is greater than "
                  "maximum X value (%d).",
-                 pcxHeaderP->Xmin, pcxHeaderP->Xmax);
-    if (pcxHeaderP->Ymax < pcxHeaderP->Ymin)
+                 pcxHeaderP->xmin, pcxHeaderP->xmax);
+    if (pcxHeaderP->ymax < pcxHeaderP->ymin)
         pm_error("Invalid PCX input:  minimum Y value (%d) is greater than "
                  "maximum Y value (%d).",
-                 pcxHeaderP->Ymin, pcxHeaderP->Ymax);
+                 pcxHeaderP->ymin, pcxHeaderP->ymax);
 
-    pm_readlittleshort(ifP, &pcxHeaderP->HorizontalResolution);
-    pm_readlittleshort(ifP, &pcxHeaderP->VerticalResolution);
+    pm_readlittleshort(ifP, &pcxHeaderP->horizontalResolution);
+    pm_readlittleshort(ifP, &pcxHeaderP->verticalResolution);
 
     {
         unsigned int i;
@@ -202,12 +236,13 @@ readPcxHeader(FILE *             const ifP,
             unsigned int const b = getByte(ifP);
             PPM_ASSIGN(pcxHeaderP->cmap16[i], r, g, b);
         }
+        pcxHeaderP->hasCmap16 = !allBlackPalette(pcxHeaderP->cmap16);
     }
 
     getByte(ifP);                /* skip reserved byte       */
-    pcxHeaderP->Planes = getByte(ifP);     /* # of color planes        */
-    pm_readlittleshort(ifP, &pcxHeaderP->BytesPerLine);
-    pm_readlittleshort(ifP, &pcxHeaderP->PaletteInfo);
+    pcxHeaderP->planeCt = getByte(ifP);     /* # of color planes        */
+    pm_readlittleshort(ifP, &pcxHeaderP->bytesPerLine);
+    pm_readlittleshort(ifP, &pcxHeaderP->paletteInfo);
 
     /* Read past a bunch of reserved space in the header.  We have read
        70 bytes of the header so far.  We would just seek here, except that
@@ -226,16 +261,16 @@ readPcxHeader(FILE *             const ifP,
 static void
 reportPcxHeader(struct PcxHeader const pcxHeader) {
 
-    pm_message("Version: %d", pcxHeader.Version);
-    pm_message("BitsPerPixel: %d", pcxHeader.BitsPerPixel);
+    pm_message("Version: %d", pcxHeader.version);
+    pm_message("BitsPerPixel: %d", pcxHeader.bitsPerPixel);
     pm_message("Xmin: %d   Ymin: %d   Xmax: %d   Ymax: %d",
-               pcxHeader.Xmin, pcxHeader.Ymin, pcxHeader.Xmax, pcxHeader.Ymax);
+               pcxHeader.xmin, pcxHeader.ymin, pcxHeader.xmax, pcxHeader.ymax);
     pm_message("Planes: %d    BytesPerLine: %d    PaletteInfo: %d",
-               pcxHeader.Planes, pcxHeader.BytesPerLine,
-               pcxHeader.PaletteInfo);
+               pcxHeader.planeCt, pcxHeader.bytesPerLine,
+               pcxHeader.paletteInfo);
     pm_message("Color map in image:  (index: r/g/b)");
 
-    if (pcxHeader.BitsPerPixel < 8) {
+    if (pcxHeader.bitsPerPixel < 8) {
         unsigned int colorIndex;
         for (colorIndex = 0; colorIndex < 16; ++colorIndex) {
             pixel const p = pcxHeader.cmap16[colorIndex];
@@ -243,27 +278,6 @@ reportPcxHeader(struct PcxHeader const pcxHeader) {
                        PPM_GETR(p), PPM_GETG(p), PPM_GETB(p));
         }
     }
-}
-
-
-
-static bool
-allBlackPalette(pixel cmap16[]) {
-
-    unsigned int colorIndex;
-    bool allBlack;
-
-    allBlack = TRUE;  /* initial assumption */
-    for (colorIndex = 0; colorIndex < 16; ++colorIndex) {
-        pixel const p = cmap16[colorIndex];
-
-        if (PPM_GETR(p) != 0 ||
-            PPM_GETG(p) != 0 ||
-            PPM_GETB(p) != 0)
-
-            allBlack = FALSE;
-    }
-    return allBlack;
 }
 
 
@@ -312,7 +326,7 @@ static void
 pcxUnpackPixels(unsigned char * const pixels,
                 unsigned char * const bitplanes,
                 unsigned int    const bytesperline,
-                unsigned int    const planes,
+                unsigned int    const planeCt,
                 unsigned int    const bitsperpixel) {
 /*----------------------------------------------------------------------------
    Convert packed pixel format in bitplanes[] into 1 pixel per byte
@@ -320,7 +334,7 @@ pcxUnpackPixels(unsigned char * const pixels,
 -----------------------------------------------------------------------------*/
     unsigned int i;
 
-    if (planes != 1)
+    if (planeCt != 1)
         pm_error("can't handle packed pixels with more than 1 plane" );
 
     for (i = 0; i < bytesperline; ++i) {
@@ -360,7 +374,7 @@ static void
 pcxPlanesToPixels(unsigned char * const pixels,
                   unsigned char * const bitPlanes,
                   unsigned int    const bytesPerLine,
-                  unsigned int    const planes,
+                  unsigned int    const planeCt,
                   unsigned int    const bitsPerPixel) {
 /*----------------------------------------------------------------------------
    Unpack sub-byte sample values to yield one byte per pixel.
@@ -385,7 +399,7 @@ pcxPlanesToPixels(unsigned char * const pixels,
 
     unsigned int  i;
 
-    if (planes > 4)
+    if (planeCt > 4)
         pm_error("can't handle more than 4 planes");
     if (bitsPerPixel != 1)
         pm_error("can't handle more than 1 bit per pixel");
@@ -396,7 +410,7 @@ pcxPlanesToPixels(unsigned char * const pixels,
 
     bitPlanesIdx = 0;  /* initial value */
 
-    for (i = 0; i < planes; ++i) {
+    for (i = 0; i < planeCt; ++i) {
         unsigned int const pixbit = (1 << i);
 
         unsigned int pixelIdx;
@@ -421,21 +435,34 @@ pcxPlanesToPixels(unsigned char * const pixels,
 
 
 static bool
-paletteIsOk(const pixel * const cmap,
-            unsigned int  const colorCt) {
+paletteIsAllOneColor(const pixel * const cmap,
+                     unsigned int  const bitsPerPixel,
+                     unsigned int  const planeCt) {
+/*----------------------------------------------------------------------------
+   Every color that can be indexed by 'bitsPerPixel' bits per plane across
+   'planeCt' planes is the same.
+-----------------------------------------------------------------------------*/
+    unsigned int const maxColorIdx = (1 << (bitsPerPixel * planeCt)) - 1;
+        /* The maximum color index that a pixel can have with 'planeCt'
+           planes of 'bitsPerPixel' each
+        */
+    bool allOneColor;
+    unsigned int i;
 
-    bool paletteOk;
-    unsigned int col;
+    assert(bitsPerPixel > 0);
+    assert(bitsPerPixel <= 4);
+    assert(planeCt > 0);
+    assert(planeCt <= 4);
+    assert(maxColorIdx > 0);
+    assert(maxColorIdx < 16);
 
-    paletteOk = false;  /* initial assumption */
-
-    /* check if palette is ok  */
-    for (col = 0; col < colorCt - 1; ++col) {
-        if (!PPM_EQUAL(cmap[col], cmap[col+1])) {
-            paletteOk = true;
+    for (i = 0, allOneColor = true; i <= maxColorIdx - 1; ++i) {
+        if (!PPM_EQUAL(cmap[i], cmap[i+1])) {
+            allOneColor = false;
         }
     }
-    return paletteOk;
+
+    return allOneColor;
 }
 
 
@@ -446,12 +473,14 @@ pcx16ColToPpm(FILE *       const ifP,
               unsigned int const rows,
               unsigned int const bytesPerLine,
               unsigned int const bitsPerPixel,
-              unsigned int const planes,
-              pixel *      const cmap) {
-
-    unsigned int const colors = (1 << (bitsPerPixel * planes));
-    bool const paletteOk = paletteIsOk(cmap, colors);
-
+              unsigned int const planeCt,
+              bool         const stdPaletteWanted,
+              pixel *      const pcxCmap) {
+/*----------------------------------------------------------------------------
+   'pcxCmap' is the 16-color colormap in the PCX image header, or null if
+   there isn't one.
+-----------------------------------------------------------------------------*/
+    pixel * cmap16;
     unsigned int cols;
     unsigned int row;
     unsigned int rawcols;
@@ -459,15 +488,18 @@ pcx16ColToPpm(FILE *       const ifP,
     unsigned char * rawrow;
     pixel * ppmrow;
 
-    if (!paletteOk) {
-        unsigned int col;
+    if (stdPaletteWanted || !pcxCmap)
+        cmap16 = stdPalette;
+    else if (pcxCmap) {
+        if (paletteIsAllOneColor(pcxCmap, bitsPerPixel, planeCt)) {
+            pm_message("warning - useless header palette, "
+                       "using builtin standard palette");
 
-        pm_message("warning - useless header palette, "
-                   "using builtin standard palette");
-
-        for (col = 0; col < colors; ++col)
-            PPM_ASSIGN(cmap[col], StdRed[col], StdGreen[col], StdBlue[col]);
-    }
+            cmap16 = stdPalette;
+        } else
+            cmap16 = pcxCmap;
+    } else
+          cmap16 = stdPalette;
 
     if (bytesPerLine > UINT_MAX/8)
         pm_error("Image too wide to compute (%u bytes per line)",
@@ -484,10 +516,10 @@ pcx16ColToPpm(FILE *       const ifP,
     } else
         cols = headerCols;
 
-    MALLOCARRAY(pcxrow, planes * bytesPerLine);
+    MALLOCARRAY(pcxrow, planeCt * bytesPerLine);
     if (pcxrow == NULL)
         pm_error("Can't get memory for %u planes, %u bytes per line",
-                 planes, bytesPerLine);
+                 planeCt, bytesPerLine);
     MALLOCARRAY(rawrow, rawcols);
     if (rawrow == NULL)
         pm_error("Can't get memory for %u columns", rawcols);
@@ -497,17 +529,17 @@ pcx16ColToPpm(FILE *       const ifP,
     for (row = 0; row < rows; ++row) {
         unsigned int col;
 
-        getPCXRow(ifP, pcxrow, planes * bytesPerLine);
+        getPCXRow(ifP, pcxrow, planeCt * bytesPerLine);
 
-        if (planes == 1)
+        if (planeCt == 1)
             pcxUnpackPixels(rawrow, pcxrow, bytesPerLine,
-                            planes, bitsPerPixel);
+                            planeCt, bitsPerPixel);
         else
             pcxPlanesToPixels(rawrow, pcxrow, bytesPerLine,
-                              planes, bitsPerPixel);
+                              planeCt, bitsPerPixel);
 
         for (col = 0; col < cols; ++col)
-            ppmrow[col] = cmap[rawrow[col]];
+            ppmrow[col] = cmap16[rawrow[col]];
 
         ppm_writeppmrow(stdout, ppmrow, cols, PCX_MAXVAL, 0);
     }
@@ -585,7 +617,7 @@ pcxTruecolToPpm(FILE *       const ifP,
                 unsigned int const headerCols,
                 unsigned int const rows,
                 unsigned int const bytesPerLine,
-                unsigned int const planes) {
+                unsigned int const planeCt) {
 
     unsigned int    cols;
     unsigned char * redrow;
@@ -610,7 +642,7 @@ pcxTruecolToPpm(FILE *       const ifP,
     if (redrow == NULL || grnrow == NULL || blurow == NULL)
         pm_error("Can't get memory for %u-byte row buffer", bytesPerLine);
 
-    if (planes == 4) {
+    if (planeCt == 4) {
         MALLOCARRAY(intensityrow, bytesPerLine);
         if (intensityrow == NULL)
             pm_error("Can't get memory for %u-byte row buffer", bytesPerLine);
@@ -655,8 +687,7 @@ main(int argc, const char *argv[]) {
     FILE * ifP;
     struct CmdlineInfo cmdline;
     struct PcxHeader pcxHeader;
-    unsigned int Width, Height;
-    pixel * cmap16;
+    unsigned int width, height;
 
     pm_proginit(&argc, argv);
 
@@ -671,50 +702,57 @@ main(int argc, const char *argv[]) {
     if (cmdline.verbose)
         reportPcxHeader(pcxHeader);
 
-    Width  = (pcxHeader.Xmax - pcxHeader.Xmin) + 1;
-    Height = (pcxHeader.Ymax - pcxHeader.Ymin) + 1;
+    width  = (pcxHeader.xmax - pcxHeader.xmin) + 1;
+    height = (pcxHeader.ymax - pcxHeader.ymin) + 1;
 
-    if (cmdline.stdpalette || allBlackPalette(pcxHeader.cmap16))
-        cmap16 = stdPalette;
-    else
-        cmap16 = pcxHeader.cmap16;
+    ppm_writeppminit(stdout, width, height, PCX_MAXVAL, 0);
 
-    ppm_writeppminit(stdout, Width, Height, PCX_MAXVAL, 0);
-
-    switch (pcxHeader.BitsPerPixel) {
+    switch (pcxHeader.bitsPerPixel) {
     case 1:
-        if(pcxHeader.Planes >= 1 && pcxHeader.Planes <= 4)
-            pcx16ColToPpm(ifP, Width, Height, pcxHeader.BytesPerLine,
-                          pcxHeader.BitsPerPixel, pcxHeader.Planes, cmap16);
+        if(pcxHeader.planeCt >= 1 && pcxHeader.planeCt <= 4)
+            pcx16ColToPpm(ifP, width, height, pcxHeader.bytesPerLine,
+                          pcxHeader.bitsPerPixel, pcxHeader.planeCt,
+                          cmdline.stdpalette,
+                          pcxHeader.hasCmap16 ? pcxHeader.cmap16 : NULL);
         else
-            goto fail;
+            pm_error("PCX image has 1 bit per plane and %d planes; "
+                     "Maximum allowed with 1 bit per plane is 4 planes",
+                     pcxHeader.planeCt);
         break;
     case 2:
     case 4:
-        if (pcxHeader.Planes == 1)
-            pcx16ColToPpm(ifP, Width, Height, pcxHeader.BytesPerLine,
-                          pcxHeader.BitsPerPixel, pcxHeader.Planes, cmap16);
+        if (pcxHeader.planeCt == 1)
+            pcx16ColToPpm(ifP, width, height, pcxHeader.bytesPerLine,
+                          pcxHeader.bitsPerPixel, pcxHeader.planeCt,
+                          cmdline.stdpalette,
+                          pcxHeader.hasCmap16 ? pcxHeader.cmap16 : NULL);
         else
-            goto fail;
+            pm_error("PCX image has %d planes with %d bits per plane.  "
+                     "With this many bits per plane, there can be only 1 "
+                     "plane",
+                     pcxHeader.bitsPerPixel, pcxHeader.planeCt);
         break;
     case 8:
-        switch(pcxHeader.Planes) {
+        switch (pcxHeader.planeCt) {
         case 1:
-            pcx256ColToPpm(ifP, Width, Height, pcxHeader.BytesPerLine);
+            pcx256ColToPpm(ifP, width, height, pcxHeader.bytesPerLine);
             break;
         case 3:
         case 4:
-            pcxTruecolToPpm(ifP, Width, Height,
-                            pcxHeader.BytesPerLine, pcxHeader.Planes);
+            pcxTruecolToPpm(ifP, width, height,
+                            pcxHeader.bytesPerLine, pcxHeader.planeCt);
             break;
         default:
-            goto fail;
+            pm_error("PCX image has 8 bits per plane and %d planes.  "
+                     "With 8 bits per plane, only 1, 3, or 4 planes is "
+                     "allowed.",
+                     pcxHeader.planeCt);
         }
         break;
     default:
-    fail:
-        pm_error("can't handle %d bits per pixel image with %d planes",
-                 pcxHeader.BitsPerPixel, pcxHeader.Planes);
+        pm_error("PCX image claims %d bits per plane.  "
+                 "Only 1, 2, 4, and 8 are possible.",
+                 pcxHeader.bitsPerPixel);
     }
     pm_close(ifP);
 
