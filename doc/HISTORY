@@ -4,6 +4,25 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+26.03.31 BJH  Release 10.86.49
+
+              pcxtoppm: fix determination that palette in image is all one
+              color (so probably in error) based on random memory access.
+              Always broken (all-one-color feature was added in July 1995).
+
+              pbmtext: fix crash when input text contains a character with
+              code >127.  Broken in Netpbm 10.82 (March 2018).
+
+              pnmhisteq: fix incorrect output with -gray: color pixels
+              changed, gray pixels left alone.  Broken in Netpbm 10.30
+              (October 2005).
+
+              asciitopgm: fix crash with missing height or width argument.
+              Always broken (asciitopgm was new in the 1994 Netpbm release).
+
+              asciitopgm: fix crash with zero divisor.
+              Always broken (asciitopgm was new in the 1994 Netpbm release).
+
 25.09.27 BJH  Release 10.86.48
 
               pamtris: fix unrecognized command or crash on line with no
