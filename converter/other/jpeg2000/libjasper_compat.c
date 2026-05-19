@@ -5,6 +5,12 @@
 
 #ifndef JAS_HAVE_PMJAS_IMAGE_DECODE
 
+/* The Netpbm build has been modified to use original libjasper instead of the
+   fork of it in Netpbm.  That means libjasper has 'jas_image_decode' instead
+   of 'pmjas_image_decode' and Netpbm programs that use libjasper have to use
+   the former, via this compatibility wrapper.
+*/
+
 void
 pmjas_image_decode(jas_stream_t * const in,
                    int            const fmtArg,
