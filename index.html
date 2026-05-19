@@ -3,7 +3,7 @@
 <head><title>User manual for Netpbm</title></head>
 <body>
 <h1>Netpbm</h1>
-Updated: 08 August 2020
+Updated: 19 May 2026
 <br>
 <?makeman .SH NAME ?>
 <?makeman netpbm - netpbm library overview ?>
@@ -867,10 +867,11 @@ href="http://xmorph.sourceforge.net/">http://xmorph.sourceforge.net/</a></b>.
 
 <h2 id="otherfmt">Other Graphics Formats</h2>
 
-<p>People never seem to tire of inventing new graphics formats, often
-completely redundant with pre-existing ones.  Netpbm cannot keep up
-with them.  Here is a list of a few that we know Netpbm does
-<em>not</em> handle (yet).
+<p>In the early days of computer graphics, people never seemed to tire of
+inventing new graphics formats, often completely redundant with pre-existing
+ones.  Netpbm could not keep up with them.  (In more recent times, new graphic
+formats are rare, and usually serve important new purposes).  Here is a list
+of a few graphics formats that we know Netpbm does <em>not</em> handle (yet).
 
 <p>Various commercial Windows software handles dozens of formats that
 Netpbm does not, especially formats typically used with Windows programs.
@@ -887,7 +888,6 @@ representing all the information in any raster image, so you could convert
 from, say, PNM, without losing any information.  CharLS is a programming
 library for JPEG-LS.
 
-
 <li>Lossless JPEG is a similarly lossless variation of JPEG.  It predates
 every other lossless JPEG variation, but had only brief interest.  You can
 find code for encoding and decoding Lossless JPEG
@@ -899,6 +899,11 @@ understand this format, starting with Windows 7 and Internet Explorer 9, along
 with many other programs.  This format was previously known as Windows Media
 Photo and HD Photo.
 
+<li><a href="https://en.wikipedia.org/wiki/JPEG_XL">JPEG XL</a> is an
+improvement on JPEG produced in 2021 by the same group that produced JPEG,
+with the goal of replacing JPEG.  Among other improvements, it can be
+generated and interpreted 60% faster than JPEG and has a lossless option.
+  
 <li>Direct Draw Surface (DDS)is the de facto standard wrapper format for S3
 texture compression, as used in all modern realtime graphics applications.
 Besides Windows-based tools, there is a <b>Gimp</b> plugin for this format.
