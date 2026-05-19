@@ -9,6 +9,9 @@ not yet  BJH  Release 11.15.00
               libnetpbm/pm_message: don't write nonprintable characters to
               Standard Error; instead, print e.g. "0x23" or "\n".
 
+              Build with modified Netpbm that uses real libjasper: fix
+              compiler warning/error about bug in vestigial code.
+
 26.03.31 BJH  Release 11.14.00
 
               pcxtoppm: fix determination that palette in image is all one
