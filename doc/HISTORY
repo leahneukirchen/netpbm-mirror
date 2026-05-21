@@ -12,6 +12,9 @@ not yet  BJH  Release 11.15.00
               Build with modified Netpbm that uses real libjasper: fix
               compiler warning/error about bug in vestigial code.
 
+              pamcut: fix incorrect behavior or crash with options that
+              specify an uncomputably large column or row number (UINT_MAX).
+
 26.03.31 BJH  Release 11.14.00
 
               pcxtoppm: fix determination that palette in image is all one
