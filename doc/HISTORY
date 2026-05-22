@@ -9,11 +9,15 @@ not yet  BJH  Release 11.15.00
               libnetpbm/pm_message: don't write nonprintable characters to
               Standard Error; instead, print e.g. "0x23" or "\n".
 
+              pamcut: fix incorrect behavior or crash with options that
+              specify an uncomputably large column or row number (UINT_MAX).
+
               Build with modified Netpbm that uses real libjasper: fix
               compiler warning/error about bug in vestigial code.
 
-              pamcut: fix incorrect behavior or crash with options that
-              specify an uncomputably large column or row number (UINT_MAX).
+              makeman: make it just Python 3, as the old supposed 2+3 code
+              doesn't work on some systems.  Thanks R M HildigerR Vergaray
+              (moonsdad@gmail.com).
 
 26.03.31 BJH  Release 11.14.00
 
