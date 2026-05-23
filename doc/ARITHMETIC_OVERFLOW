@@ -1,0 +1,85 @@
+This document explains Netpbm's strategy for dealing with the problem of
+arithmetic overflow.
+
+Arithmetic overflow is the problem that exists on essentially all computers
+that deals with the case where integer arithmetic results in a value that
+cannot be represented in the number of bits allocated for it, which is known
+as arithmetic overflow (e.g. the result is 2^32 and is supposed to go in a 32
+bit register.  At a machine level, the computer handles overflow by omitting
+the higher bits (in the example, it presents the result as 0).  When the CPU
+does this, it sets a carry flag that the program can check to find out that
+upper bits are missing, but most programs ignore that.  The C programming
+language is designed to be compatible with this behavior, so for example "2 *
+foo", where 'foo' is a 32-bit variable with the value 2^31 is defined to be 0.
+There is no carry flag in C.
+
+This handling of arithmetic overflow is virtually never what a programmer
+wants.  Consequently, C programs must ensure that integer arithmetic never
+overflows by ensuring that operands are sufficiently small for the word size
+or detect that it has occurred because the result obtained is impossible
+without it and recognize an exception.
+
+Many C programs simply perform a check of all operands in statements
+immediately before statements that do integer arithmetic.  Netpbm eschews this
+strategy because it makes the code harder to read.  It is also easy to forget.
+Instead, where possible, Netpbm programs limit integers to small enough values
+that typical arithmetic will not overflow.
+
+
+COLUMN AND ROW NUMBERS
+----------------------
+
+The Netpbm programming library ensures that image widths and heights and
+column and row values are small enough that typical arithmetic on them does
+not overflow.  They can be represented in a 32 bit signed format and have up
+to 10 added to them, rounded up to a multiple of 8 without overflowing.  The
+number of bytes needed to represent a row in the Netpbm library's raster
+format fits in a 32 it signed integer.
+
+Note that multiplying a height by a width, another common operation, is not
+safe from overflow.
+
+One way the Netpbm library enforces this is that functions that read an image
+header fail if the height or width in the image header is not small enough.
+Functions that write an image header fail the same way, simply as a check on
+height and width values that the caller will probably use later.
+
+Note that there is no defined maximum for height and width in the Netpbm image
+format.  An image with 2^128 columns is legal; Netpbm programs simply aren't
+able to process it.
+
+Because column and row numbers are limited to what fits in a signed integer,
+Netpbm programs can add them as unsigned integers (one bit wider) with no
+risk.
+
+
+MAXVAL
+------
+
+Arithmetic with maxvals rarely causes overflow because the maximum maxval
+allowed in the Netpbm format is 65535.  Even the product of two maxvals fits
+in a 32 bit word.  The Netpbm programming library functions to read and write
+image headers enforce this.
+
+Strategically, though, new Netpbm code tries not to rely on this, because the
+65535 limit on maxval is arbitrary, so good code would not rely on it.  As a
+practical matter, the code could some day be used in a context without that
+limit.
+
+
+SAMPLE VALUES
+-------------
+
+Sample values are constrained by the maxval, so are never more than 65535.
+That means most operations on sample values done in 32 bits cannot overflow.
+
+
+FLOATING POINT
+--------------
+
+The arithmetic overflow problem does not exist in floating point arithmetic.
+An overflow in floating point arithmetic is considered an error at all levels.
+At the machine level, it generates a trap, and at higher levels, it generates
+similar kinds of exceptions, including a unix SIGFPE signal.
+
+
