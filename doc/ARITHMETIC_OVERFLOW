@@ -83,3 +83,14 @@ At the machine level, it generates a trap, and at higher levels, it generates
 similar kinds of exceptions, including a unix SIGFPE signal.
 
 
+CURRENT STATUS
+--------------
+
+There are no known cases in any current Netpbm release where a problematic
+arithmetic overflow can occur.
+
+Some operating system distributions contain modifications to Netpbm that
+purport to add arithmetic overflow protection, but as far as Netpbm developers
+know, none of these have any effect; the authors and maintainers of them just
+aren't aware that the suspected overflow is prevented by constraints placed on
+the operands in code elsewhere.
