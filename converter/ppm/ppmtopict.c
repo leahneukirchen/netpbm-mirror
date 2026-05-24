@@ -12,6 +12,7 @@
 */
 
 #include <assert.h>
+#include <limits.h>
 
 #include "pm_c_util.h"
 #include "pm.h"
@@ -436,9 +437,19 @@ main(int argc, const char ** argv) {
                  "input file name", argc-1);
 
     pixels = ppm_readppm(ifP, &cols, &rows, &maxval);
+
     if (cols < 8)
-        pm_error("ppm input too narrow, must be >= 8 pixels wide" );
+        pm_error("ppm input too narrow (%d columns); "
+                 "a PICT image must be at least 8 pixels wide", cols);
+    else if (cols > 32767)
+        pm_error("ppm input too wide (%u columns); "
+                 "a PICT image can be at most 32767 pixels wide", cols);
+    else if (rows > 32767)
+        pm_error("ppm input too tall (%u rows); "
+                 "a PICT image can be at most 32767 pixels high", rows);
+
     lmaxval = (long)maxval;
+
     pm_close(ifP);
 
     /* Figure out the colormap. */
