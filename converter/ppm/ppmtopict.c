@@ -12,7 +12,6 @@
 */
 
 #include <assert.h>
-#include <limits.h>
 
 #include "pm_c_util.h"
 #include "pm.h"
