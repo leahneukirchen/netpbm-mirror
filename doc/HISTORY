@@ -12,6 +12,9 @@ not yet  BJH  Release 11.15.00
               pamcut: fix incorrect behavior or crash with options that
               specify an uncomputably large column or row number (UINT_MAX).
 
+              pbmtopgm: fix incorrect output with absurdly large convolution
+              kernel.
+
               ppmtopict: fix incorrect output with oversize input image.
 
               Build with modified Netpbm that uses real libjasper: fix
