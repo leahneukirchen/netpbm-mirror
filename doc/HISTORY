@@ -17,6 +17,11 @@ not yet  BJH  Release 11.15.00
 
               ppmtopict: fix incorrect output with oversize input image.
 
+              pnmtoddif: fix incorrect output at right edge.
+
+              pnmtoddif: fix undefined behavior with absurdly large image
+              dimensions or corrupted image header
+
               Build with modified Netpbm that uses real libjasper: fix
               compiler warning/error about bug in vestigial code.
 

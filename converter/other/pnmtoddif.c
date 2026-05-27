@@ -24,6 +24,8 @@
 
 #include "mallocvar.h"
 #include "pnm.h"
+#include "bitreverse.h"
+
 
 /* The structure we use to convey all sorts of "magic" data to the DDIF */
 /* header write procedure.                      */
@@ -44,6 +46,12 @@ typedef struct {
 
 
 /* ASN.1 basic encoding rules magic number */
+
+/*  Abstract Syntax Notation One (ASN.1)   */
+/*  https://en.wikipedia.org/wiki/ASN.1    */
+/*  Basic Encoding Rules (BER):            */
+/*  https://en.wikipedia.org/wiki/X.690    */
+
 #define UNIVERSAL 0
 #define APPLICATION 1
 #define CONTEXT 2
@@ -60,24 +68,30 @@ typedef struct {
 /* All of these routines take a pointer to a pointer into an output */
 /* buffer in the first argument and update it accordingly.      */
 
-static void tag(unsigned char ** buffer, int cl, int constructed,
-                unsigned int t)
+
+static void
+tag(unsigned char ** const buffer,
+    int              const cl,
+    int              const constructed,
+    unsigned int     const t0)
 {
-    int tag_first;
+    int const tag_first = (cl << 6) | constructed << 5;
+
     unsigned int stack[10];
     int sp;
     unsigned char *p = *buffer;
 
-    tag_first = (cl << 6) | constructed << 5;
-    if (t < 31) {         /* Short tag form   */
-        *p++ = tag_first | t;
+    if (t0 < 31) {         /* Short tag form   */
+        *p++ = tag_first | t0;
     } else {          /* Long tag form */
+        unsigned int t;
+
         *p++ = tag_first | 31;
-        sp = 0;
-        while (t > 0) {
+
+        for (t = t0, sp = 0; t > 0; t >>= 7) {
             stack[sp++] = t & 0x7f;
-            t >>= 7;
         }
+
         while (--sp > 0) {  /* Tag values with continuation bits */
             *p++ = stack[sp] | 0x80;
         }
@@ -90,7 +104,7 @@ static void tag(unsigned char ** buffer, int cl, int constructed,
 
 /* Emit indefinite length encoding */
 static void
-ind(unsigned char **buffer)
+ind(unsigned char ** const buffer)
 {
     unsigned char *p = *buffer;
 
@@ -102,7 +116,7 @@ ind(unsigned char **buffer)
 
 /* Emit ASN.1 NULL */
 static void
-wr_null(unsigned char **buffer)
+wr_null(unsigned char ** const buffer)
 {
     unsigned char *p = *buffer;
 
@@ -114,7 +128,8 @@ wr_null(unsigned char **buffer)
 
 /* Emit ASN.1 length only into buffer, no data */
 static void
-wr_length(unsigned char ** buffer, int amount)
+wr_length(unsigned char ** const buffer,
+          int const amount)
 {
     int length;
     unsigned int mask;
@@ -145,7 +160,8 @@ wr_length(unsigned char ** buffer, int amount)
 
 /* BER encode an integer and write it's length and value */
 static void
-wr_int(unsigned char ** buffer, int val)
+wr_int(unsigned char ** const buffer,
+       int const val)
 {
     int length;
     int sign;
@@ -179,7 +195,7 @@ wr_int(unsigned char ** buffer, int val)
 
 /* Emit and End Of Coding sequence  */
 static void
-eoc(unsigned char ** buffer)
+eoc(unsigned char ** const buffer)
 {
     unsigned char *p = *buffer;
 
@@ -191,8 +207,9 @@ eoc(unsigned char ** buffer)
 
 
 /* Emit a simple string */
-static
-void wr_string(unsigned char ** const buffer, const char * const val)
+static void
+wr_string(unsigned char ** const buffer,
+          const char *     const val)
 {
     int length;
     unsigned char *p = *buffer;
@@ -215,7 +232,8 @@ void wr_string(unsigned char ** const buffer, const char * const val)
 
 /* Emit a ISOLATIN-1 string */
 static void
-emit_isolatin1(unsigned char ** const buffer, const char * const val)
+emit_isolatin1(unsigned char ** const buffer,
+               const char *     const val)
 {
     int length;
     unsigned char *p = *buffer;
@@ -243,21 +261,51 @@ emit_isolatin1(unsigned char ** const buffer, const char * const val)
 /* the bit grammars that the PBMPLUS formats want.           */
 
 static int
-write_header(FILE *file, imageparams *ip)
+write_header(FILE *file, const imageparams * const ip)
 {
-    unsigned char buffer[300];            /* Be careful with the size ! */
-    unsigned char *p = buffer;
+    int const maxheadersize = 300;
+
+    unsigned char *buffer;  /* malloc'ed */
+    unsigned char *p;       /* pointer into 'buffer' */
     int headersize;
     int bounding_x;
     int bounding_y;
     int i;
+    size_t writeRc;
+
+    MALLOCARRAY_NOFAIL(buffer, maxheadersize * 2);
+    p = &buffer[0];
 
     /* Calculate the bounding box from the resolutions    */
-    bounding_x = ((int) (1200 * ((double) (ip->width) / ip->h_res)));
-    bounding_y = ((int) (1200 * ((double) (ip->height) / ip->v_res)));
+
+    if (ip->width / ip->h_res > INT_MAX / 1200)
+        pm_error("Product of input image width %d and "
+                 "horizontal resolution %d too large for compuatation",
+                 ip->width, ip->h_res);
+    else
+        bounding_x = ((int) (1200 * ((double) (ip->width) / ip->h_res)));
+
+    if (ip->height / ip->v_res > INT_MAX / 1200)
+        pm_error("Product of image height %d and "
+                 "vertical resolution %d too large for computation",
+                 ip->height, ip->v_res);
+    else
+        bounding_y = ((int) (1200 * ((double) (ip->height) / ip->v_res)));
 
     /* This is gross. The entire DDIF grammar is constructed by   */
     /* hand. The indentation is meant to indicate DDIF document structure */
+
+    /*  function            bytes    count                     */
+    /*                                                         */
+    /*  tag();              3        1     first tag(), t0>31  */
+    /*  tag();              1       73     69 if PBM, PGM      */
+    /*  wr_int();           2-5     38     most are 2,3 bytes  */
+    /*                                     34 if PBM,PGM       */
+    /*  ind();              1       31                         */
+    /*  eoc();              2       27                         */
+    /*  wr_string();        3,5      2                         */
+    /*  emit_isolatin1();   5,21     2                         */
+    /*  wr_length();        2-5      1                         */
 
     tag(&p,PRIVATE,CONS,16383); ind(&p);      /* DDIF Document */
     tag(&p,CONTEXT,CONS, 0); ind(&p);        /* Document Descriptor */
@@ -367,12 +415,18 @@ write_header(FILE *file, imageparams *ip)
         /* Component Plane Data */
     /* End of DDIF document Indentation */
     headersize = p - buffer;
-    if (headersize >= 300)  {
-        fprintf(stderr,"Overran buffer area %d >= 300\n",headersize);
+    if (headersize >= maxheadersize)  {
+        fprintf(stderr,"Overran buffer area %d >= %d",
+                headersize, maxheadersize);
+        free(buffer);
         exit(1);
     }
 
-    return (fwrite(buffer, 1, headersize, file) == headersize);
+    writeRc = fwrite(buffer, 1, headersize, file);
+
+    free(buffer);
+    return (writeRc == headersize);
+
 }
 
 
@@ -381,11 +435,18 @@ write_header(FILE *file, imageparams *ip)
 /* The strange indentation reflects exactly the same indentation that  */
 /* we left off in the write_header procedure.                  */
 static int
-write_trailer(FILE * file)
+write_trailer(FILE * const file)
 {
-    unsigned char buffer[30];
-    unsigned char *p = buffer;
+    int const targetsize = 12;
+    int const buffersize = targetsize * 3;
+
+    unsigned char * buffer;  /* malloc'ed */
+    unsigned char * p;       /* pointer into 'buffer' */
     int trailersize;
+    size_t writeRc;
+
+    MALLOCARRAY_NOFAIL(buffer, buffersize);
+    p = &buffer[0];
 
     /* Indentation below gives DDIF document structure */
     eoc(&p);                        /* Sequence */
@@ -395,13 +456,26 @@ write_trailer(FILE * file)
     eoc(&p);                  /* Document Content */
     eoc(&p);                   /* DDIF Document */
     /* End of DDIF document Indentation */
+
+    /*  function            bytes    count */
+    /*                                     */
+    /*  tag();              1        2     */
+    /*  eoc();              2        4     */
+    /*  wr_null()           1        2     */
+    /*                                     */
+    /*  total 12 bytes  (targetsize=12)    */
+
     trailersize = p - buffer;
-    if (trailersize >= 30)  {
-        fprintf(stderr,"Overran buffer area %d >= 30\n",trailersize);
+    if (trailersize != targetsize)  {
+        fprintf(stderr,"Abnormal trailer size %d.  Should be %d\n",
+                trailersize, targetsize);
+        free(buffer);
         exit(1);
     }
 
-    return(fwrite(buffer, 1, trailersize, file) == trailersize);
+    writeRc = fwrite(buffer, 1, trailersize, file);
+    free(buffer);
+    return(writeRc == trailersize);
 }
 
 
@@ -415,41 +489,22 @@ convertPbmRaster(FILE *          const ifP,
                  unsigned int    const bytesPerLine,
                  unsigned char * const data) {
 
-    bit * const pixels = pbm_allocrow(cols);
-
     unsigned int row;
 
     for (row = 0; row < rows; ++row) {
-        unsigned int col;
-        unsigned int k;
-        unsigned int mask;
-        unsigned char * p;
+
+        unsigned int byteCt;
         size_t bytesWritten;
 
-        pbm_readpbmrow(ifP, pixels, cols, format);
+        pbm_readpbmrow_packed(ifP, data, cols, format);
 
-        mask = 0x00;
-        p = &data[0];
-        for (col = 0, k = 0; col < cols; ++col) {
-            if (pixels[col] == PBM_BLACK)
-                mask |= 1 << k;
-            if (k == 7) {
-                *p++ = mask;
-                mask = 0x00;
-                k = 0;
-            } else
-                ++k;
-        }
-        if (k != 7)
-            /* Flush the rest of the column */
-            *p = mask;
+        for (byteCt=0; byteCt < bytesPerLine; ++byteCt)
+            data[byteCt] = bitreverse[data[byteCt]];
 
         bytesWritten =  fwrite(data, 1, bytesPerLine, ofP);
         if (bytesWritten != bytesPerLine)
             pm_error("File write error on Row %u", row);
     }
-
-    pbm_freerow(pixels);
 }
 
 
@@ -653,6 +708,9 @@ main(int argc, char *argv[]) {
         fprintf(stderr, "Unrecognized PBMPLUS format %d\n", format);
         exit(1);
     }
+
+    if (ip.bytes_per_line > INT_MAX / ip.height)
+        pm_error("Input image too large");
 
     if (!write_header(ofd,&ip)) {
         perror("Writing header");
