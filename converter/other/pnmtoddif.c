@@ -215,10 +215,11 @@ wr_string(unsigned char ** const buffer,
     unsigned char *p = *buffer;
 
     length  = strlen(val);
-    if (length > 127) {
-        fprintf(stderr,"Can't encode length > 127 yet (%d)\n",length);
-        exit(1);
-    }
+    if (length > 127)
+        pm_error("Program does not know how to encode a string "
+                 "longer than 127 characters.  "
+                 "Image requires one that is %d characters", length);
+
     *p++ = length;
     {
         const char * valCursor;
@@ -239,10 +240,11 @@ emit_isolatin1(unsigned char ** const buffer,
     unsigned char *p = *buffer;
 
     length  = strlen(val) + 1;        /* One NULL byte and charset leader */
-    if (length > 127) {
-        fprintf(stderr,"Can't encode length > 127 yet (%d)\n",length);
-        exit(1);
-    }
+    if (length > 127)
+        pm_error("Program does not know how to encode a string "
+                 "longer than 127 characters.  "
+                 "Image requires one that is %d characters", length);
+
     *p++ = length;
     *p++ = 1;             /* ISO LATIN-1 */
     {
@@ -416,10 +418,10 @@ write_header(FILE *file, const imageparams * const ip)
     /* End of DDIF document Indentation */
     headersize = p - buffer;
     if (headersize >= maxheadersize)  {
-        fprintf(stderr,"Overran buffer area %d >= %d",
-                headersize, maxheadersize);
         free(buffer);
-        exit(1);
+        pm_error("Header would be %d bytes, which exceeds this program's"
+                 "maximum of %d bytes",
+                 headersize, maxheadersize);
     }
 
     writeRc = fwrite(buffer, 1, headersize, file);
@@ -466,11 +468,11 @@ write_trailer(FILE * const file)
     /*  total 12 bytes  (targetsize=12)    */
 
     trailersize = p - buffer;
+
     if (trailersize != targetsize)  {
-        fprintf(stderr,"Abnormal trailer size %d.  Should be %d\n",
-                trailersize, targetsize);
         free(buffer);
-        exit(1);
+        pm_error("Abnormal trailer size %d bytes.  Should be %d",
+                 trailersize, targetsize);
     }
 
     writeRc = fwrite(buffer, 1, trailersize, file);
@@ -651,11 +653,9 @@ main(int argc, char *argv[]) {
         }
     }
 
-    if (hor_resolution <= 0 || ver_resolution <= 0) {
-        fprintf(stderr,"Unreasonable resolution values: %d x %d\n",
-                hor_resolution,ver_resolution);
-        exit(1);
-    }
+    if (hor_resolution <= 0 || ver_resolution <= 0)
+        pm_error("Unreasonable resolution values: %d x %d",
+                 hor_resolution,ver_resolution);
 
     if (argn == argc - 2) {
         ifd = pm_openr(argv[argn]);
@@ -705,8 +705,7 @@ main(int argc, char *argv[]) {
         ip.polarity = 2;
         break;
     default:
-        fprintf(stderr, "Unrecognized PBMPLUS format %d\n", format);
-        exit(1);
+        pm_error("Unrecognized PBMPLUS format %d", format);
     }
 
     if (ip.bytes_per_line > INT_MAX / ip.height)
