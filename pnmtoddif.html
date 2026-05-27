@@ -2,7 +2,7 @@
 <html><head><title>Pnmtoddif User Manual</title></head>
 <body>
 <h1>pnmtoddif</h1>
-Updated: 2003
+Updated: 27 May 2026
 <br>
 <a href="#index">Table Of Contents</a>
 <h2>NAME</h2>
@@ -32,10 +32,20 @@ interleaved by pixel.
 dimension, DDIF images also carry information about the size that the
 image should have, that is, the physical space that a pixel occupies.
 Netpbm images do not carry this information, hence you have to supply
-it externally.  The default of 78 dpi has the beneficial property of
+it externally.  The default of 75 dpi has the beneficial property of
 not causing a resize on most Digital Equipment Corporation color
 monitors.
 
+(Until 2026, this manual said the default was 78 dpi, but it has always been
+implemented as 75, which is a typical resolution value.  We include this note
+in case 78 is actually more sensible and the program has just been defective
+all this time).
+
+<p><em>This program works only on Netpbm input images with maxval 255.  For
+other images, it produces incorrect results.</em>  If you have a Netpbm image
+with maxval other than 255, use <b>pamdepth</b> to change it to 255 for use
+with this program.
+  
 <h2 id="options">OPTIONS</h2>
 
 <p>In addition to the options common to all programs based on libnetpbm
@@ -47,7 +57,7 @@ command line option:
 <dt><b>-resolution</b> <i>x</i> <i>y</i>
 
 <dd>The horizontal and vertical resolution of the output image in dots
-per inch.  Default is 78 dpi.
+per inch.  Default is 75 dpi.
 
 </dl>
 
