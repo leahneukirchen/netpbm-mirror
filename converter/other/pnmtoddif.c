@@ -21,6 +21,7 @@
 */
 
 #include <string.h>
+#include <assert.h>
 
 #include "mallocvar.h"
 #include "pnm.h"
@@ -60,26 +61,80 @@ typedef struct {
 #define PRIM 0
 #define CONS 1
 
-/* "tag": Emit an ASN tag of the specified class and tag number.    */
-/* This is used in conjunction with the                  */
-/* wr_xxx routines that follow to construct the various ASN.1 entities. */
-/* Writing each entity is a two-step process, where first the tag is    */
-/* written and then the length and value.               */
-/* All of these routines take a pointer to a pointer into an output */
-/* buffer in the first argument and update it accordingly.      */
+
+
+static imageparams
+ddifImageParams(int          const format,
+                unsigned int const cols,
+                unsigned int const rows,
+                int          const horizontalResolution,
+                int          const verticalResolution) {
+
+    imageparams img;
+
+    img.width  = cols;
+    img.height = rows;
+    img.h_res  = horizontalResolution;
+    img.v_res  = verticalResolution;
+
+    switch (PNM_FORMAT_TYPE(format)) {
+    case PBM_TYPE:
+        img.bits_per_pixel = 1;
+        img.bytes_per_line = (cols + 7) / 8;
+        img.spectral = 2;
+        img.components = 1;
+        img.bits_per_component = 1;
+        img.polarity = 1;
+        break;
+    case PGM_TYPE:
+        img.bytes_per_line = cols;
+        img.bits_per_pixel = 8;
+        img.spectral = 2;
+        img.components = 1;
+        img.bits_per_component = 8;
+        img.polarity = 2;
+        break;
+    case PPM_TYPE:
+        img.bytes_per_line = 3 * cols;
+        img.bits_per_pixel = 24;
+        img.spectral = 5;
+        img.components = 3;
+        img.bits_per_component = 8;
+        img.polarity = 2;
+        break;
+    default:
+        pm_error("INTERNAL ERROR: impossible Netpbm image format %d", format);
+    }
+
+    if (img.bytes_per_line > INT_MAX / img.height)
+        pm_error("Input image too large for computation");
+
+    return img;
+}
+
 
 
 static void
-tag(unsigned char ** const buffer,
+tag(unsigned char ** const pP,
     int              const cl,
     int              const constructed,
-    unsigned int     const t0)
-{
+    unsigned int     const t0) {
+/*----------------------------------------------------------------------------
+  Emit an ASN tag of the specified class and tag number.  This is used in
+  conjunction with the wr_xxx routines that follow to construct the various
+  ASN.1 entities.  Writing each entity is a two-step process, where first the
+  tag is written and then the length and value.
+
+   All of these routines take a pointer to a pointer into an output buffer in
+   the first argument and update it accordingly.
+-----------------------------------------------------------------------------*/
     int const tag_first = (cl << 6) | constructed << 5;
 
     unsigned int stack[10];
     int sp;
-    unsigned char *p = *buffer;
+    unsigned char * p;
+
+    p = *pP;  /* initial value */
 
     if (t0 < 31) {         /* Short tag form   */
         *p++ = tag_first | t0;
@@ -97,46 +152,58 @@ tag(unsigned char ** const buffer,
         }
         *p++ = stack[0];    /* Last tag portion without continuation bit */
     }
-    *buffer = p;      /* Update buffer pointer */
+    *pP = p;
 }
 
 
 
-/* Emit indefinite length encoding */
 static void
-ind(unsigned char ** const buffer)
-{
-    unsigned char *p = *buffer;
+ind(unsigned char ** const pP) {
+
+/*----------------------------------------------------------------------------
+  Emit indefinite length encoding
+-----------------------------------------------------------------------------*/
+    unsigned char * p;
+
+    p = *pP;  /* initial value */
 
     *p++ = 0x80;
-    *buffer = p;
+
+    *pP = p;
 }
 
 
 
-/* Emit ASN.1 NULL */
 static void
-wr_null(unsigned char ** const buffer)
-{
-    unsigned char *p = *buffer;
+wrNull(unsigned char ** const pP) {
+/*----------------------------------------------------------------------------
+  Emit ASN.1 NULL
+-----------------------------------------------------------------------------*/
+    unsigned char * p;
+
+    p = *pP;  /* initial value */
 
     *p++ = 0;
-    *buffer = p;
+
+    *pP = p;
 }
 
 
 
-/* Emit ASN.1 length only into buffer, no data */
 static void
-wr_length(unsigned char ** const buffer,
-          int const amount)
-{
+wrLength(unsigned char ** const pP,
+         int              const amount) {
+/*----------------------------------------------------------------------------
+  Emit ASN.1 length only into buffer, no data
+-----------------------------------------------------------------------------*/
     int length;
     unsigned int mask;
-    unsigned char *p = *buffer;
+    unsigned char * p;
 
-    length = 4;
-    mask = 0xff000000;
+    p = *pP;  /* initial value */
+
+    length = 4;  /* initial value */
+    mask = 0xff000000;  /* initial value */
 
     if (amount < 128) {
         *p++ = amount;
@@ -153,174 +220,207 @@ wr_length(unsigned char ** const buffer,
         }
 
     }
-    *buffer = p;
+    *pP = p;
 }
 
 
 
-/* BER encode an integer and write it's length and value */
 static void
-wr_int(unsigned char ** const buffer,
-       int const val)
-{
-    int length;
-    int sign;
-    unsigned int mask;
-    unsigned char *p = *buffer;
+wrInt(unsigned char ** const pP,
+      int              const val) {
+/*----------------------------------------------------------------------------
+  BER encode an integer and write it's length and value
+-----------------------------------------------------------------------------*/
+    unsigned char * p;
+
+    p = *pP;  /* initial value */
 
     if (val == 0) {
         *p++ = 1;               /* length */
         *p++ = 0;               /* value  */
     } else {
-        sign = val < 0 ? 0xff : 0x00;   /* Sign bits */
-        length = 4;
-        mask  = 0xffu << 24;
-        while ((val & mask) == sign) {  /* Find the smallest representation */
-            length--;
-            mask >>= 8;
+        int length;
+
+        length = 4;  /* initial value */
+        {
+            /* Find the smallest representation */
+            int const sign = val < 0 ? 0xff : 0x00;   /* Sign bits */
+
+            unsigned int mask;
+
+            for (mask  = 0xffu << 24; (val & mask) == sign; mask >>=8 )
+                --length;
         }
-        sign = (0x80 << ((length-1)*8)) & val; /* New sign bit */
-        if (((val < 0) && !sign) || ((val > 0) && sign)) { /* Sign error */
-            length++;
+        {
+            int const sign = (0x80 << ((length-1)*8)) & val;
+
+            if (((val < 0) && !sign) || ((val > 0) && sign)) { /* Sign error */
+                ++length;
+            }
         }
         *p++ = length;          /* length */
         while (--length >= 0) {
             *p++ = (val >> (8*length)) & 0xff;
         }
     }
-    *buffer = p;
+    *pP = p;
 }
 
 
 
-/* Emit and End Of Coding sequence  */
 static void
-eoc(unsigned char ** const buffer)
-{
-    unsigned char *p = *buffer;
+eoc(unsigned char ** const pP) {
+/*----------------------------------------------------------------------------
+  Emit and End Of Coding sequence
+-----------------------------------------------------------------------------*/
+    unsigned char * p;
+
+    p = *pP; /* initial value */
 
     *p++ = 0;
     *p++ = 0;
-    *buffer = p;
+
+    *pP = p;
 }
 
 
 
-/* Emit a simple string */
 static void
-wr_string(unsigned char ** const buffer,
-          const char *     const val)
-{
-    int length;
-    unsigned char *p = *buffer;
+wrString(unsigned char ** const pP,
+         const char *     const val) {
+/*----------------------------------------------------------------------------
+  Emit a simple string
+-----------------------------------------------------------------------------*/
+    size_t const length = strlen(val);
 
-    length  = strlen(val);
+    unsigned char * p;
+
+    p = *pP; /* initial value */
+
     if (length > 127)
         pm_error("Program does not know how to encode a string "
                  "longer than 127 characters.  "
-                 "Image requires one that is %d characters", length);
+                 "Image requires one that is %d characters",
+                 (unsigned int) length);
 
-    *p++ = length;
+    *p++ = (unsigned char)length;
     {
         const char * valCursor;
         for (valCursor = val; *valCursor; ++valCursor)
             *p++ = *valCursor;
     }
-    *buffer = p;
+    *pP = p;
 }
 
 
 
-/* Emit a ISOLATIN-1 string */
 static void
-emit_isolatin1(unsigned char ** const buffer,
-               const char *     const val)
-{
-    int length;
-    unsigned char *p = *buffer;
+emitIsolatin1(unsigned char ** const pP,
+              const char *     const val) {
+/*----------------------------------------------------------------------------
+   Emit a ISOLATIN-1 string
+-----------------------------------------------------------------------------*/
+    size_t const length = strlen(val) + 1;
+        /* One NULL byte and charset leader */
 
-    length  = strlen(val) + 1;        /* One NULL byte and charset leader */
+    unsigned char * p = *pP;
+
     if (length > 127)
         pm_error("Program does not know how to encode a string "
                  "longer than 127 characters.  "
-                 "Image requires one that is %d characters", length);
+                 "Image requires one that is %u characters",
+                 (unsigned int)length);
 
-    *p++ = length;
+    *p++ = (unsigned char)length;
     *p++ = 1;             /* ISO LATIN-1 */
     {
         const char * valCursor;
         for (valCursor = val; *valCursor; ++valCursor)
             *p++ = *valCursor;
     }
-    *buffer = p;
+    *pP = p;
 }
 
 
 
-/* Write the DDIF grammar onto "file" up to the actual starting location */
-/* of the image data. The "ip" structure needs to be set to the right    */
-/* values. A lot of the values here are hardcoded to be just right for   */
-/* the bit grammars that the PBMPLUS formats want.           */
-
-static int
-write_header(FILE *file, const imageparams * const ip)
-{
-    int const maxheadersize = 300;
-
-    unsigned char *buffer;  /* malloc'ed */
-    unsigned char *p;       /* pointer into 'buffer' */
-    int headersize;
-    int bounding_x;
-    int bounding_y;
-    int i;
-    size_t writeRc;
-
-    MALLOCARRAY_NOFAIL(buffer, maxheadersize * 2);
-    p = &buffer[0];
-
-    /* Calculate the bounding box from the resolutions    */
-
-    if (ip->width / ip->h_res > INT_MAX / 1200)
+static void
+computeBoundingBox(int   const width,
+                   int   const height,
+                   int   const hRes,
+                   int   const vRes,
+                   int * const boundingXP,
+                   int * const boundingYP) {
+/*----------------------------------------------------------------------------
+  Calculate the bounding box from the resolutions.
+-----------------------------------------------------------------------------*/
+    if (width / hRes > INT_MAX / 1200)
         pm_error("Product of input image width %d and "
-                 "horizontal resolution %d too large for compuatation",
-                 ip->width, ip->h_res);
+                 "horizontal resolution %d too large for computation",
+                 width, hRes);
     else
-        bounding_x = ((int) (1200 * ((double) (ip->width) / ip->h_res)));
+        *boundingXP = ((int) (1200 * ((double) (width) / hRes)));
 
-    if (ip->height / ip->v_res > INT_MAX / 1200)
+    if (height / vRes > INT_MAX / 1200)
         pm_error("Product of image height %d and "
                  "vertical resolution %d too large for computation",
-                 ip->height, ip->v_res);
+                 height, vRes);
     else
-        bounding_y = ((int) (1200 * ((double) (ip->height) / ip->v_res)));
+        *boundingYP = ((int) (1200 * ((double) (height) / vRes)));
+}
 
-    /* This is gross. The entire DDIF grammar is constructed by   */
-    /* hand. The indentation is meant to indicate DDIF document structure */
+
+
+static void
+writeHeader(FILE *              const ofP,
+            const imageparams * const imgP) {
+/*----------------------------------------------------------------------------
+  Write the DDIF grammar onto "file" up to the actual starting location of the
+  image data.  The "ip" structure needs to be set to the right values.  A lot
+  of the values here are hardcoded to be just right for the bit grammars that
+  the Netpbm formats want.
+-----------------------------------------------------------------------------*/
+    int const maxheadersize = 300;
+
+    unsigned char * buffer;  /* malloc'ed */
+    unsigned char * p;       /* pointer into 'buffer' */
+    int headersize;
+    int boundingX;
+    int boundingY;
+    int i;
+
+    MALLOCARRAY_NOFAIL(buffer, maxheadersize * 2);
+
+    computeBoundingBox(imgP->width, imgP->height, imgP->h_res, imgP->v_res,
+                       &boundingX, &boundingY);
+
+    /* This is gross. The entire DDIF grammar is constructed by hand. */
 
     /*  function            bytes    count                     */
     /*                                                         */
     /*  tag();              3        1     first tag(), t0>31  */
     /*  tag();              1       73     69 if PBM, PGM      */
-    /*  wr_int();           2-5     38     most are 2,3 bytes  */
+    /*  wrInt();            2-5     38     most are 2,3 bytes  */
     /*                                     34 if PBM,PGM       */
     /*  ind();              1       31                         */
     /*  eoc();              2       27                         */
-    /*  wr_string();        3,5      2                         */
-    /*  emit_isolatin1();   5,21     2                         */
-    /*  wr_length();        2-5      1                         */
+    /*  wrString();         3,5      2                         */
+    /*  emitIsolatin1();    5,21     2                         */
+    /*  wrLength();         2-5      1                         */
+
+    p = &buffer[0];
 
     tag(&p,PRIVATE,CONS,16383); ind(&p);      /* DDIF Document */
     tag(&p,CONTEXT,CONS, 0); ind(&p);        /* Document Descriptor */
-    tag(&p,CONTEXT,PRIM, 0); wr_int(&p,1);  /* Major Version */
-    tag(&p,CONTEXT,PRIM, 1); wr_int(&p,3);  /* Minor Version */
-    tag(&p,CONTEXT,PRIM, 2); wr_string(&p,"PBM+"); /* Product Identifier */
+    tag(&p,CONTEXT,PRIM, 0); wrInt(&p,1);  /* Major Version */
+    tag(&p,CONTEXT,PRIM, 1); wrInt(&p,3);  /* Minor Version */
+    tag(&p,CONTEXT,PRIM, 2); wrString(&p,"PBM+"); /* Product Identifier */
     tag(&p,CONTEXT,CONS, 3); ind(&p);       /* Product Name */
-    tag(&p,PRIVATE,PRIM, 9); emit_isolatin1(&p,"PBMPLUS Writer V1.0");
+    tag(&p,PRIVATE,PRIM, 9); emitIsolatin1(&p,"PBMPLUS Writer V1.0");
     eoc(&p);
     eoc(&p);                 /* Document Descriptor */
     tag(&p,CONTEXT,CONS, 1); ind(&p);        /* Document Header     */
     tag(&p,CONTEXT,CONS, 3); ind(&p);       /* Version */
-    tag(&p,PRIVATE,PRIM, 9); emit_isolatin1(&p,"1.0");
+    tag(&p,PRIVATE,PRIM, 9); emitIsolatin1(&p,"1.0");
     eoc(&p);
     eoc(&p);                 /* Document Header */
     tag(&p,CONTEXT,CONS, 2); ind(&p);        /* Document Content    */
@@ -328,38 +428,38 @@ write_header(FILE *file, const imageparams * const ip)
     eoc(&p);
     tag(&p,APPLICATION,CONS,2); ind(&p);    /* Segment  */
     tag(&p,CONTEXT,CONS, 3); ind(&p);      /* Segment Specific Attributes */
-    tag(&p,CONTEXT,PRIM, 2); wr_string(&p,"$I");  /* Category */
+    tag(&p,CONTEXT,PRIM, 2); wrString(&p,"$I");  /* Category */
     tag(&p,CONTEXT,CONS,22); ind(&p);     /* Image Attributes */
     tag(&p,CONTEXT,CONS, 0); ind(&p);    /* Image Presentation Attributes */
-    tag(&p,CONTEXT,PRIM, 1); wr_int(&p,0);  /* Pixel Path */
-    tag(&p,CONTEXT,PRIM, 2); wr_int(&p,270); /* Line Progression */
+    tag(&p,CONTEXT,PRIM, 1); wrInt(&p,0);  /* Pixel Path */
+    tag(&p,CONTEXT,PRIM, 2); wrInt(&p,270); /* Line Progression */
     tag(&p,CONTEXT,CONS, 3); ind(&p);   /* Pixel Aspect Ratio */
-    tag(&p,CONTEXT,PRIM, 0); wr_int(&p,1); /* PP Pixel Dist */
-    tag(&p,CONTEXT,PRIM, 1); wr_int(&p,1); /* LP Pixel Dist */
+    tag(&p,CONTEXT,PRIM, 0); wrInt(&p,1); /* PP Pixel Dist */
+    tag(&p,CONTEXT,PRIM, 1); wrInt(&p,1); /* LP Pixel Dist */
     eoc(&p);                /* Pixel Aspect Ratio */
-    tag(&p,CONTEXT,PRIM, 4); wr_int(&p,ip->polarity);
+    tag(&p,CONTEXT,PRIM, 4); wrInt(&p,imgP->polarity);
         /* Brightness Polarity */
-    tag(&p,CONTEXT,PRIM, 5); wr_int(&p,1);  /* Grid Type    */
-    tag(&p,CONTEXT,PRIM, 7); wr_int(&p,ip->spectral);  /* Spectral Mapping */
+    tag(&p,CONTEXT,PRIM, 5); wrInt(&p,1);  /* Grid Type    */
+    tag(&p,CONTEXT,PRIM, 7); wrInt(&p,imgP->spectral);  /* Spectral Mapping */
     tag(&p,CONTEXT,CONS,10); ind(&p);   /* Pixel Group Info */
-    tag(&p,CONTEXT,PRIM, 0); wr_int(&p,1); /* Pixel Group Size */
-    tag(&p,CONTEXT,PRIM, 1); wr_int(&p,1); /* Pixel Group Order */
+    tag(&p,CONTEXT,PRIM, 0); wrInt(&p,1); /* Pixel Group Size */
+    tag(&p,CONTEXT,PRIM, 1); wrInt(&p,1); /* Pixel Group Order */
     eoc(&p);                /* Pixel Group Info */
     eoc(&p);                     /* Image Presentation Attributes */
     tag(&p,CONTEXT,CONS, 1); ind(&p);    /* Component Space Attributes */
-    tag(&p,CONTEXT,PRIM, 0); wr_int(&p,1);  /* Component Space Organization */
-    tag(&p,CONTEXT,PRIM, 1); wr_int(&p,1);  /* Planes per Pixel */
-    tag(&p,CONTEXT,PRIM, 2); wr_int(&p,1);  /* Plane Significance   */
-    tag(&p,CONTEXT,PRIM, 3); wr_int(&p,ip->components);
+    tag(&p,CONTEXT,PRIM, 0); wrInt(&p,1);  /* Component Space Organization */
+    tag(&p,CONTEXT,PRIM, 1); wrInt(&p,1);  /* Planes per Pixel */
+    tag(&p,CONTEXT,PRIM, 2); wrInt(&p,1);  /* Plane Significance   */
+    tag(&p,CONTEXT,PRIM, 3); wrInt(&p,imgP->components);
         /* Number of Components    */
     tag(&p,CONTEXT,CONS, 4); ind(&p);   /* Bits per Component   */
-    for (i = 0; i < ip->components; i++) {
-        tag(&p,UNIVERSAL,PRIM,2); wr_int(&p,ip->bits_per_component);
+    for (i = 0; i < imgP->components; i++) {
+        tag(&p,UNIVERSAL,PRIM,2); wrInt(&p,imgP->bits_per_component);
     }
     eoc(&p);                /* Bits per Component   */
     tag(&p,CONTEXT,CONS, 5); ind(&p);   /* Component Quantization Levels */
-    for (i = 0; i < ip->components; i++) {
-        tag(&p,UNIVERSAL,PRIM,2); wr_int(&p,1 << ip->bits_per_component);
+    for (i = 0; i < imgP->components; i++) {
+        tag(&p,UNIVERSAL,PRIM,2); wrInt(&p,1 << imgP->bits_per_component);
     }
     eoc(&p);                /* Component Quantization Levels */
     eoc(&p);                 /* Component Space Attributes */
@@ -368,27 +468,27 @@ write_header(FILE *file, const imageparams * const ip)
     tag(&p,CONTEXT,CONS, 1); ind(&p);    /* Bounding Box */
     tag(&p,CONTEXT,CONS, 0); ind(&p);   /* lower-left   */
     tag(&p,CONTEXT,CONS, 0); ind(&p);  /* XCoordinate  */
-    tag(&p,CONTEXT,PRIM, 0); wr_int(&p,0);
+    tag(&p,CONTEXT,PRIM, 0); wrInt(&p,0);
     eoc(&p);                           /* XCoordinate  */
     tag(&p,CONTEXT,CONS, 1); ind(&p);  /* YCoordinate  */
-    tag(&p,CONTEXT,PRIM, 0); wr_int(&p,0);
+    tag(&p,CONTEXT,PRIM, 0); wrInt(&p,0);
     eoc(&p);                               /* YCoordinate  */
     eoc(&p);                /* lower left */
     tag(&p,CONTEXT,CONS, 1); ind(&p);       /* upper right */
     tag(&p,CONTEXT,CONS, 0); ind(&p);      /* XCoordinate  */
-    tag(&p,CONTEXT,PRIM, 0); wr_int(&p,bounding_x);
+    tag(&p,CONTEXT,PRIM, 0); wrInt(&p,boundingX);
     eoc(&p);               /* XCoordinate  */
     tag(&p,CONTEXT,CONS, 1); ind(&p);      /* YCoordinate  */
-    tag(&p,CONTEXT,PRIM, 0); wr_int(&p,bounding_y);
+    tag(&p,CONTEXT,PRIM, 0); wrInt(&p,boundingY);
     eoc(&p);                   /* YCoordinate  */
     eoc(&p);                            /* upper right */
     eoc(&p);                 /* Bounding Box */
     tag(&p,CONTEXT,CONS, 4); ind(&p);    /* Frame Position */
     tag(&p,CONTEXT,CONS, 0); ind(&p);   /* XCoordinate  */
-    tag(&p,CONTEXT,PRIM, 0); wr_int(&p,0);
+    tag(&p,CONTEXT,PRIM, 0); wrInt(&p,0);
     eoc(&p);                /* XCoordinate  */
     tag(&p,CONTEXT,CONS, 1); ind(&p);   /* YCoordinate  */
-    tag(&p,CONTEXT,PRIM, 0); wr_int(&p,0);
+    tag(&p,CONTEXT,PRIM, 0); wrInt(&p,0);
     eoc(&p);                    /* YCoordinate  */
     eoc(&p);                 /* Frame Position */
     eoc(&p);                  /* Frame Parameters */
@@ -397,67 +497,67 @@ write_header(FILE *file, const imageparams * const ip)
     tag(&p,APPLICATION,CONS,17); ind(&p);   /* Image Data Descriptor */
     tag(&p,UNIVERSAL,CONS,16); ind(&p);    /* Sequence */
     tag(&p,CONTEXT,CONS, 0); ind(&p);     /* Image Coding Attributes */
-    tag(&p,CONTEXT,PRIM, 1); wr_int(&p,ip->width); /* Pixels per Line    */
-    tag(&p,CONTEXT,PRIM, 2); wr_int(&p,ip->height);  /* Number of Lines  */
-    tag(&p,CONTEXT,PRIM, 3); wr_int(&p,2);   /* Compression Type */
-    tag(&p,CONTEXT,PRIM, 5); wr_int(&p,0);   /* Data Offset  */
-    tag(&p,CONTEXT,PRIM, 6); wr_int(&p,ip->bits_per_pixel);  /* Pixel Stride */
-    tag(&p,CONTEXT,PRIM, 7); wr_int(&p,ip->bytes_per_line * 8);
+    tag(&p,CONTEXT,PRIM, 1); wrInt(&p,imgP->width); /* Pixels per Line    */
+    tag(&p,CONTEXT,PRIM, 2); wrInt(&p,imgP->height);  /* Number of Lines  */
+    tag(&p,CONTEXT,PRIM, 3); wrInt(&p,2);   /* Compression Type */
+    tag(&p,CONTEXT,PRIM, 5); wrInt(&p,0);   /* Data Offset  */
+    tag(&p,CONTEXT,PRIM, 6); wrInt(&p,imgP->bits_per_pixel); /* Pixel Stride */
+    tag(&p,CONTEXT,PRIM, 7); wrInt(&p,imgP->bytes_per_line * 8);
         /* Scanline Stride    */
-    tag(&p,CONTEXT,PRIM, 8); wr_int(&p,1);   /* Bit Order        */
-    tag(&p,CONTEXT,PRIM, 9); wr_int(&p,ip->bits_per_pixel);
+    tag(&p,CONTEXT,PRIM, 8); wrInt(&p,1);   /* Bit Order        */
+    tag(&p,CONTEXT,PRIM, 9); wrInt(&p,imgP->bits_per_pixel);
         /* Planebits per Pixel */
     tag(&p,CONTEXT,CONS,10); ind(&p);    /* Byteorder Info   */
-    tag(&p,CONTEXT,PRIM, 0); wr_int(&p,1);  /* Byte Unit        */
-    tag(&p,CONTEXT,PRIM, 1); wr_int(&p,1);  /* Byte Order   */
+    tag(&p,CONTEXT,PRIM, 0); wrInt(&p,1);  /* Byte Unit        */
+    tag(&p,CONTEXT,PRIM, 1); wrInt(&p,1);  /* Byte Order   */
     eoc(&p);                 /* Byteorder Info   */
-    tag(&p,CONTEXT,PRIM,11); wr_int(&p,3);   /* Data Type        */
+    tag(&p,CONTEXT,PRIM,11); wrInt(&p,3);   /* Data Type        */
     eoc(&p);                              /* Image Coding Attributes */
-    tag(&p,CONTEXT,PRIM, 1); wr_length(&p,ip->bytes_per_line*ip->height);
+    tag(&p,CONTEXT,PRIM, 1); wrLength(&p,imgP->bytes_per_line*imgP->height);
         /* Component Plane Data */
-    /* End of DDIF document Indentation */
+
     headersize = p - buffer;
-    if (headersize >= maxheadersize)  {
-        free(buffer);
-        pm_error("Header would be %d bytes, which exceeds this program's"
-                 "maximum of %d bytes",
-                 headersize, maxheadersize);
+
+    assert(headersize <= maxheadersize);
+
+    {
+        size_t bytesWritten;
+
+        bytesWritten = fwrite(buffer, 1, headersize, ofP);
+
+        if (bytesWritten != headersize) {
+            pm_error("Write of %u-byte header failed.  Errno='%s'",
+                     headersize, strerror(errno));
+        }
     }
 
-    writeRc = fwrite(buffer, 1, headersize, file);
-
     free(buffer);
-    return (writeRc == headersize);
-
 }
 
 
 
-/* Write all the closing brackets of the DDIF grammar that are missing */
-/* The strange indentation reflects exactly the same indentation that  */
-/* we left off in the write_header procedure.                  */
-static int
-write_trailer(FILE * const file)
-{
+static void
+writeTrailer(FILE * const ofP) {
+/*----------------------------------------------------------------------------
+  Write all the closing brackets of the DDIF grammar that are missing.
+-----------------------------------------------------------------------------*/
     int const targetsize = 12;
     int const buffersize = targetsize * 3;
 
     unsigned char * buffer;  /* malloc'ed */
     unsigned char * p;       /* pointer into 'buffer' */
     int trailersize;
-    size_t writeRc;
 
     MALLOCARRAY_NOFAIL(buffer, buffersize);
+
     p = &buffer[0];
 
-    /* Indentation below gives DDIF document structure */
     eoc(&p);                        /* Sequence */
     eoc(&p);                     /* Image Data Descriptor */
-    tag(&p,APPLICATION,PRIM,1); wr_null(&p);     /* End Segment */
-    tag(&p,APPLICATION,PRIM,1); wr_null(&p);     /* End Segment */
+    tag(&p,APPLICATION,PRIM,1); wrNull(&p);     /* End Segment */
+    tag(&p,APPLICATION,PRIM,1); wrNull(&p);     /* End Segment */
     eoc(&p);                  /* Document Content */
     eoc(&p);                   /* DDIF Document */
-    /* End of DDIF document Indentation */
 
     /*  function            bytes    count */
     /*                                     */
@@ -475,9 +575,17 @@ write_trailer(FILE * const file)
                  trailersize, targetsize);
     }
 
-    writeRc = fwrite(buffer, 1, trailersize, file);
+    {
+        size_t bytesWritten;
+        bytesWritten = fwrite(buffer, 1, trailersize, ofP);
+
+        if (bytesWritten != trailersize) {
+            pm_error("Write of %u-byte header failed.  Errno='%s'",
+                     trailersize, strerror(errno));
+        }
+    }
+
     free(buffer);
-    return(writeRc == trailersize);
 }
 
 
@@ -620,29 +728,36 @@ convertRaster(FILE *       const ifP,
 
 
 
-int
-main(int argc, char *argv[]) {
-    FILE           *ifd;
-    FILE           *ofd;
-    int             rows, cols;
-    xelval          maxval;
-    int             format;
-    const char     * const usage = "[-resolution x y] [pnmfile [ddiffile]]";
-    char           *outfile;
-    int       argn;
-    int hor_resolution = 75;
-    int ver_resolution = 75;
-    imageparams ip;
+struct CmdlineInfo {
+    const char * inFileNm;
+    const char * outFileNm;
+    int          horizontalResolution;
+    int          verticalResolution;
+};
 
-    pnm_init(&argc, argv);
+
+
+static void
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
+
+    /* Implementation note: We cannot use shhopt to process the command
+       line because of the nonstandard syntax for the -resolution option
+    */
+    const char     * const usage = "[-resolution x y] [pnmfile [ddiffile]]";
+
+    int argn;
+
+    cmdlineP->horizontalResolution = 75;  /* initial value */
+    cmdlineP->verticalResolution   = 75;  /* initial value */
 
     for (argn = 1;argn < argc && argv[argn][0] == '-';argn++) {
         int arglen = strlen(argv[argn]);
 
         if (!strncmp (argv[argn],"-resolution", arglen)) {
             if (argn + 2 < argc) {
-                hor_resolution = atoi(argv[argn+1]);
-                ver_resolution = atoi(argv[argn+2]);
+                cmdlineP->horizontalResolution = atoi(argv[argn+1]);
+                cmdlineP->verticalResolution  = atoi(argv[argn+2]);
                 argn += 2;
                 continue;
             } else {
@@ -653,84 +768,60 @@ main(int argc, char *argv[]) {
         }
     }
 
-    if (hor_resolution <= 0 || ver_resolution <= 0)
+    if (cmdlineP->horizontalResolution <= 0 ||
+        cmdlineP->verticalResolution <= 0)
         pm_error("Unreasonable resolution values: %d x %d",
-                 hor_resolution,ver_resolution);
+                 cmdlineP->horizontalResolution, cmdlineP->verticalResolution);
 
     if (argn == argc - 2) {
-        ifd = pm_openr(argv[argn]);
-        outfile = argv[argn+1];
-        if (!(ofd = fopen(outfile,"wb"))) {
-            perror(outfile);
-            exit(1);
-        }
+        cmdlineP->inFileNm = argv[argn];
+        cmdlineP->outFileNm = argv[argn+1];
     } else if (argn == argc - 1) {
-        ifd = pm_openr(argv[argn]);
-        ofd = stdout;
+        cmdlineP->inFileNm = argv[argn];
+        cmdlineP->outFileNm = "-";
     } else {
-        ifd = stdin;
-        ofd = stdout;
+        cmdlineP->inFileNm  = "-";
+        cmdlineP->outFileNm = "-";
     }
+}
 
-    pnm_readpnminit(ifd, &cols, &rows, &maxval, &format);
 
-    ip.width = cols;
-    ip.height = rows;
-    ip.h_res = hor_resolution;
-    ip.v_res = ver_resolution;
 
-    switch (PNM_FORMAT_TYPE(format)) {
-    case PBM_TYPE:
-        ip.bits_per_pixel = 1;
-        ip.bytes_per_line = (cols + 7) / 8;
-        ip.spectral = 2;
-        ip.components = 1;
-        ip.bits_per_component = 1;
-        ip.polarity = 1;
-        break;
-    case PGM_TYPE:
-        ip.bytes_per_line = cols;
-        ip.bits_per_pixel = 8;
-        ip.spectral = 2;
-        ip.components = 1;
-        ip.bits_per_component = 8;
-        ip.polarity = 2;
-        break;
-    case PPM_TYPE:
-        ip.bytes_per_line = 3 * cols;
-        ip.bits_per_pixel = 24;
-        ip.spectral = 5;
-        ip.components = 3;
-        ip.bits_per_component = 8;
-        ip.polarity = 2;
-        break;
-    default:
-        pm_error("Unrecognized PBMPLUS format %d", format);
-    }
+int
+main(int argc, const char *argv[]) {
 
-    if (ip.bytes_per_line > INT_MAX / ip.height)
-        pm_error("Input image too large");
+    struct CmdlineInfo cmdline;
+    FILE * ifP;
+    FILE * ofP;
+    int rows, cols;
+    xelval maxval;
+    int format;
+    imageparams img;
 
-    if (!write_header(ofd,&ip)) {
-        perror("Writing header");
-        exit(1);
-    }
+    pm_proginit(&argc, argv);
 
-    convertRaster(ifd, format, maxval, cols, rows, ofd, ip.bytes_per_line);
+    parseCommandLine(argc, argv, &cmdline);
 
-    pm_close(ifd);
+    ifP = pm_openr(cmdline.inFileNm);
+    ofP = pm_openw(cmdline.outFileNm);
 
-    if (!write_trailer(ofd)) {
-        perror("Writing trailer");
-        exit(1);
-    }
+    pnm_readpnminit(ifP, &cols, &rows, &maxval, &format);
 
-    if (fclose(ofd) == EOF) {
-        perror("Closing output file");
-        exit(1);
-    };
+    img = ddifImageParams(format, cols, rows,
+                          cmdline.horizontalResolution,
+                          cmdline.verticalResolution);
 
-    return(0);
+    writeHeader(ofP, &img);
+
+    convertRaster(ifP, format, maxval, cols, rows, ofP, img.bytes_per_line);
+
+    pm_close(ifP);
+
+    writeTrailer(ofP);
+
+    pm_close(ofP);
+
+    return 0;
 }
 
 
