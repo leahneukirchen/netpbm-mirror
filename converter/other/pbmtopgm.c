@@ -39,6 +39,11 @@ parseCommandLine(int                  const argc,
             pm_error("Invalid convolution kernel height argument. %s", error);
         if (cmdlineP->convCols < 1 || cmdlineP->convRows < 1)
             pm_error("convolution kernel width and height must be > 0");
+        if (cmdlineP->convCols > INT_MAX / cmdlineP->convRows)
+            pm_error("You specified a convolution kernel which is "
+                     "too large for this program to process "
+                     "(%u cols, %u rows)",
+                     cmdlineP->convCols, cmdlineP->convRows);
 
         if (argc-1 >= 3)
             cmdlineP->inputFileName = argv[3];
