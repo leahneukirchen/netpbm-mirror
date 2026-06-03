@@ -56,6 +56,11 @@ main(int argc, char *argv[]) {
 
     left = width  / 2;  right = width  - left;
     up   = height / 2;  down  = height - up;
+        if (cmdlineP->convCols > INT_MAX / cmdlineP->convRows)
+            pm_error("You specified a convolution kernel which is "
+                     "too large for this program to process "
+                     "(%u cols, %u rows)",
+                     cmdlineP->convCols, cmdlineP->convRows);
 
 
 

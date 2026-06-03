@@ -882,7 +882,7 @@ int jbg_enc_lrange(struct jbg_enc_state *s, int dl, int dh)
  * number of layer 0 lines per stripes.
  */
 void jbg_enc_options(struct jbg_enc_state *s, int order, int options,
-		     unsigned long l0, int mx, int my)
+		     long int l0, int mx, int my)
 {
   if (order >= 0 && order <= 0x0f) s->order = order;
   if (options >= 0) s->options = options;

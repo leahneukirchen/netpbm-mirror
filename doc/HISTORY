@@ -4,6 +4,19 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+26.06.03 BJH  Release 11.02.24
+
+              pamcut: fix incorrect behavior or crash with options that
+              specify an uncomputably large column or row number (UINT_MAX).
+
+              pbmtopgm: fix incorrect output with absurdly large convolution
+              kernel.
+
+              ppmtopict: fix incorrect output with oversize input image.
+
+              pnmtojbig: fix empty output when input image is large.
+              Always broken (pnmtojbig was new in Netpbm 9.2 (May 2000)).
+
 26.03.30 BJH  Release 11.02.23
 
               pcxtoppm: fix determination that palette in image is all one
