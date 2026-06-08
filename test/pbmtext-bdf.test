@@ -2,6 +2,13 @@
 # This script tests: pbmtext
 # Also requires:
 
+# Ensure awk produces narrow output
+# no multiple byte characters for 128-255
+
+LANG=C
+LC_ALL=C
+export LANG LC_ALL
+
 tmpdir=${tmpdir:-/tmp}
 
 # Test 1
