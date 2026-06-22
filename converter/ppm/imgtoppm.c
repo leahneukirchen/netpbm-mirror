@@ -22,45 +22,98 @@
 
 
 static void
+readVariableLengthField(FILE *           const ifP,
+                        unsigned char ** const dataP,
+                        unsigned int *   const lengthP,
+                        const char **    const errorP) {
+/*----------------------------------------------------------------------------
+   Read from the current position of *ifP a variable length field, which is
+   encoded as an 8-character decimal text length, followed by the number of
+   bytes indicated by that length.
+
+   We append an ASCII NUL, just in case the data is text, so that we return
+   it as an ASCIIZ string.
+
+   Return the data portion in newly malloced storage and return a pointer to
+   it as *dataP.  Return the length of the data (not including the NUL) as
+   *lengthP.
+-----------------------------------------------------------------------------*/
+    unsigned char lengthBuf[8+1];
+    size_t itemsReadCt;
+
+    itemsReadCt =  fread(lengthBuf, 8, 1, ifP);
+    if (itemsReadCt != 1)
+        pm_asprintf(errorP, "Failed to read 8-byte length field");
+    else {
+        unsigned int len;
+        unsigned char * dataBuf;  /* malloced */
+
+        lengthBuf[8] = '\0';  /* string terminator */
+
+        len = atoi((char*) lengthBuf);
+
+        dataBuf = malloc(len+1);
+
+        if (!dataBuf)
+            pm_asprintf(errorP, "Unable to allocate %u byte read buffer", len);
+        else {
+            size_t itemsReadCt;
+
+            itemsReadCt = fread(dataBuf, len, 1, ifP);
+
+            if (itemsReadCt != 1)
+                pm_asprintf(errorP, "failed to read %u bytes from image", len);
+            else {
+                *errorP = NULL;
+
+                dataBuf[len] = '\0';
+
+                *dataP   = dataBuf;
+                *lengthP = len;
+            }
+            if (*errorP)
+                free(dataBuf);
+        }
+    }
+}
+
+
+
+static void
 doAtChunk(FILE *         const ifP,
           unsigned int * const colsP,
           unsigned int * const rowsP,
           unsigned int * const cmaplenP) {
 
-    unsigned char buf[4096];
     unsigned int len;
     unsigned int cols;
     unsigned int rows;
     unsigned int cmaplen;
-    size_t itemsReadCt;
+    unsigned char * data;  /* malloced */
+    const char * error;  /* malloced */
 
-    itemsReadCt =  fread(buf, 8, 1, ifP);
-    if (itemsReadCt != 1)
-        pm_error("bad attributes header");
+    readVariableLengthField(ifP, &data, &len, &error);
 
-    buf[8] = '\0';
+    if (error) {
+        pm_error("Failed to read attributes chunk.  %s", error);
+        pm_strfree(error);
+    } else {
+        sscanf((char*) data, "%4u%4u%4u", &cols, &rows, &cmaplen);
 
-    len = atoi((char*) buf);
+        if (cols > UINT_MAX/rows)
+            pm_message("height (%u) and width (%u) in header are "
+                       "uncomputably large", rows, cols);
 
-    itemsReadCt = fread(buf, len, 1, ifP);
-    if (itemsReadCt != 1)
-        pm_error("bad attributes buf");
+        if (cmaplen > UINT_MAX/3)
+            pm_message("colormap length (%u) in header is "
+                       "uncomputably large", cmaplen);
 
-    buf[len] = '\0';
+        *colsP    = cols;
+        *rowsP    = rows;
+        *cmaplenP = cmaplen;
 
-    sscanf((char*) buf, "%4u%4u%4u", &cols, &rows, &cmaplen);
-
-    if (cols > UINT_MAX/rows)
-        pm_message("height (%u) and width (%u) in header are "
-                   "uncomputably large", rows, cols);
-
-    if (cmaplen > UINT_MAX/3)
-        pm_message("colormap length (%u) in header is "
-                   "uncomputably large", cmaplen);
-
-    *colsP    = cols;
-    *rowsP    = rows;
-    *cmaplenP = cmaplen;
+        free(data);
+    }
 }
 
 
@@ -71,7 +124,6 @@ doCmChunk(FILE *         const ifP,
           pixel *        const colormap,
           unsigned int * const adjustedCmaplenP) {
 
-    unsigned char buf[4096];
     unsigned int i;
     unsigned int len;
     unsigned int adjustedCmaplen;
@@ -84,35 +136,35 @@ doCmChunk(FILE *         const ifP,
            because the image is corrupted in that case, but original didn't,
            and we don't mess with that.
         */
-    size_t itemsReadCt;
+    unsigned char * data;  /* malloced */
+    const char * error;  /* malloced */
 
-    itemsReadCt =  fread(buf, 8, 1, ifP);
-    if (itemsReadCt != 1)
-        pm_error("bad colormap header");
+    readVariableLengthField(ifP, &data, &len, &error);
 
-    buf[8] = '\0';
-
-    len = atoi((char*) buf);
-
-    itemsReadCt = fread(buf, len, 1, ifP);
-    if (itemsReadCt != 1)
-        pm_error("bad colormap buf");
-
-    if (len != cmaplen * 3) {
-        pm_message(
-            "cmaplen (%u) and colormap buf length (%u) do not match",
-            cmaplen, len);
-        if (len < cmaplen * 3)
-            adjustedCmaplen = len / 3;
-        else
+    if (error) {
+        pm_error("Failed to read colormap chunk.  %s", error);
+        pm_strfree(error);
+    } else {
+        if (len != cmaplen * 3) {
+            pm_message(
+                "cmaplen (%u) and colormap buf length (%u) do not match",
+                cmaplen, len);
+            if (len < cmaplen * 3)
+                adjustedCmaplen = len / 3;
+            else
+                adjustedCmaplen = cmaplen;
+        } else
             adjustedCmaplen = cmaplen;
-    } else
-        adjustedCmaplen = cmaplen;
 
-    for (i = 0; i < adjustedCmaplen; ++i)
-        PPM_ASSIGN(colormap[i], buf[3*i + 0], buf[3*i + 1], buf[3*i + 2]);
+        for (i = 0; i < adjustedCmaplen; ++i) {
+            PPM_ASSIGN(colormap[i],
+                       data[3*i + 0], data[3*i + 1], data[3*i + 2]);
+        }
 
-    *adjustedCmaplenP = adjustedCmaplen;
+        *adjustedCmaplenP = adjustedCmaplen;
+
+        free(data);
+    }
 }
 
 
