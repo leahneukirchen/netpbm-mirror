@@ -22,6 +22,34 @@
 
 
 static void
+readUint8(FILE *         const ifP,
+          unsigned int * const valueP,
+          const char **  const errorP) {
+/*----------------------------------------------------------------------------
+   Read an unsigned integer from the current position of file *ifP.
+   It is coded in ASCII decimal, 8 characters, right justified.
+-----------------------------------------------------------------------------*/
+    unsigned char buf[8+1];
+    size_t itemsReadCt;
+
+    itemsReadCt =  fread(buf, 8, 1, ifP);
+    if (itemsReadCt != 1)
+        pm_asprintf(errorP, "Failed to read 8-bytes from file");
+    else {
+        int intValue;
+
+        buf[8] = '\0';  /* string terminator */
+
+        intValue = atoi((char*) buf);
+
+        *errorP = NULL;
+        *valueP = intValue;
+    }
+}
+
+
+
+static void
 readVariableLengthField(FILE *           const ifP,
                         unsigned char ** const dataP,
                         unsigned int *   const lengthP,
@@ -38,19 +66,15 @@ readVariableLengthField(FILE *           const ifP,
    it as *dataP.  Return the length of the data (not including the NUL) as
    *lengthP.
 -----------------------------------------------------------------------------*/
-    unsigned char lengthBuf[8+1];
-    size_t itemsReadCt;
+    unsigned int len;
+    const char * error;
 
-    itemsReadCt =  fread(lengthBuf, 8, 1, ifP);
-    if (itemsReadCt != 1)
-        pm_asprintf(errorP, "Failed to read 8-byte length field");
-    else {
-        unsigned int len;
+    readUint8(ifP, &len, &error);
+    if (error) {
+        pm_asprintf(errorP, "Failed to read length field.  %s", error);
+        pm_strfree(error);
+    } else {
         unsigned char * dataBuf;  /* malloced */
-
-        lengthBuf[8] = '\0';  /* string terminator */
-
-        len = atoi((char*) lengthBuf);
 
         dataBuf = malloc(len+1);
 
@@ -179,41 +203,49 @@ doPdChunk(FILE *        const ifP,
           unsigned int  const cmaplen,
           FILE *        const ofP) {
 
-    unsigned char buf[4096];
-    pixel * pixelrow;
     unsigned int len;
-    unsigned int row;
-    size_t itemsReadCt;
+    const char * error;
 
-    itemsReadCt = fread(buf, 8, 1, ifP);
-    if (itemsReadCt != 1)
-        pm_error("bad pixel data header");
-    buf[8] = '\0';
-    len = atoi((char*) buf);
-    if (len != cols * rows)
-        pm_message(
-            "pixel data length (%u) does not match image size (%u)",
-            len, cols * rows);
+    readUint8(ifP, &len, &error);
+    if (error) {
+        pm_error("Failed to read pixel data length field.  %s", error);
+        pm_strfree(error);
+    } else {
+        unsigned char * buf; /* malloced */
+        pixel * pixelrow; /* malloced */
+        unsigned int row;
 
-    ppm_writeppminit(ofP, cols, rows, maxval, 0);
-    pixelrow = ppm_allocrow(cols);
+        if (len != cols * rows)
+            pm_message(
+                "pixel data length (%u) does not match image size (%u)",
+                len, cols * rows);
 
-    for (row = 0; row < rows; ++row) {
-        unsigned int col;
-        size_t itemsReadCt;
+        buf = malloc(cols);
 
-        itemsReadCt = fread(buf, 1, cols, ifP);
-        if (itemsReadCt != cols)
-            pm_error("EOF / read error");
+        if (!buf)
+            pm_error("Failed to allocate a buffer to read %u columns", cols);
 
-        for (col = 0; col < cols; ++col) {
-            if (haveColormap)
-                pixelrow[col] = colormap[buf[col]];
-            else
-                PPM_ASSIGN(pixelrow[col],
-                           buf[col], buf[col], buf[col]);
+        ppm_writeppminit(ofP, cols, rows, maxval, 0);
+        pixelrow = ppm_allocrow(cols);
+
+        for (row = 0; row < rows; ++row) {
+            unsigned int col;
+            size_t itemsReadCt;
+
+            itemsReadCt = fread(buf, 1, cols, ifP);
+            if (itemsReadCt != cols)
+                pm_error("EOF / read error");
+
+            for (col = 0; col < cols; ++col) {
+                if (haveColormap)
+                    pixelrow[col] = colormap[buf[col]];
+                else
+                    PPM_ASSIGN(pixelrow[col],
+                               buf[col], buf[col], buf[col]);
+            }
+            ppm_writeppmrow(ofP, pixelrow, cols, maxval, 0);
         }
-        ppm_writeppmrow(ofP, pixelrow, cols, maxval, 0);
+        free(buf);
     }
 }
 
