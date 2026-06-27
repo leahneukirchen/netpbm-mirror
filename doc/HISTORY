@@ -4,7 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-26.06.03 BJH  Release 11.14.01
+26.06.27 BJH  Release 11.15.00
+
+              Add pbmtobrush.
+
+              libnetpbm/pm_message: don't write nonprintable characters to
+              Standard Error; instead, print e.g. "0x23" or "\n".
 
               pamcut: fix incorrect behavior or crash with options that
               specify an uncomputably large column or row number (UINT_MAX).
@@ -14,8 +19,20 @@ CHANGE HISTORY
 
               ppmtopict: fix incorrect output with oversize input image.
 
-              pnmtojbig: fix empty output when input image is large.
-              Always broken (pnmtojbig was new in Netpbm 9.2 (May 2000)).
+              pnmtoddif: fix incorrect output at right edge.
+
+              pnmtoddif: fix undefined behavior with absurdly large image
+              dimensions or corrupted image header
+
+              Build: stop GCC compiler warnings related to compiler not
+              recognizing assertions by 'assert'.
+
+              Build with modified Netpbm that uses real libjasper: fix
+              compiler warning/error about bug in vestigial code.
+
+              makeman: make it just Python 3, as the old supposed 2+3 code
+              doesn't work on some systems.  Thanks R M HildigerR Vergaray
+              (moonsdad@gmail.com).
 
 26.03.31 BJH  Release 11.14.00
 

@@ -28,12 +28,13 @@ pnmindex -size 50 -across=2 -noquant testimg.ppm testimg.ppm testimg.ppm \
          testimg.ppm testimg.ppm testimg.ppm | tee ${pnmindex256_ppm} | cksum
 
 echo "Test 7. Should print 256 twice"
-pnmindex testimg.ppm | ppmhist -nomap -noheader | wc -l
-pnmindex -colors 256 testimg.ppm | ppmhist -nomap -noheader | wc -l
+pnmindex testimg.ppm | ppmhist -nomap -noheader | wc -l | tr -d ' '
+pnmindex -colors 256 testimg.ppm | ppmhist -nomap -noheader | wc -l | tr -d ' '
 
 echo "Test 8. Should print 100 twice"
-pnmindex -colors 100 testimg.ppm | ppmhist -nomap -noheader | wc -l
-pnmindex -colors 100 testimg.ppm testimg.ppm | ppmhist -nomap -noheader | wc -l
+pnmindex -colors 100 testimg.ppm | ppmhist -nomap -noheader | wc -l | tr -d ' '
+pnmindex -colors 100 testimg.ppm testimg.ppm | \
+    ppmhist -nomap -noheader | wc -l | tr -d ' '
 
 
 echo "Test 9. Should print match"

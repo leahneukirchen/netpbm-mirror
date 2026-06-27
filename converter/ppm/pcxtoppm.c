@@ -46,23 +46,24 @@
 
 #define PCX_MAXVAL      (pixval)255
 
-/* standard palette */
-static unsigned char const StdRed[]   = { 0, 255,   0,   0, 170, 170, 170, 170, 85,  85,  85,  85, 255, 255, 255, 255 };
-static unsigned char const StdGreen[] = { 0, 255, 170, 170,   0,   0, 170, 170, 85,  85, 255, 255,  85,  85, 255, 255 };
-static unsigned char const StdBlue[]  = { 0, 255,   0, 170,   0, 170,   0, 170, 85, 255,  85, 255,  85, 255,  85, 255 };
-
-static pixel stdPalette[16];
-
-
-
-static void
-generateStdPalette(void) {
-
-    unsigned int i;
-
-    for (i = 0; i < 16; ++i)
-        PPM_ASSIGN(stdPalette[i], StdRed[i], StdGreen[i], StdBlue[i]);
-}
+static pixel const stdPalette[16] = {
+    {   0,   0,   0 },
+    { 255, 255, 255 },
+    {   0, 170,   0 },
+    {   0, 170, 170 },
+    { 170,   0,   0 },
+    { 170,   0, 170 },
+    { 170, 170,   0 },
+    { 170, 170, 170 },
+    {  85,  85,  85 },
+    {  85,  85, 255 },
+    {  85, 255,  85 },
+    {  85, 255, 255 },
+    { 255,  85,  85 },
+    { 255,  85, 255 },
+    { 255, 255,  85 },
+    { 255, 255, 255 }
+};
 
 
 
@@ -480,7 +481,7 @@ pcx16ColToPpm(FILE *       const ifP,
    'pcxCmap' is the 16-color colormap in the PCX image header, or null if
    there isn't one.
 -----------------------------------------------------------------------------*/
-    pixel * cmap16;
+    const pixel * cmap16;
     unsigned int cols;
     unsigned int row;
     unsigned int rawcols;
@@ -690,8 +691,6 @@ main(int argc, const char *argv[]) {
     unsigned int width, height;
 
     pm_proginit(&argc, argv);
-
-    generateStdPalette();
 
     parseCommandLine(argc, argv, &cmdline);
 

@@ -360,6 +360,9 @@ pngx_setChrm(struct pngx *      const pngxP,
 
 
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type"
+
 const char *
 pngx_srgbIntentDesc(pngx_srgbIntent const srgbIntent) {
 
@@ -371,8 +374,12 @@ pngx_srgbIntentDesc(pngx_srgbIntent const srgbIntent) {
     }
     assert(false);
 }
+#pragma GCC diagnostic pop
 
 
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type"
 
 static int
 const libpngSrgbIntentCode(pngx_srgbIntent const srgbIntent) {
@@ -386,6 +393,7 @@ const libpngSrgbIntentCode(pngx_srgbIntent const srgbIntent) {
 
     assert(false);  /* All cases above return */
 }
+#pragma GCC diagnostic pop
 
 
 

@@ -31,6 +31,9 @@
 static long item, bitmask;
 static unsigned int bitsperitem, maxbitsperitem, bitshift;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type"
+
 static unsigned int
 wordSizeFmDepth(unsigned int const depth) {
 /*----------------------------------------------------------------------------
@@ -48,6 +51,7 @@ wordSizeFmDepth(unsigned int const depth) {
         assert(false);
     }
 }
+#pragma GCC diagnostic pop
 
 
 

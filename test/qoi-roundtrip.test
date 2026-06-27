@@ -148,7 +148,8 @@ rm ${noise1_pgm} ${tartan_ppm} ${test_rgb_alpha}
 echo "Test Invalid"
 
 test_out=${tmpdir}/test.out
-maze_qoi_size=$(cat ${maze_qoi} | wc -c)
+maze_qoi_size=$(cat ${maze_qoi} | wc -c | tr -d ' ')
+# tr step is for consistency with other tests
 
 echo 1>&2
 echo "Invalid command-line argument combinations." 1>&2

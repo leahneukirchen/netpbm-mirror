@@ -437,6 +437,10 @@ pnm_graytoxel(gray const inputGray) {
 }
 
 
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type"
+
 xel
 pnm_bittoxel(bit    const inputBit,
              xelval const maxval) {
@@ -448,6 +452,7 @@ pnm_bittoxel(bit    const inputBit,
         assert(false);
     }
 }
+#pragma GCC diagnostic pop
 
 
 

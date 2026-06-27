@@ -37,16 +37,19 @@ rm ${abcde_pgm}
 ramp_pgm=${tmpdir}/ramp.pgm
 
 echo "Test 4"
-pgmramp -lr -maxval=31 32 1 | tee ${ramp_pgm} | \
-    pnmhisteq | cmps -s - ${ramp_pgm} | \
-    echo "match" || echo "no match"
+pgmramp -lr -maxval=31 32 1 > ${ramp_pgm}
+
 pnmhisteq ${ramp_pgm} -gray | \
+    cmp -s - ${ramp_pgm} && \    
     echo "match" || echo "no match"
 pnmhisteq ${ramp_pgm} -noblack | \
+    cmp -s - ${ramp_pgm} && \	
     echo "match" || echo "no match"
 pnmhisteq ${ramp_pgm} -nowhite | \
+    cmp -s - ${ramp_pgm} && \		
     echo "match" || echo "no match"
 pnmhisteq ${ramp_pgm} -noblack -nowhite | \
+    cmp -s - ${ramp_pgm} && \	
     echo "match" || echo "no match"
 
 rm ${ramp_pgm}

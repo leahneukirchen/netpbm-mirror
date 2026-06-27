@@ -1,10 +1,11 @@
-#! /bin/bash
+#! /bin/sh
 # This script tests: pamtopdbimg
 # Also requires: pgmmake pgmnoise
 
 tmpdir=${tmpdir:-/tmp}
 mono_pgm=${tmpdir}/graymono.pgm
 noise_pgm=${tmpdir}/graynoise.pgm
+out_pdbimg=${tmpdir}/out.pdbimg
 text65533=${tmpdir}/ascii65533.txt
 text65534=${tmpdir}/ascii65534.txt
 text65597=${tmpdir}/ascii65597.txt
@@ -35,17 +36,17 @@ echo poor compression
 pgmnoise -maxval=15 -randomseed=0 160 160 > ${noise_pgm}
 for flag in "-compressed" "-maybecompressed" "-uncompressed"
    do
-   pamtopdbimg $flag ${noise_pgm} | wc -c
+   pamtopdbimg $flag ${noise_pgm} | wc -c | tr -d ' '
    done  | uniq -c | awk '{print $1}'
 rm ${noise_pgm}
 
 
 # Test 3. long titles
 # Should succeed twice and fail once, producing:
-# 268
 # 0
 # 268
 # 0
+# 268
 # 1
 # 0
 
@@ -56,20 +57,22 @@ echo long titles
 for flag in "" "-title=0123456789012345678901234567890" \
                "-title=01234567890123456789012345678901"
    do
-   pamtopdbimg $flag testgrid.pbm | wc -c | tr -d ' '
-   echo ${PIPESTATUS[0]}
+       pamtopdbimg $flag testgrid.pbm > ${out_pdbimg}
+       echo $?
+       cat ${out_pdbimg} | wc -c | tr -d ' '
+       rm ${out_pdbimg}
    done
-
 
 
 # Test 4. large notefile
 # Should succeed twice and fail once, producing:
+# 0
 # 3344
 # 0
-# 68886
-# 0
+# 68885
 # 1
 # 0
+
 echo large notefile 
 awk 'BEGIN { ABC="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
              abc="abcdefghijklmnopqrstuvwxyz";
@@ -82,14 +85,19 @@ awk 'BEGIN { ABC="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 head -c 65533 ${text65597} > ${text65533}
 head -c 65534 ${text65597} > ${text65534}
-pamtopdbimg -uncompressed maze.pbm | \
-  wc -c | tr -d ' '
-  echo ${PIPESTATUS[0]}
-pamtopdbimg -uncompressed -notefile=${text65533} maze.pbm | \
-  wc -c | tr -d ' '
-  echo ${PIPESTATUS[0]}
-pamtopdbimg -uncompressed -notefile=${text65534} maze.pbm | \
-  wc -c | tr -d ' '
-  echo ${PIPESTATUS[0]}
+rm ${text65597}
 
-rm ${text65533} ${text65534} ${text65597}
+pamtopdbimg -uncompressed maze.pbm > ${out_pdbimg}
+    echo $?
+    cat ${out_pdbimg} | wc -c | tr -d ' '
+    rm ${out_pdbimg}
+
+pamtopdbimg -uncompressed -notefile=${text65533} maze.pbm > ${out_pdbimg}
+    echo $?
+    cat ${out_pdbimg} | wc -c | tr -d ' '
+    rm ${text65533} ${out_pdbimg} 
+
+pamtopdbimg -uncompressed -notefile=${text65534} maze.pbm > ${out_pdbimg}
+    echo $?
+    cat ${out_pdbimg} | wc -c | tr -d ' '
+    rm ${text65534} ${out_pdbimg}

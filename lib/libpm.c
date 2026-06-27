@@ -205,6 +205,57 @@ pm_usage(const char usage[]) {
 
 
 
+static const char *
+printableMessage(const char * const msg) {
+/*----------------------------------------------------------------------------
+   A message consisting only of printable ASCII characters.  Where 'msg'
+   contains something else, we return something of the form "\x23", except
+   in the case of newline, where it is "\n".
+
+   Return value is memory freeable with 'pm_strfree'.
+-----------------------------------------------------------------------------*/
+    size_t const maxMsgLen = 4*strlen(msg) + 1;
+        /* Max length of returned value for any input: every character is
+           rendered in hexadecimal (e.g. "\x07"), plus the terminating NUL.
+        */
+
+    const char * retval;
+    char * buffer;
+
+    MALLOCARRAY(buffer, maxMsgLen);
+
+    if (!buffer) {
+        pm_asprintf(&retval, "[Out of memory for %lu-byte message",
+                    (unsigned long)strlen(msg));
+        /* Note: If _really_ out of memory, pm_asprint returns pm_strsol() */
+    } else {
+        unsigned int inCursor, outCursor;
+
+        for (inCursor = 0, outCursor = 0; inCursor < strlen(msg); ++inCursor) {
+            char const c = msg[inCursor];
+            if (isprint(c))
+                buffer[outCursor++] = c;
+            else if (c == '\n') {
+                buffer[outCursor++] = '\\';
+                buffer[outCursor++] = 'n';
+            } else {
+                snprintf(&buffer[outCursor], 5, "\\x%02X", c);
+                outCursor += 4;
+                assert(outCursor <= maxMsgLen);
+            }
+        }
+        buffer[outCursor++] = '\0';
+
+        assert(outCursor <= maxMsgLen);
+
+        retval = buffer;
+    }
+
+    return retval;
+}
+
+
+
 void PM_GNU_PRINTF_ATTR(1,2)
 pm_message(const char format[], ...) {
 
@@ -218,8 +269,13 @@ pm_message(const char format[], ...) {
 
         if (userMessageFn)
             userMessageFn(msg);
-        else
-            fprintf(stderr, "%s: %s\n", pm_progname, msg);
+        else {
+            const char * const printableMsg = printableMessage(msg);
+
+            fprintf(stderr, "%s: %s\n", pm_progname, printableMsg);
+
+            pm_strfree(printableMsg);
+        }
 
         pm_strfree(msg);
     }
@@ -390,6 +446,9 @@ pm_keymatch(const char * const strarg,
 
 /* Log base two hacks. */
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type"
+
 int
 pm_maxvaltobits(int const maxval) {
     if (maxval <= 1)
@@ -429,6 +488,7 @@ pm_maxvaltobits(int const maxval) {
 
     assert(false);
 }
+#pragma GCC diagnostic pop
 
 
 
