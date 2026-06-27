@@ -1200,6 +1200,9 @@ initialBackgroundColor(const struct pam *  const outpamP,
 
 
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type"
+
 static unsigned int
 leftPadAmount(const struct pam * const outpamP,
               const struct pam * const inpamP,
@@ -1212,6 +1215,7 @@ leftPadAmount(const struct pam * const outpamP,
     }
     assert(false);
 }
+#pragma GCC diagnostic pop
 
 
 

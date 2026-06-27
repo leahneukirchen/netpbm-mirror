@@ -253,6 +253,9 @@ computeColormap(pixel **           const pixels,
 
 
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type"
+
 static unsigned int
 nextPowerOf2(unsigned int const arg) {
 /*----------------------------------------------------------------------------
@@ -268,6 +271,7 @@ nextPowerOf2(unsigned int const arg) {
             assert(false);
         }
 }
+#pragma GCC diagnostic pop
 
 
 

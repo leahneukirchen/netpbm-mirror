@@ -446,6 +446,9 @@ pm_keymatch(const char * const strarg,
 
 /* Log base two hacks. */
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type"
+
 int
 pm_maxvaltobits(int const maxval) {
     if (maxval <= 1)
@@ -485,6 +488,7 @@ pm_maxvaltobits(int const maxval) {
 
     assert(false);
 }
+#pragma GCC diagnostic pop
 
 
 

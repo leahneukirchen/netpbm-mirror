@@ -561,9 +561,14 @@ writeCommentExtension(FILE * const ofP,
  */
 
 
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-const-variable"
+
 static StringCode const maxCodeLimitLzw = (StringCode)1 << BITS;
        /* One beyond the largest string code that can exist in GIF */
        /* Used only in assertions  */
+#pragma GCC diagnostic pop
 
 
 struct HashTableEntry {

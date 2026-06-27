@@ -24,6 +24,9 @@ not yet  BJH  Release 11.15.00
               pnmtoddif: fix undefined behavior with absurdly large image
               dimensions or corrupted image header
 
+              Build: stop GCC compiler warnings related to compiler not
+              recognizing assertions by 'assert'.
+
               Build with modified Netpbm that uses real libjasper: fix
               compiler warning/error about bug in vestigial code.
 
