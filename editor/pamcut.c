@@ -201,10 +201,16 @@ parseCommandLine(int argc, const char ** const argv,
             cmdlineP->botLoc.n = -(heightArg - 1);
         }
     } else {
+        /* Note that we have to be able to represent the image height and
+           width as unsigned integers, which limits the value of the right
+           column and bottom row number to UINT_MAX-1.
+        */
         if (leftSpec && cropleftSpec)
             pm_error("You cannot specify both -left and -cropleft");
         if (leftSpec) {
             if (left >= 0) {
+                if (left > UINT_MAX-1)
+                    pm_error("-left value %u is uncomputably large", left);
                 cmdlineP->leftLoc.locType = LOCTYPE_FROMNEAR;
                 cmdlineP->leftLoc.n       = left;
             } else {
@@ -212,6 +218,8 @@ parseCommandLine(int argc, const char ** const argv,
                 cmdlineP->leftLoc.n       = -left;
             }
         } else if (cropleftSpec) {
+            if (cropleft > UINT_MAX-1)
+                pm_error("-cropleft value %u is uncomputably large", cropleft);
             cmdlineP->leftLoc.locType = LOCTYPE_FROMNEAR;
             cmdlineP->leftLoc.n       = cropleft;
         } else
@@ -221,6 +229,8 @@ parseCommandLine(int argc, const char ** const argv,
             pm_error("You cannot specify both -right and -cropright");
         if (rightSpec) {
             if (right >= 0) {
+                if (right > UINT_MAX-1)
+                    pm_error("-right value %u is uncomputably large", right);
                 cmdlineP->rghtLoc.locType = LOCTYPE_FROMNEAR;
                 cmdlineP->rghtLoc.n       = right;
             } else {
@@ -228,6 +238,9 @@ parseCommandLine(int argc, const char ** const argv,
                 cmdlineP->rghtLoc.n       = -right;
             }
         } else if (croprightSpec) {
+            if (cropright > UINT_MAX-1)
+                pm_error("-cropright value %u is uncomputably large",
+                         cropright);
             cmdlineP->rghtLoc.locType = LOCTYPE_FROMFAR;
             cmdlineP->rghtLoc.n       = 1 + cropright;
         } else
@@ -237,6 +250,8 @@ parseCommandLine(int argc, const char ** const argv,
             pm_error("You cannot specify both -top and -croptop");
         if (topSpec) {
             if (top >= 0) {
+                if (top > UINT_MAX-1)
+                    pm_error("-top value %u is uncomputably large", top);
                 cmdlineP->topLoc.locType = LOCTYPE_FROMNEAR;
                 cmdlineP->topLoc.n       = top;
             } else {
@@ -244,6 +259,8 @@ parseCommandLine(int argc, const char ** const argv,
                 cmdlineP->topLoc.n       = -top;
             }
         } else if (croptopSpec) {
+            if (croptop > UINT_MAX-1)
+                pm_error("-croptop value %u is uncomputably large", croptop);
             cmdlineP->topLoc.locType = LOCTYPE_FROMNEAR;
             cmdlineP->topLoc.n       = croptop;
         } else
@@ -253,6 +270,8 @@ parseCommandLine(int argc, const char ** const argv,
             pm_error("You cannot specify both -bottom and -cropbottom");
         if (bottomSpec) {
             if (bottom >= 0) {
+                if (bottom > UINT_MAX-1)
+                    pm_error("-bottom value %u is uncomputably large", bottom);
                 cmdlineP->botLoc.locType = LOCTYPE_FROMNEAR;
                 cmdlineP->botLoc.n       = bottom;
             } else {
@@ -260,12 +279,16 @@ parseCommandLine(int argc, const char ** const argv,
                 cmdlineP->botLoc.n       = -bottom;
             }
         } else if (cropbottomSpec) {
+            if (cropbottom > UINT_MAX-1)
+                pm_error("-cropbottom value %u is uncomputably large",
+                         cropbottom);
             cmdlineP->botLoc.locType = LOCTYPE_FROMFAR;
             cmdlineP->botLoc.n       = 1 + cropbottom;
         } else
             cmdlineP->botLoc.locType = LOCTYPE_NONE;
     }
 }
+
 
 
 static int

@@ -52,6 +52,12 @@ main(int argc, char *argv[]) {
         pm_error("You specified a sample height (%u rows) which is greater "
                  "than the image height (%u rows)", height, rows);
 
+    if (width > INT_MAX / height)
+        pm_error("You specified a convolution kernel which is "
+                 "too large for this program to process "
+                 "(%d cols, %d rows)",
+                 width, height);
+
     outrow = pgm_allocrow(cols) ;
     maxval = MIN(PGM_OVERALLMAXVAL, width*height);
     pgm_writepgminit(stdout, cols, rows, maxval, 0) ;
