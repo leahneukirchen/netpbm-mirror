@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.15.00
 
+              Add pbmtobrush.
+
               libnetpbm/pm_message: don't write nonprintable characters to
               Standard Error; instead, print e.g. "0x23" or "\n".
 
