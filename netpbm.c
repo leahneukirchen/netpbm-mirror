@@ -38,14 +38,12 @@ main(int argc, char *argv[]) {
         ++argv;
         --argc;
         if (argc < 1 || !*argv) {
-            fprintf(stderr,
-                    "When you invoke this program by the name 'netpbm', "
+            pm_error("When you invoke this program by the name 'netpbm', "
                     "You must supply at least one argument: the name of "
                     "the Netpbm program to run, e.g. "
-                    "'netpbm pamfile /tmp/myfile.ppm'\n");
-            exit(1);
-                }
+                    "'netpbm pamfile /tmp/myfile.ppm'");
         }
+    }
 
     cp = pm_arg0toprogname(argv[0]);
 
@@ -58,9 +56,7 @@ main(int argc, char *argv[]) {
 
 #include "mergetrylist"
 
-    fprintf(stderr,"'%s' is an unknown Netpbm program name \n", cp );
-
-    exit(1);
+    pm_error("'%s' is an unknown Netpbm program name", cp);
 }
 
 
