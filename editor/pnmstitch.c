@@ -1624,7 +1624,7 @@ SliverMatch(Stitcher * me, Image * Left, Image * Right,
     }
     if ((me->width > (Right->pam.width/2))
      || (me->width > (Left->pam.width/2))) {
-        pm_error ("stitch sample too wide %d\n", me->width);
+        pm_error ("stitch sample too wide %d", me->width);
         /* NOTREACHED */
     }
     if (me->height == INT_MAX) {
@@ -1632,7 +1632,7 @@ SliverMatch(Stitcher * me, Image * Left, Image * Right,
     }
     if ((me->height > Right->pam.height)
      || (me->height > Left->pam.height)) {
-        pm_error ("stitch sample too high %d\n", me->height);
+        pm_error ("stitch sample too high %d", me->height);
         /* NOTREACHED */
     }
     yDiff = (Right->pam.height * skip_sliver) / image_portion;

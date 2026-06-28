@@ -37,7 +37,7 @@ pgm_writepgminit(FILE * const fileP,
     pgm_validateComputableMaxval(maxval);
 
     if (maxval > PGM_OVERALLMAXVAL && !plainFormat)
-        pm_error("too-large maxval passed to ppm_writepgminit(): %d.\n"
+        pm_error("too-large maxval passed to ppm_writepgminit(): %d.  "
                  "Maximum allowed by the PGM format is %d.",
                  maxval, PGM_OVERALLMAXVAL);
 

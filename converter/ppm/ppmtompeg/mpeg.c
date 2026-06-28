@@ -354,7 +354,7 @@ outputIFrame(MpegFrame * const frameP,
         }
 
         if (!realQuiet)
-            pm_message("Creating new GOP (closed = %s) before frame %d\n",
+            pm_message("Creating new GOP (closed = %s) before frame %d",
                        closed ? "YES" : "NO", frameP->id);
 
         ++num_gop;

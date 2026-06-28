@@ -65,7 +65,7 @@ parseCommandLine(int argc, const char ** argv,
         cmdlineP->background = NULL;
 
     if (argc-1 < 1)
-        pm_error("Need an argument:  the shear angle.\n");
+        pm_error("Need an argument:  the shear angle");
     else {
         char *endptr;
         cmdlineP->angle = strtod(argv[1], &endptr) * M_PI / 180;
@@ -77,8 +77,8 @@ parseCommandLine(int argc, const char ** argv,
         else {
             cmdlineP->inputFileName = argv[2];
             if (argc-1 > 2)
-                pm_error("too many arguments (%d).  "
-                         "The only arguments are shear angle and filespec.",
+                pm_error("Too many arguments (%d).  "
+                         "The only arguments are shear angle and filespec",
                          argc-1);
         }
     }

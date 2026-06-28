@@ -139,7 +139,7 @@ DIG             [0-9]
                        BEGIN (0);
                        }
 
-<RASTERMODE>[.\0\n]    { pm_error ("Unexpected character (%#x) in raster mode.\n", yytext[0]); }
+<RASTERMODE>[.\0\n]    { pm_error ("Unexpected character (%#x) in raster mode.", yytext[0]); }
 
 \033\&l{DIG}+.         { debug ("Match <esc>&l\n"); }
 \033\*r{DIG}+S         { debug ("Match <esc>*r#S\n"); }

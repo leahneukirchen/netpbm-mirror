@@ -1087,7 +1087,7 @@ executeGhostscript(char                    const inputFileName[],
 
         if (gsTermStatus != 0) {
             if (WIFEXITED(gsTermStatus))
-                pm_error("Ghostscript failed.  Exit code=%d\n",
+                pm_error("Ghostscript failed.  Exit code=%d",
                          WEXITSTATUS(gsTermStatus));
             else if (WIFSIGNALED(gsTermStatus))
                 pm_error("Ghostscript process died because of a signal %d.",

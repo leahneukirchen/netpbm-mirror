@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+26.06.28 BJH  Release 11.15.01
+
+              various: fix literal "\n" in messages.  Introduced in Netpbm
+              11.15.00 (June 2026).
+
 26.06.27 BJH  Release 11.15.00
 
               Add pbmtobrush.

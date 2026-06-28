@@ -748,7 +748,7 @@ validateGlyphLimits(const struct font2 * const font2P,
         pbm_maxfontwidth()
         ) {
 
-        pm_error("Font metric(s) for char '%s' out of bounds.\n", charName);
+        pm_error("Font metric(s) for char '%s' out of bounds", charName);
     }
 }
 

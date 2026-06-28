@@ -53,12 +53,12 @@ printPbm(FILE * const ifP) {
 
     ppa_init_job(&printer);
 
-    while(make_pbm_stat(&pbm, ifP)) {
+    while (make_pbm_stat(&pbm, ifP)) {
         if (pbm.width != Width || pbm.height != Height)
             pm_error("print_pbm(): Input image is not the size "
                     "of a page for Page %d.  "
                     "The input is %dW x %dH, "
-                     "while a page is %dW x %dH pixels.\n"
+                     "while a page is %dW x %dH pixels.  "
                     "Page size is controlled by options and the configuration "
                     "file.",
                      numpages+1, pbm.width, pbm.height, Width, Height);

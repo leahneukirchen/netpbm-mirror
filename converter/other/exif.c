@@ -666,7 +666,7 @@ processDirEntry(const unsigned char *  const dirEntry,
             /* Bogus pointer offset and / or bytecount value */
             pm_message("Illegal pointer offset value in EXIF "
                        "for tag %04x.  "
-                       "Offset %d bytes %d ExifLen %d\n",
+                       "Offset %d bytes %d ExifLen %d",
                        tag, offsetVal, valueSz, exifLength);
             return;
         }

@@ -108,11 +108,11 @@ validateChannels(int          const n_channel,
                  unsigned int const channels[],
                  int          const depth) {
 
-    int i;
+    unsigned int i;
 
-    for (i = 0; i < n_channel; i++)
+    for (i = 0; i < n_channel; ++i)
         if (channels[i] > depth-1)
-            pm_error("You specified channel number %d.  The highest numbered\n"
+            pm_error("You specified channel number %u.  The highest numbered "
                      "channel in the input image is %d.",
                      channels[i], depth-1);
 }

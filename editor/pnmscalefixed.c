@@ -141,7 +141,7 @@ parse_command_line(int argc, char ** argv,
         /* parameters are xbox, ybox, and optional filespec */
         scale_parm = 0.0;
         if (argc-1 < 2)
-            pm_error("You must supply at least two parameters with -xysize:\n "
+            pm_error("You must supply at least two parameters with -xysize:  "
                      "x and y dimensions of the bounding box.");
         else if (argc-1 > 3)
             pm_error("Too many arguments.  With -xysize, you need 2 or 3 "
@@ -164,7 +164,7 @@ parse_command_line(int argc, char ** argv,
             /* parameters are scale factor and optional filespec */
             if (argc-1 < 1)
                 pm_error("With no dimension options, you must supply at least "
-                         "one parameter: \nthe scale factor.");
+                         "one parameter:  the scale factor.");
             else {
                 scale_parm = atof(argv[1]);
 

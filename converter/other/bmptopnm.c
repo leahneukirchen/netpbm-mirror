@@ -1024,7 +1024,7 @@ allocBmpRaster(unsigned int const rows,
     bmpRaster = (unsigned char **) malloc(storageSize);
 
     if (bmpRaster == NULL)
-        pm_error("Unable to allocate %u bytes for the BMP raster\n",
+        pm_error("Unable to allocate %u bytes for the BMP raster",
                  storageSize);
 
     startOfRows = (unsigned char *)(bmpRaster + rows);

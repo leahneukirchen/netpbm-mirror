@@ -21,6 +21,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include <string.h>
+#include <stdio.h>
 #include <assert.h>
 
 #include "pm_c_util.h"
@@ -551,7 +552,7 @@ readIconFile(FILE * const ifP,
        for the icons.
     */
     if (verbose)
-        pm_message("#\tColors\tBPP\tWidth\tHeight\n");
+        fprintf(stderr, "#\tColors\tBPP\tWidth\tHeight\n");
 
     for (i = 0; i < MSIconDataP->count; ++i) {
         IC_Entry * const entryP = MSIconDataP->entries[i];
@@ -583,9 +584,9 @@ readIconFile(FILE * const ifP,
         if (verbose) {
             char colsText[10];
             sprintf (colsText, "%d", entryP->color_count);
-            pm_message("%d\t%s\t%d\t%d\t%d\n", i,
-                       entryP->color_count ? colsText : "TRUE",
-                       bpp, entryP->width, entryP->height);
+            fprintf(stderr, "%d\t%s\t%d\t%d\t%d\n", i,
+                    entryP->color_count ? colsText : "TRUE",
+                    bpp, entryP->width, entryP->height);
         }
         /* Pixels are stored bottom-up, left-to-right. Pixel lines are
          * padded with zeros to end on a 32bit (4byte) boundary. Every

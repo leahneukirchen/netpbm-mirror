@@ -271,11 +271,11 @@ main(int argc, const char **argv) {
     /* Read MDA file header */
 
     if (fread(header, 1, 128, ifP) < 128)
-        pm_error("Not a .MDA file\n");
+        pm_error("Not a .MDA file");
 
     if (strncmp((char*) header, ".MDA", 4) &&
         strncmp((char*) header, ".MDP", 4))
-        pm_error("Not a .MDA file\n");
+        pm_error("Not a .MDA file");
 
     {
         short yy;

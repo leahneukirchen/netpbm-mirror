@@ -479,7 +479,7 @@ main(int argc, const char ** argv) {
          strlen( manufcode ) != 5 || ( ! alldig ( manufcode ) ) ||
          strlen( prodcode ) != 5 || ( ! alldig ( prodcode ) ) )
         pm_error(
-            "type code must be one digit, and\n    manufacturer and product codes must be five digits" );
+            "type code must be one digit, and manufacturer and product codes must be five digits" );
     p = typecode[0] - '0';
     lc0 = manufcode[0] - '0';
     lc1 = manufcode[1] - '0';

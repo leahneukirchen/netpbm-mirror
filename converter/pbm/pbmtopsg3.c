@@ -284,7 +284,7 @@ doPage(FILE *       const ifP,
 
     bitrow = pbm_allocrow(cols);
 
-    pm_message("[%u]\n", pageNum);
+    pm_message("[%u]", pageNum);
 
     printf ("%%%%Page: %u %u\n", pageNum, pageNum);
     printf ("%u %u 1 [ %f 0 0 %f 0 %u ]\n"
