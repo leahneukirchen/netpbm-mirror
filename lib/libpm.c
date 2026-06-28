@@ -699,7 +699,7 @@ showNetpbmHelp(const char progname[]) {
                    "Bryan Henderson (bryanh@giraffe-data.com) for help.");
     else
         pm_message("This program is part of the Netpbm package.  Find "
-                   "documentation for it at %s/%s\n", docurl, progname);
+                   "documentation for it at %s/%s", docurl, progname);
 }
 
 

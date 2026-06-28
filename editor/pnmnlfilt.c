@@ -1002,7 +1002,7 @@ main(int argc, char *argv[]) {
     pnm_readpnminit(ifP, &cols, &rows, &maxval, &format);
 
     if (maxval > MXIVAL)
-        pm_error("The maxval of the input image (%d) is too large.\n"
+        pm_error("The maxval of the input image (%d) is too large.  "
                  "This program's limit is %d.",
                  maxval, MXIVAL);
 

@@ -75,9 +75,8 @@ parseCommandLine(int argc, const char ** argv,
 
     if (!strstr(cmdlineP->outputFilePattern, "%d"))
         pm_error("output file spec pattern parameter must include the "
-                 "string '%%d',\n"
-                 "to stand for the image sequence number.\n"
-                 "You specified '%s'.", cmdlineP->outputFilePattern);
+                 "string '%%d', to stand for the image sequence number.  "
+                 "You specified '%s'", cmdlineP->outputFilePattern);
 }
 
 

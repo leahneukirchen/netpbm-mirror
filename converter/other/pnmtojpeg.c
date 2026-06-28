@@ -1207,7 +1207,7 @@ main(int           argc,
     /* Open the pnm input */
     pnm_readpnminit(ifP, &width, &height, &maxval, &inputFmt);
     if (cmdline.verbose) {
-        pm_message("Input file has format %c%c.\n"
+        pm_message("Input file has format %c%c.  "
                    "It has %d rows of %d columns of pixels "
                    "with max sample value of %d.",
                    (char) (inputFmt/256), (char) (inputFmt % 256),

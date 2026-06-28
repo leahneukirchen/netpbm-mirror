@@ -1075,7 +1075,7 @@ pm_tell2(FILE *       const fileP,
     pm_filepos const filepos = FTELLO(fileP);
     if (filepos < 0)
         pm_error("ftello() to get current file position failed.  "
-                 "Errno = %s (%d)\n", strerror(errno), errno);
+                 "Errno = %s (%d)", strerror(errno), errno);
 
     if (fileposSize == sizeof(pm_filepos)) {
         pm_filepos * const fileposP_filepos = fileposP;
@@ -1247,8 +1247,8 @@ pm_check(FILE *               const file,
         rc = fstat(fileno(file), &statbuf);
         if (rc != 0)
             pm_error("fstat() failed to get size of file, though ftello() "
-                     "successfully identified\n"
-                     "the current position.  Errno=%s (%d)",
+                     "successfully identified the current position.  "
+                     "Errno=%s (%d)",
                      strerror(errno), errno);
         else if (!S_ISREG(statbuf.st_mode)) {
             /* Not a regular file; we can't know its size */
@@ -1258,8 +1258,8 @@ pm_check(FILE *               const file,
 
             if (have_raster_size < need_raster_size)
                 pm_error("File has invalid format.  The raster should "
-                         "contain %u bytes, but\n"
-                         "the file ends after only %u bytes.",
+                         "contain %u bytes, but "
+                         "the file ends after only %u bytes",
                          (unsigned int) need_raster_size,
                          (unsigned int) have_raster_size);
             else if (have_raster_size > need_raster_size) {

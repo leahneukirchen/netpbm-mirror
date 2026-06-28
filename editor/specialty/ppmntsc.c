@@ -360,7 +360,7 @@ reportMapping(pixel const oldPixel,
 
     if (!PPM_EQUAL(oldPixel, newPixel) &&
         (firstTime || PPM_EQUAL(oldPixel, lastChangedPixel))) {
-        pm_message("Mapping %u %u %u -> %u %u %u\n",
+        pm_message("Mapping %u %u %u -> %u %u %u",
                    PPM_GETR(oldPixel),
                    PPM_GETG(oldPixel),
                    PPM_GETB(oldPixel),

@@ -231,7 +231,7 @@ parseCommandLine(int argc, char ** argv,
     else if (argc - 1 == 1)
         cmdlineP->inputFilename = strdup(argv[1]);
     else
-        pm_error("Too many arguments.  The only argument accepted\n"
+        pm_error("Too many arguments.  The only argument accepted "
                  "is the input file specification");
 
 }

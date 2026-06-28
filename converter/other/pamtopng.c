@@ -704,7 +704,7 @@ pngLineSize(struct pngx * const pngxP) {
     }
 
     if (UINT_MAX / bytesPerSample / samplesPerPixel < pngx_imageWidth(pngxP)) {
-        pm_error("pngcopy: width %u of PNG is uncomputably large\n",
+        pm_error("pngcopy: width %u of PNG is uncomputably large",
                   pngx_imageWidth(pngxP));
     }
 

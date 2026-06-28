@@ -383,7 +383,7 @@ readDirectory(TIFF *               const tiffP,
     fldPresent = TIFFGetField(tiffP, TIFFTAG_PHOTOMETRIC, &headerP->photomet);
     if (!fldPresent)
         pm_error("PHOTOMETRIC tag is not in Tiff file.  "
-                 "TIFFGetField() of it failed.\n"
+                 "TIFFGetField() of it failed.  "
                  "This means the input is not valid Tiff.");
 
     if (headerP->spp > 1)

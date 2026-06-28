@@ -100,7 +100,7 @@ main(int argc, const char **argv) {
     ppm_readppminit(ifP, &cols, &rows, &maxval, &format);
 
     if (cols % 2 != 0)
-        pm_error("Image must have even number of columns.\n"
+        pm_error("Image must have even number of columns.  "
                  "This image is %u columns wide.  Try Pamcut.", cols);
 
     pixelrow = ppm_allocrow(cols);
