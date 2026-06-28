@@ -82,15 +82,15 @@ main(int argc, const char ** argv)  {
     bitrow = pbm_allocrow_packed(cols + 16);
 
     for (row = 0; row < rows; ++row) {
-        unsigned int const inRowBytes = ((cols + 15) / 16) * 2;
+        unsigned int const inRowByteCt = ((cols + 15) / 16) * 2;
         unsigned int i;
-        size_t bytesRead;
+        size_t bytesReadCt;
 
-        bytesRead = fread (bitrow, 1, inRowBytes, ifP);
-        if (bytesRead != inRowBytes)
+        bytesReadCt = fread(bitrow, 1, inRowByteCt, ifP);
+        if (bytesReadCt != inRowByteCt)
             pm_error("Error reading a row of data from brushfile");
 
-        for (i = 0; i < inRowBytes; ++i)
+        for (i = 0; i < inRowByteCt; ++i)
             bitrow[i] = ~bitrow[i];
 
         /* Clean off remainder of fractional last character */
