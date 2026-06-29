@@ -241,6 +241,7 @@ atk-roundtrip.test
 avs-roundtrip.test
 bmp-roundtrip.test
 bmp-quant-roundtrip.test
+brush-roundtrip.test
 cis-roundtrip.test
 cmuw-roundtrip.test
 facesaver-roundtrip.test
