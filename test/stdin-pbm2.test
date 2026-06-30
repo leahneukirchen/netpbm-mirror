@@ -1,5 +1,6 @@
 #! /bin/sh
 # This script tests: atktopbm pbmtoatk
+# This script tests: brusthtopbm pbmtobrush
 # This script tests: cistopbm pbmtocis
 # This script tests: cmuwmtopbm pbmtocmuwm
 # This script tests: escp2topbm pbmtoescp2
@@ -23,6 +24,7 @@ out4=${tmpdir}/out4
 
 for fmt in  \
         atk \
+        brush \
         cis \
         cmuwm \
         escp2 \

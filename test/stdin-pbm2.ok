@@ -1,5 +1,7 @@
 pbmtoatk: 0 0 0 0
 atktopbm: 0 0 0 0
+pbmtobrush: 0 0 0 0
+brushtopbm: 0 0 0 0
 pbmtocis: 0 0 0 0
 cistopbm: 0 0 0 0
 pbmtocmuwm: 0 0 0 0
