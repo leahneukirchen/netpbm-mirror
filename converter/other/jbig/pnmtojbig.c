@@ -38,6 +38,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
+
 #include <jbig.h>
 
 #include "pm_c_util.h"
@@ -47,56 +49,51 @@
 static unsigned long total_length = 0;
   /* used for determining output file length */
 
-/*
- * malloc() with exception handler
- */
 static void
-*checkedmalloc(size_t n)
-{
-  void *p;
+dataOut(unsigned char * const start,
+        size_t          const len,
+        void *          const fileP) {
+/*----------------------------------------------------------------------------
+  Callback procedure which is used by JBIG encoder to deliver the
+  encoded data. It simply sends the bytes to the output file.
+-----------------------------------------------------------------------------*/
+    fwrite(start, len, 1, (FILE *) fileP);
 
-  if ((p = malloc(n)) == NULL) {
-    fprintf(stderr, "Sorry, not enough memory available!\n");
-    exit(1);
-  }
-
-  return p;
-}
-
-
-
-/*
- * Callback procedure which is used by JBIG encoder to deliver the
- * encoded data. It simply sends the bytes to the output file.
- */
-static void data_out(unsigned char *start, size_t len, void *file)
-{
-  fwrite(start, len, 1, (FILE *) file);
-  total_length += len;
-  return;
+    total_length += len;
 }
 
 
 
 static void
-readPbm(FILE *            const fin,
+readPbm(FILE *            const ifP,
         unsigned int      const cols,
         unsigned int      const rows,
         unsigned char *** const bitmapP) {
 
-    unsigned int const bytes_per_line = pbm_packed_bytes(cols);
+    unsigned int const bytesPerLine = pbm_packed_bytes(cols);
 
     unsigned char ** bitmap;
 
     /* Read the input image into bitmap[] */
     /* Shortcut for PBM */
-    int row;
-    bitmap = (unsigned char **) checkedmalloc(sizeof(unsigned char *));
-    bitmap[0] = (unsigned char *) checkedmalloc(bytes_per_line * rows);
+    unsigned int row;
 
-    for (row = 0; row < rows; row++)
-        pbm_readpbmrow_packed(fin, &bitmap[0][row*bytes_per_line],
+    MALLOCVAR_NOFAIL(bitmap);
+
+    if (UINT_MAX / bytesPerLine > rows)
+        pm_error("Image is uncomputably large");
+
+    MALLOCARRAY(bitmap[0], bytesPerLine * rows);
+
+    if (!bitmap[0]) {
+        pm_error("Failed to allocate a buffer for %u rows of %u bytes",
+                 rows, bytesPerLine);
+    }
+
+    for (row = 0; row < rows; ++row) {
+        pbm_readpbmrow_packed(ifP, &bitmap[0][row*bytesPerLine],
                               cols, RPBM_FORMAT);
+    }
 
     *bitmapP = bitmap;
 }
@@ -104,7 +101,7 @@ readPbm(FILE *            const fin,
 
 
 static void
-readImage(FILE * const fin,
+readImage(FILE *           const ifP,
           unsigned int     const cols,
           unsigned int     const rows,
           xelval           const maxval,
@@ -117,7 +114,7 @@ readImage(FILE * const fin,
   Although the PBM case is separated, this logic works also for
   PBM, bpp=1.
 -----------------------------------------------------------------------------*/
-    unsigned char *image;
+    unsigned char * image;  /* malloc'ed */
         /* This is a representation of the entire image with 'bpp' bytes per
            pixel.  The 'bpp' bytes for each pixel are arranged MSB first
            and its numerical value is the value from the PNM input.
@@ -134,7 +131,7 @@ readImage(FILE * const fin,
 
     for (row = 0; row < rows; ++row) {
         unsigned int col;
-        pnm_readpnmrow(fin, pnm_row, cols, maxval, format);
+        pnm_readpnmrow(ifP, pnm_row, cols, maxval, format);
         for (col = 0; col < cols; col++) {
             unsigned int j;
             /* Move each byte of the sample into image[], MSB first */
@@ -152,8 +149,8 @@ readImage(FILE * const fin,
 static void
 convertImageToBitmap(unsigned char *   const image,
                      unsigned char *** const bitmapP,
-                     unsigned int      const encode_planes,
-                     unsigned int      const bytes_per_line,
+                     unsigned int      const encodePlanes,
+                     unsigned int      const bytesPerLine,
                      unsigned int      const lines) {
 
     /* Convert image[] into bitmap[]  */
@@ -161,9 +158,9 @@ convertImageToBitmap(unsigned char *   const image,
     unsigned char ** bitmap;
     unsigned int i;
 
-    MALLOCARRAY_NOFAIL(bitmap, encode_planes);
-    for (i = 0; i < encode_planes; ++i)
-        MALLOCARRAY_NOFAIL(bitmap[i], bytes_per_line * lines);
+    MALLOCARRAY_NOFAIL(bitmap, encodePlanes);
+    for (i = 0; i < encodePlanes; ++i)
+        MALLOCARRAY_NOFAIL(bitmap[i], bytesPerLine * lines);
 
     *bitmapP = bitmap;
 }
@@ -171,28 +168,28 @@ convertImageToBitmap(unsigned char *   const image,
 
 
 static void
-readPnm(FILE *            const fin,
+readPnm(FILE *            const ifP,
         unsigned int      const cols,
         unsigned int      const rows,
         xelval            const maxval,
         int               const format,
         unsigned int      const bpp,
         unsigned int      const planes,
-        unsigned int      const encode_planes,
-        bool              const use_graycode,
+        unsigned int      const encodePlanes,
+        bool              const useGraycode,
         unsigned char *** const bitmapP) {
 
-    unsigned int const bytes_per_line = pbm_packed_bytes(cols);
+    unsigned int const bytesPerLine = pbm_packed_bytes(cols);
 
     unsigned char * image;
     unsigned char ** bitmap;
 
-    readImage(fin, cols, rows, maxval, format, bpp, &image);
+    readImage(ifP, cols, rows, maxval, format, bpp, &image);
 
-    convertImageToBitmap(image, &bitmap, encode_planes, bytes_per_line, rows);
+    convertImageToBitmap(image, &bitmap, encodePlanes, bytesPerLine, rows);
 
-    jbg_split_planes(cols, rows, planes, encode_planes, image, bitmap,
-                     use_graycode);
+    jbg_split_planes(cols, rows, planes, encodePlanes, image, bitmap,
+                     useGraycode);
     free(image);
 
     /* Invert the image if it is just one plane.  See top of this file
@@ -200,16 +197,17 @@ readPnm(FILE *            const fin,
        this is for exceptional PGM files.
     */
 
-    if (encode_planes == 1) {
+    if (encodePlanes == 1) {
         unsigned int row;
         for (row = 0; row < rows; ++row) {
             unsigned int i;
-            for (i = 0; i < bytes_per_line; i++)
-                bitmap[0][(row*bytes_per_line) + i] ^= 0xff;
+
+            for (i = 0; i < bytesPerLine; ++i)
+                bitmap[0][(row*bytesPerLine) + i] ^= 0xff;
 
             if (cols % 8 > 0) {
-                bitmap[0][ (row+1)*bytes_per_line  -1] >>= 8-cols%8;
-                bitmap[0][ (row+1)*bytes_per_line  -1] <<= 8-cols%8;
+                bitmap[0][ (row+1)*bytesPerLine  -1] >>= 8-cols%8;
+                bitmap[0][ (row+1)*bytesPerLine  -1] <<= 8-cols%8;
             }
         }
     }
@@ -218,13 +216,57 @@ readPnm(FILE *            const fin,
 
 
 
+static void
+reportVerbose(struct jbg_enc_state const s,
+              int                  const useGraycode) {
+
+    fprintf(stderr, "Information about the created JBIG bi-level image entity "
+            "(BIE):\n\n");
+    fprintf(stderr, "              input image size: %ld x %ld pixel\n",
+            s.xd, s.yd);
+    fprintf(stderr, "                    bit planes: %d\n", s.planes);
+    if (s.planes > 1)
+        fprintf(stderr, "                      encoding: %s code, MSB first\n",
+                useGraycode ? "Gray" : "binary");
+    fprintf(stderr, "                       stripes: %ld\n", s.stripes);
+    fprintf(stderr, "   lines per stripe in layer 0: %ld\n", s.l0);
+    fprintf(stderr, "  total number of diff. layers: %d\n", s.d);
+    fprintf(stderr, "           lowest layer in BIE: %d\n", s.dl);
+    fprintf(stderr, "          highest layer in BIE: %d\n", s.dh);
+    fprintf(stderr, "             lowest layer size: %lu x %lu pixel\n",
+            jbg_ceil_half(s.xd, s.d - s.dl), jbg_ceil_half(s.yd, s.d - s.dl));
+    fprintf(stderr, "            highest layer size: %lu x %lu pixel\n",
+            jbg_ceil_half(s.xd, s.d - s.dh), jbg_ceil_half(s.yd, s.d - s.dh));
+    fprintf(stderr, "                   option bits:%s%s%s%s%s%s%s\n",
+            s.options & JBG_LRLTWO  ? " LRLTWO" : "",
+            s.options & JBG_VLENGTH ? " VLENGTH" : "",
+            s.options & JBG_TPDON   ? " TPDON" : "",
+            s.options & JBG_TPBON   ? " TPBON" : "",
+            s.options & JBG_DPON    ? " DPON" : "",
+            s.options & JBG_DPPRIV  ? " DPPRIV" : "",
+            s.options & JBG_DPLAST  ? " DPLAST" : "");
+    fprintf(stderr, "                    order bits:%s%s%s%s\n",
+            s.order & JBG_HITOLO ? " HITOLO" : "",
+            s.order & JBG_SEQ    ? " SEQ" : "",
+            s.order & JBG_ILEAVE ? " ILEAVE" : "",
+            s.order & JBG_SMID   ? " SMID" : "");
+    fprintf(stderr, "           AT maximum x-offset: %d\n"
+            "           AT maximum y-offset: %d\n", s.mx, s.my);
+    fprintf(stderr, "         length of output file: %lu byte\n\n",
+            total_length);
+}
+
+
+
 int
-main(int argc, char **argv) {
-    FILE *fin = stdin, *fout = stdout;
+main(int argc, const char ** argv) {
+
+    FILE * ifP;
+    FILE * ofP;
     const char *fnin = "<stdin>", *fnout = "<stdout>";
     int i;
     int all_args = 0, files = 0;
-    int bpp, planes, encode_planes = -1;
+    int bpp, planes, encodePlanes = -1;
     int cols, rows;
     xelval maxval;
     int format;
@@ -236,13 +278,16 @@ main(int argc, char **argv) {
     */
 
     struct jbg_enc_state s;
-    int verbose = 0, delay_at = 0, use_graycode = 1;
+    int verbose = 0, delay_at = 0, useGraycode = 1;
     long mwidth = 640, mheight = 480;
     int dl = -1, dh = -1, d = -1, l0 = -1, mx = -1;
     int options = JBG_TPDON | JBG_TPBON | JBG_DPON;
     int order = JBG_ILEAVE | JBG_SMID;
 
-    pbm_init(&argc, argv);
+    pm_proginit(&argc, argv);
+
+    ifP = stdin;  /* initial value */
+    ofP = stdout; /* initial value */
 
     /* parse command line arguments */
     for (i = 1; i < argc; ++i) {
@@ -260,7 +305,7 @@ main(int argc, char **argv) {
                         verbose = 1;
                         break;
                     case 'b':
-                        use_graycode = 0;
+                        useGraycode = 0;
                         break;
                     case 'c':
                         delay_at = 1;
@@ -320,7 +365,7 @@ main(int argc, char **argv) {
                         if (++i >= argc)
                             pm_error("-t needs a value");
                         j = -1;
-                        encode_planes = atoi(argv[i]);
+                        encodePlanes = atoi(argv[i]);
                         break;
                     case 'm':
                         if (++i >= argc)
@@ -338,8 +383,8 @@ main(int argc, char **argv) {
             case 0:
                 if (argv[i][0] != '-' || argv[i][1] != '\0') {
                     fnin = argv[i];
-                    fin = fopen(fnin, "rb");
-                    if (!fin) {
+                    ifP = fopen(fnin, "rb");
+                    if (!ifP) {
                         fprintf(stderr, "Can't open input file '%s", fnin);
                         perror("'");
                         exit(1);
@@ -348,8 +393,8 @@ main(int argc, char **argv) {
                 break;
             case 1:
                 fnout = argv[i];
-                fout = fopen(fnout, "wb");
-                if (!fout) {
+                ofP = fopen(fnout, "wb");
+                if (!ofP) {
                     fprintf(stderr, "Can't open input file '%s", fnout);
                     perror("'");
                     exit(1);
@@ -361,12 +406,13 @@ main(int argc, char **argv) {
         }
     }
 
-    pnm_readpnminit(fin, &cols, &rows, &maxval, &format);
+    pnm_readpnminit(ifP, &cols, &rows, &maxval, &format);
 
     if (PNM_FORMAT_TYPE(format) != PGM_TYPE &&
-        PNM_FORMAT_TYPE(format) != PBM_TYPE)
+        PNM_FORMAT_TYPE(format) != PBM_TYPE) {
         pm_error("This program accepts PBM and PGM input only.  "
                  "Try Ppmtopgm.");
+    }
 
     planes = pm_maxvaltobits(maxval);
 
@@ -381,84 +427,47 @@ main(int argc, char **argv) {
 
     bpp = (planes + 7) / 8;
 
-    if (encode_planes < 0 || encode_planes > planes)
-        encode_planes = planes;
+    if (encodePlanes < 0 || encodePlanes > planes)
+        encodePlanes = planes;
 
     if (bpp == 1 && PNM_FORMAT_TYPE(format) == PBM_TYPE)
-        readPbm(fin, cols, rows, &bitmap);
+        readPbm(ifP, cols, rows, &bitmap);
     else
-        readPnm(fin, cols, rows, maxval, format, bpp,
-                planes, encode_planes, use_graycode,
+        readPnm(ifP, cols, rows, maxval, format, bpp,
+                planes, encodePlanes, useGraycode,
                 &bitmap);
 
     /* Apply JBIG algorithm and write BIE to output file */
 
-  /* initialize parameter struct for JBIG encoder*/
-    jbg_enc_init(&s, cols, rows, encode_planes, bitmap, data_out, fout);
+    /* initialize parameter struct for JBIG encoder*/
+    jbg_enc_init(&s, cols, rows, encodePlanes, bitmap, dataOut, ofP);
 
-    /* Select number of resolution layers either directly or based
-   * on a given maximum size for the lowest resolution layer */
+    /* Select number of resolution layers either directly or based on a given
+       maximum size for the lowest resolution layer
+    */
     if (d >= 0)
         jbg_enc_layers(&s, d);
     else
         jbg_enc_lrlmax(&s, mwidth, mheight);
 
-  /* Specify a few other options (each is ignored if negative) */
     if (delay_at)
         options |= JBG_DELAY_AT;
+
     jbg_enc_lrange(&s, dl, dh);
     jbg_enc_options(&s, order, options, l0, mx, -1);
 
-  /* now encode everything and send it to data_out() */
     jbg_enc_out(&s);
+        /* Encode everything and send it to dataOut() */
 
-    /* give encoder a chance to free its temporary data structures */
     jbg_enc_free(&s);
 
-    /* check for file errors and close fout */
-    if (ferror(fout) || fclose(fout)) {
-        fprintf(stderr, "Problem while writing output file '%s", fnout);
-        perror("'");
-        exit(1);
+    if (ferror(ofP) || fclose(ofP)) {
+        pm_error("Problem while writing output file '%s'.  %s",
+                 fnout, strerror(errno));
     }
 
-    /* In case the user wants to know all the gory details ... */
-    if (verbose) {
-        fprintf(stderr, "Information about the created JBIG bi-level image entity "
-                "(BIE):\n\n");
-        fprintf(stderr, "              input image size: %ld x %ld pixel\n",
-                s.xd, s.yd);
-        fprintf(stderr, "                    bit planes: %d\n", s.planes);
-        if (s.planes > 1)
-            fprintf(stderr, "                      encoding: %s code, MSB first\n",
-                    use_graycode ? "Gray" : "binary");
-        fprintf(stderr, "                       stripes: %ld\n", s.stripes);
-        fprintf(stderr, "   lines per stripe in layer 0: %ld\n", s.l0);
-        fprintf(stderr, "  total number of diff. layers: %d\n", s.d);
-        fprintf(stderr, "           lowest layer in BIE: %d\n", s.dl);
-        fprintf(stderr, "          highest layer in BIE: %d\n", s.dh);
-        fprintf(stderr, "             lowest layer size: %lu x %lu pixel\n",
-                jbg_ceil_half(s.xd, s.d - s.dl), jbg_ceil_half(s.yd, s.d - s.dl));
-        fprintf(stderr, "            highest layer size: %lu x %lu pixel\n",
-                jbg_ceil_half(s.xd, s.d - s.dh), jbg_ceil_half(s.yd, s.d - s.dh));
-        fprintf(stderr, "                   option bits:%s%s%s%s%s%s%s\n",
-                s.options & JBG_LRLTWO  ? " LRLTWO" : "",
-                s.options & JBG_VLENGTH ? " VLENGTH" : "",
-                s.options & JBG_TPDON   ? " TPDON" : "",
-                s.options & JBG_TPBON   ? " TPBON" : "",
-                s.options & JBG_DPON    ? " DPON" : "",
-                s.options & JBG_DPPRIV  ? " DPPRIV" : "",
-                s.options & JBG_DPLAST  ? " DPLAST" : "");
-        fprintf(stderr, "                    order bits:%s%s%s%s\n",
-                s.order & JBG_HITOLO ? " HITOLO" : "",
-                s.order & JBG_SEQ    ? " SEQ" : "",
-                s.order & JBG_ILEAVE ? " ILEAVE" : "",
-                s.order & JBG_SMID   ? " SMID" : "");
-        fprintf(stderr, "           AT maximum x-offset: %d\n"
-                "           AT maximum y-offset: %d\n", s.mx, s.my);
-        fprintf(stderr, "         length of output file: %lu byte\n\n",
-                total_length);
-    }
+    if (verbose)
+        reportVerbose(s, useGraycode);
 
     return 0;
 }
