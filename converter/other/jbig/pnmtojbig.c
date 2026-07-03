@@ -44,10 +44,130 @@
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
+#include "shhopt.h"
 #include "pnm.h"
 
 static unsigned long total_length = 0;
   /* used for determining output file length */
+
+struct CmdlineInfo {
+    /* All the information the user supplied in the command line,
+       in a form easy for the program to use.
+    */
+    const char * inputFilename;  /* Filename of input file, or "-" */
+    const char * outputFilename;  /* filename of output file, or "-" */
+    unsigned int singlelayer;
+    unsigned int width;
+    unsigned int height;
+    unsigned int lowestlayerSpec;
+    unsigned int lowestlayer;
+    unsigned int highestlayerSpec;
+    unsigned int highestlayer;
+    unsigned int binary;
+    unsigned int differentialSpec;
+    unsigned int differential;
+    unsigned int stripesSpec;
+    unsigned int stripes;
+    unsigned int maxoffsetSpec;
+    unsigned int maxoffset;
+    unsigned int planesSpec;
+    unsigned int planes;
+    unsigned int order;
+    unsigned int algorithmSpec;
+    unsigned int algorithm;
+    unsigned int annexc;
+    unsigned int verbose;
+};
+
+
+
+
+static void
+parseCommandLine(int argc,
+                 const char ** argv,
+                 struct CmdlineInfo  * const cmdlineP) {
+/* --------------------------------------------------------------------------
+   Parse program command line described in Unix standard form by argc
+   and argv.  Return the information in the options as *cmdlineP.
+
+   If command line is internally inconsistent (invalid options, etc.),
+   issue error message to stderr and abort program.
+
+   Note that the strings we return are stored in the storage that
+   was passed to us as the argv array.  We also trash *argv.
+--------------------------------------------------------------------------*/
+    optEntry *option_def;
+    /* Instructions to pm_optParseOptions3 on how to parse our options. */
+    optStruct3 opt;
+
+    unsigned int option_def_index;
+    unsigned int widthSpec, heightSpec, orderSpec;
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
+
+    option_def_index = 0;   /* incremented by OPTENT3 */
+    OPTENT3('q', "singlelayer",  OPT_FLAG,  NULL,
+            &cmdlineP->singlelayer,              0);
+    OPTENT3('x', "width",        OPT_UINT,  &cmdlineP->width,
+            &widthSpec,                          0);
+    OPTENT3('y', "height",       OPT_UINT,  &cmdlineP->height,
+            &heightSpec,                         0);
+    OPTENT3('l', "lowestlayer",  OPT_UINT,  &cmdlineP->lowestlayer,
+            &cmdlineP->lowestlayerSpec,          0);
+    OPTENT3('h', "highestlayer", OPT_UINT, &cmdlineP->highestlayer,
+            &cmdlineP->highestlayerSpec,         0);
+    OPTENT3('b', "binary",       OPT_FLAG,    NULL,
+            &cmdlineP->binary,                   0);
+    OPTENT3('d', "differential", OPT_UINT, &cmdlineP->differential,
+            &cmdlineP->differentialSpec,         0);
+    OPTENT3('s', "stripes",      OPT_UINT, &cmdlineP->stripes,
+            &cmdlineP->stripesSpec,              0);
+    OPTENT3('m', "maxoffset",    OPT_UINT, &cmdlineP->maxoffset,
+            &cmdlineP->maxoffsetSpec,            0);
+    OPTENT3('t', "planes",       OPT_UINT, &cmdlineP->planes,
+            &cmdlineP->planesSpec,               0);
+    OPTENT3('o', "order",        OPT_UINT, &cmdlineP->order,
+            &orderSpec,                          0);
+    OPTENT3('p', "algorithm",    OPT_UINT, &cmdlineP->algorithm,
+            &cmdlineP->algorithmSpec,            0);
+    OPTENT3('c', "annexc",       OPT_FLAG, NULL,
+            &cmdlineP->annexc,                   0);
+    OPTENT3('v', "verbose",      OPT_FLAG, NULL,
+            &cmdlineP->verbose,                  0);
+
+    opt.opt_table = option_def;
+    opt.short_allowed = TRUE;  /* We have short (old-fashioned) options */
+    opt.allowNegNum = FALSE;   /* We have no parms that are negative numbers */
+
+    pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    if (!widthSpec)
+        cmdlineP->width = 640;
+
+    if (!heightSpec)
+        cmdlineP->height = 480;
+
+    if (!orderSpec)
+        cmdlineP->order = JBG_ILEAVE | JBG_SMID;
+
+    if (argc-1 < 2) {
+        cmdlineP->outputFilename = "-";
+        if (argc-1 < 1)
+            cmdlineP->inputFilename = "-";
+        else
+            cmdlineP->inputFilename = argv[1];
+    } else {
+        cmdlineP->outputFilename = argv[2];
+        if (argc-1 > 2) {
+            pm_error("Too many arguments (%u).  The only possible non-option "
+                     "arguments are input file name and output file name",
+                     argc-1);
+        }
+    }
+}
+
+
 
 static void
 dataOut(unsigned char * const start,
@@ -261,12 +381,10 @@ reportVerbose(struct jbg_enc_state const s,
 int
 main(int argc, const char ** argv) {
 
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     FILE * ofP;
-    const char *fnin = "<stdin>", *fnout = "<stdout>";
-    int i;
-    int all_args = 0, files = 0;
-    int bpp, planes, encodePlanes = -1;
+    int bpp, planes, encodePlanes;
     int cols, rows;
     xelval maxval;
     int format;
@@ -278,133 +396,14 @@ main(int argc, const char ** argv) {
     */
 
     struct jbg_enc_state s;
-    int verbose = 0, delay_at = 0, useGraycode = 1;
-    long mwidth = 640, mheight = 480;
-    int dl = -1, dh = -1, d = -1, l0 = -1, mx = -1;
-    int options = JBG_TPDON | JBG_TPBON | JBG_DPON;
-    int order = JBG_ILEAVE | JBG_SMID;
+    int options;
 
     pm_proginit(&argc, argv);
 
-    ifP = stdin;  /* initial value */
-    ofP = stdout; /* initial value */
+    parseCommandLine(argc, argv, &cmdline);
 
-    /* parse command line arguments */
-    for (i = 1; i < argc; ++i) {
-        int j;
-        if (!all_args && argv[i][0] == '-') {
-            if (argv[i][1] == '\0' && files == 0)
-                ++files;
-            else {
-                for (j = 1; j > 0 && argv[i][j]; j++) {
-                    switch(tolower(argv[i][j])) {
-                    case '-' :
-                        all_args = 1;
-                        break;
-                    case 'v':
-                        verbose = 1;
-                        break;
-                    case 'b':
-                        useGraycode = 0;
-                        break;
-                    case 'c':
-                        delay_at = 1;
-                        break;
-                    case 'x':
-                        if (++i >= argc)
-                            pm_error("-x needs a value");
-                        j = -1;
-                        mwidth = atol(argv[i]);
-                        break;
-                    case 'y':
-                        if (++i >= argc)
-                            pm_error("-y needsa  value");
-                        j = -1;
-                        mheight = atol(argv[i]);
-                        break;
-                    case 'o':
-                        if (++i >= argc)
-                            pm_error("-o needs a value");
-                        j = -1;
-                        order = atoi(argv[i]);
-                        break;
-                    case 'p':
-                        if (++i >= argc)
-                            pm_error("-p needs a value");
-                        j = -1;
-                        options = atoi(argv[i]);
-                        break;
-                    case 'l':
-                        if (++i >= argc)
-                            pm_error("-l needs a value");
-                        j = -1;
-                        dl = atoi(argv[i]);
-                        break;
-                    case 'h':
-                        if (++i >= argc)
-                            pm_error("-h needs a value");
-                        j = -1;
-                        dh = atoi(argv[i]);
-                        break;
-                    case 'q':
-                        d = 0;
-                        break;
-                    case 'd':
-                        if (++i >= argc)
-                            pm_error("-d needs a value");
-                        j = -1;
-                        d = atoi(argv[i]);
-                        break;
-                    case 's':
-                        if (++i >= argc)
-                            pm_error("-s needs a value");
-                        j = -1;
-                        l0 = atoi(argv[i]);
-                        break;
-                    case 't':
-                        if (++i >= argc)
-                            pm_error("-t needs a value");
-                        j = -1;
-                        encodePlanes = atoi(argv[i]);
-                        break;
-                    case 'm':
-                        if (++i >= argc)
-                            pm_error("-m needs a value");
-                        j = -1;
-                        mx = atoi(argv[i]);
-                        break;
-                    default:
-                        pm_error("Unrecognized option: %c", argv[i][j]);
-                    }
-                }
-            }
-        } else {
-            switch (files++) {
-            case 0:
-                if (argv[i][0] != '-' || argv[i][1] != '\0') {
-                    fnin = argv[i];
-                    ifP = fopen(fnin, "rb");
-                    if (!ifP) {
-                        fprintf(stderr, "Can't open input file '%s", fnin);
-                        perror("'");
-                        exit(1);
-                    }
-                }
-                break;
-            case 1:
-                fnout = argv[i];
-                ofP = fopen(fnout, "wb");
-                if (!ofP) {
-                    fprintf(stderr, "Can't open input file '%s", fnout);
-                    perror("'");
-                    exit(1);
-                }
-                break;
-            default:
-                pm_error("too many non-option arguments");
-            }
-        }
-    }
+    ifP = pm_openr(cmdline.inputFilename);
+    ofP = pm_openw(cmdline.outputFilename);
 
     pnm_readpnminit(ifP, &cols, &rows, &maxval, &format);
 
@@ -427,14 +426,13 @@ main(int argc, const char ** argv) {
 
     bpp = (planes + 7) / 8;
 
-    if (encodePlanes < 0 || encodePlanes > planes)
-        encodePlanes = planes;
+    encodePlanes = cmdline.planesSpec ? MIN(cmdline.planes, planes) : planes;
 
     if (bpp == 1 && PNM_FORMAT_TYPE(format) == PBM_TYPE)
         readPbm(ifP, cols, rows, &bitmap);
     else
         readPnm(ifP, cols, rows, maxval, format, bpp,
-                planes, encodePlanes, useGraycode,
+                planes, encodePlanes, !cmdline.binary,
                 &bitmap);
 
     /* Apply JBIG algorithm and write BIE to output file */
@@ -445,29 +443,39 @@ main(int argc, const char ** argv) {
     /* Select number of resolution layers either directly or based on a given
        maximum size for the lowest resolution layer
     */
-    if (d >= 0)
-        jbg_enc_layers(&s, d);
+    if (cmdline.singlelayer)
+        jbg_enc_layers(&s, 0);
+    else if (cmdline.differentialSpec)
+        jbg_enc_layers(&s, cmdline.differential);
     else
-        jbg_enc_lrlmax(&s, mwidth, mheight);
+        jbg_enc_lrlmax(&s, cmdline.width, cmdline.height);
 
-    if (delay_at)
+    if (cmdline.algorithmSpec)
+        options = cmdline.algorithm;
+    else
+        options = JBG_TPDON | JBG_TPBON | JBG_DPON;
+    if (cmdline.annexc)
         options |= JBG_DELAY_AT;
 
-    jbg_enc_lrange(&s, dl, dh);
-    jbg_enc_options(&s, order, options, l0, mx, -1);
+    jbg_enc_lrange(&s, cmdline.lowestlayerSpec ? cmdline.lowestlayer : -1,
+                   cmdline.highestlayerSpec ? cmdline.highestlayer : -1);
+    jbg_enc_options(&s, cmdline.order, options,
+                    cmdline.stripesSpec ? (int)cmdline.stripes : -1,
+                    cmdline.maxoffsetSpec ? (int)cmdline.maxoffset : -1, -1);
 
     jbg_enc_out(&s);
         /* Encode everything and send it to dataOut() */
 
     jbg_enc_free(&s);
 
-    if (ferror(ofP) || fclose(ofP)) {
+    if (ferror(ofP)) {
         pm_error("Problem while writing output file '%s'.  %s",
-                 fnout, strerror(errno));
+                 cmdline.outputFilename, strerror(errno));
     }
+    pm_close(ofP);
 
-    if (verbose)
-        reportVerbose(s, useGraycode);
+    if (cmdline.verbose)
+        reportVerbose(s, !cmdline.binary);
 
     return 0;
 }
