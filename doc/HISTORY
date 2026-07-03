@@ -9,6 +9,9 @@ not yet  BJH  Release 11.16.00
               various: fix literal "\n" in messages.  Introduced in Netpbm
               11.15 (June 2026).
 
+              pnmtojbig: fix incorrect output with default -s option.
+              Introduced in Netpbm 10.67 (June 2014).
+
               pbmtobrush: fix write to random memory.  Always broken
               (pbmtobrush was new in Netpbm 11.15, June 2026).
 
