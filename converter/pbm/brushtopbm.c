@@ -22,10 +22,10 @@ getinit(FILE *         const ifP,
         unsigned int * const rowsP) {
 
     unsigned char header[HEADERSIZE];
-    size_t bytesRead;
+    size_t itemsReadCt;
 
-    bytesRead = fread(header, sizeof(header), 1, ifP);
-    if (bytesRead !=1)
+    itemsReadCt = fread(header, sizeof(header), 1, ifP);
+    if (itemsReadCt !=1)
         pm_error("Error reading header");
 
     if (header[0] != 1)
