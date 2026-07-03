@@ -80,7 +80,7 @@ readPbm(FILE *            const ifP,
 
     MALLOCVAR_NOFAIL(bitmap);
 
-    if (UINT_MAX / bytesPerLine > rows)
+    if (UINT_MAX / bytesPerLine < rows)
         pm_error("Image is uncomputably large");
 
     MALLOCARRAY(bitmap[0], bytesPerLine * rows);
