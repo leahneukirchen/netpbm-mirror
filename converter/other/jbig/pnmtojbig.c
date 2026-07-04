@@ -72,6 +72,7 @@ struct CmdlineInfo {
     unsigned int maxoffset;
     unsigned int planesSpec;
     unsigned int planes;
+    unsigned int orderSpec;
     unsigned int order;
     unsigned int algorithmSpec;
     unsigned int algorithm;
@@ -101,7 +102,7 @@ parseCommandLine(int argc,
     optStruct3 opt;
 
     unsigned int option_def_index;
-    unsigned int widthSpec, heightSpec, orderSpec;
+    unsigned int widthSpec, heightSpec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
@@ -127,7 +128,7 @@ parseCommandLine(int argc,
     OPTENT3('t', "planes",       OPT_UINT, &cmdlineP->planes,
             &cmdlineP->planesSpec,               0);
     OPTENT3('o', "order",        OPT_UINT, &cmdlineP->order,
-            &orderSpec,                          0);
+            &cmdlineP->orderSpec,                  0);
     OPTENT3('p', "algorithm",    OPT_UINT, &cmdlineP->algorithm,
             &cmdlineP->algorithmSpec,            0);
     OPTENT3('c', "annexc",       OPT_FLAG, NULL,
@@ -148,8 +149,24 @@ parseCommandLine(int argc,
     if (!heightSpec)
         cmdlineP->height = 480;
 
-    if (!orderSpec)
-        cmdlineP->order = JBG_ILEAVE | JBG_SMID;
+    if (cmdlineP->orderSpec) {
+        if (cmdlineP->order > 0x0f) {
+            pm_error("Invalid --order value %u.  Maximum possible is 15",
+                     cmdlineP->order);
+        }
+    }
+
+    if (cmdlineP->maxoffsetSpec) {
+        if (cmdlineP->maxoffset > 127) {
+            pm_error("Invalid --maxoffst value %u.  Maximum is 127",
+                cmdlineP->maxoffset);
+        }
+    }
+
+    if (cmdlineP->stripesSpec) {
+        if (cmdlineP->stripes < 1)
+            pm_error("--stripes must be at least 1");
+    }
 
     if (argc-1 < 2) {
         cmdlineP->outputFilename = "-";
@@ -454,14 +471,24 @@ main(int argc, const char ** argv) {
         options = cmdline.algorithm;
     else
         options = JBG_TPDON | JBG_TPBON | JBG_DPON;
+
     if (cmdline.annexc)
         options |= JBG_DELAY_AT;
 
     jbg_enc_lrange(&s, cmdline.lowestlayerSpec ? cmdline.lowestlayer : -1,
                    cmdline.highestlayerSpec ? cmdline.highestlayer : -1);
-    jbg_enc_options(&s, cmdline.order, options,
-                    cmdline.stripesSpec ? (int)cmdline.stripes : -1,
-                    cmdline.maxoffsetSpec ? (int)cmdline.maxoffset : -1, -1);
+
+    if (cmdline.orderSpec)
+        jbg_enc_set_order(&s, cmdline.order);
+
+    if (cmdline.algorithmSpec)
+        jbg_enc_set_algorithm(&s, cmdline.algorithm);
+
+    if (cmdline.stripesSpec)
+        jbg_enc_set_stripes(&s, cmdline.stripes);
+
+    if (cmdline.maxoffsetSpec)
+        jbg_enc_set_maxoffset(&s, cmdline.maxoffset);
 
     jbg_enc_out(&s);
         /* Encode everything and send it to dataOut() */
