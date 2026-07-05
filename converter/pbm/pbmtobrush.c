@@ -102,12 +102,13 @@ convertRaster(FILE *       const ifP,
 
     unsigned char * bitrow;  /* malloc'ed */
     unsigned int row;
+    unsigned int const outRowByteCt = ((cols + 15) / 16) * 2;
 
-    bitrow = pbm_allocrow_packed(cols + 16);
+    bitrow = pbm_allocrow_packed(cols + 15);
+    bitrow[outRowByteCt - 1] = 0xff;
+        /* Set don't-care bits so memory checkers don't think use before set */
 
     for (row = 0; row < rows; ++row) {
-        unsigned int const outRowByteCt = ((cols + 15) / 16) * 2;
-
         unsigned int i;
 
         pbm_readpbmrow_packed(ifP, bitrow, cols, format);
