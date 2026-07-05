@@ -2,7 +2,7 @@
 <html><head><title>Pnmtofiasco User Manual</title></head>
 <body>
 <h1>pnmtofiasco</h1>
-Updated: 09 April 2025
+Updated: 05 July 2026
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -120,10 +120,6 @@ following methods (in the specified order):
 
 <dd>Print brief help, then exit.
 
-<dt><b>--help</b>, <b>-H</b>
-
-<dd>Print detailed help, then exit.
-
 </dl>
 
 <h3 id="advancedopts">Options for Advanced Users</h3>
@@ -175,7 +171,7 @@ compression (<b>--quality</b>=<i>q</i>); default is 2.
 
 <dd>Subdivide the image into 2^<i>N</i> tiles prior coding; default is
 4, i.e. the image is subdivided into 16 tiles. The processing order of
-the individual tiles is defined by the option
+  the individual tiles is defined by the option <b>--tiling-method</b>.
 
 <dt><b>--tiling-method=</b><i>name</i>, <b>-T</b> <i>name</i>
 
@@ -339,6 +335,16 @@ predict P-frame 4, frames 1 and 4 are used to predict B-frames 2 and
 
 </dl>
 
+<h2 id="limitations">LIMITATIONS</h2>
+
+<p><b>pnmtofiasco</b> produces very low quality (small and differing from
+the input) images regardless of the <b>-quality</b> option.  This is
+probably a bug, but no one has had time to find it.
+
+<p>The program <b>cfiasco</b>, not part of Netpbm produces higher quality
+images.
+
+  
 <h2 id="seealso">SEE ALSO</h2>
 
 <b><a href="fiascotopnm.html">fiascotopnm</a></b>,
@@ -376,6 +382,7 @@ Ullrich Hafner &lt;<a href="mailto:hafner@bigfoot.de">hafner@bigfoot.de</a>&gt;
 <li><a href="#examples">EXAMPLES</a>
 <li><a href="#files">FILES</a>
 <li><a href="#environment">ENVIRONMENT</a>
+<li><a href="#limitations">LIMITATIONS</a>
 <li><a href="#seealso">SEE ALSO</a>
 <li><a href="#author">AUTHOR</a>
 </ul>

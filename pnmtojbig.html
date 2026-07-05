@@ -3,7 +3,7 @@
 <body>
 
 <h1>pnmtojbig</h1>
-Updated: 28 July 2020
+Updated: 03 July 2026
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -42,31 +42,37 @@ can read a PGM file and transform it into a multi-bitplane BIE.
 
 <h2 id="options">OPTIONS</h2>
 
+<p>Minimum unique abbreviation of option is acceptable.  You may use white
+space in place of the equals sign to separate an option name from its value.
+
 <p>In addition to the options common to all programs based on libnetpbm
 (most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
 Common Options</a>), <b>pnmtojbig</b> recognizes the following
 command line options:
 
+<p>Long options were new in Netpbm 11.16 (September 2026).  Before that, only
+the classic Unix single-character flags are available.
+  
 <dl compact>
 
-<dt><b>-q</b>
+<dt><b>--singlelayer</b>,<b>-q</b>
 
 <dd>Encode the image in one single resolution layer (sequential
 mode). This is usually the most efficient compression method. By
 default, the number of resolution layers is chosen automatically such
 that the lowest layer image is not larger than 640 &#215; 480 pixels.
 
-<dt><b>-x</b> <i>number</i>
+<dt><b>--width</b>,<b>-x</b> <i>number</i>
 
 <dd>Specify the maximal horizontal size of the lowest resolution
 layer.  The default is 640 pixels.
 
-<dt><b>-y</b> <i>number</i>
+<dt><b>--height</b>,<b>-y</b> <i>number</i>
 
 <dd>Specify the maximal vertical size of the lowest resolution layer.
 The default is 480 pixels.
 
-<dt><b>-l</b> <i>number</i>
+<dt><b>--lowestlayer</b>,<b>-l</b> <i>number</i>
 
 <dd>Select the lowest resolution layer that will be written to the
 BIE.  It is possible to store the various resolution layers of a JBIG
@@ -76,13 +82,13 @@ appear in the created BIE.  The lowest resolution layer has number 0
 and this is also the default value.  By default, <b>pnmtojbig</b>
 writes all layers.
 
-<dt><b>-h</b> <i>number</i>
+<dt><b>--highestlayer</b>,<b>-h</b> <i>number</i>
 
 <dd>Select the highest resolution layer that will be written to the
 BIE.  By default, <b>pnmtojbig</b> writes all layers.  See also option
 <b>-l</b>.
 
-<dt><b>-b</b>
+<dt><b>--binary</b>,<b>-b</b>
 
 <dd>Use binary values instead of Gray code words in order to encode
 pixel values in multiple bitplanes.  This option has only an effect if
@@ -91,7 +97,7 @@ produced. Note that the decoder has to make the same selection but
 cannot determine from the BIE, whether Gray or binary code words were
 used by the encoder.
 
-<dt><b>-d</b> <i>number</i>
+<dt><b>--differential</b>,<b>-d</b> <i>number</i>
 
 <dd>Specify the total number of differential resolution layers into
 which the input image will be split in addition to the lowest layer.
@@ -99,14 +105,14 @@ Each additional layer reduces the size of layer 0 by 50 %.  This
 option overrides options <b>-x</b> and <b>-y</b>, which are usually a
 more comfortable way of selecting the number of resolution layers.
 
-<dt><b>-s</b> <i>number</i>
+<dt><b>--stripes</b>,<b>-s</b> <i>number</i>
 
 <dd>The JBIG algorithm splits each image into a number of horizontal
 stripes.  This option specifies that each stripe shall have
 <i>number</i> lines in layer 0.  The default value is selected so that
 approximately 35 stripes will be used for the whole image.
 
-<dt><b>-m</b> <i>number</i>
+<dt><b>--maxoffset</b>,<b>-m</b> <i>number</i>
 
 <dd>Select the maximum horizontal offset of the adaptive template pixel.  The
 JBIG encoder uses a number of neighbour pixels in order to get statistical a
@@ -122,13 +128,13 @@ pixels by the standard, no higher value than 16 for
 with other JBIG implementations.  The maximal vertical offset of the
 adaptive template pixel is always zero.
 
-<dt><b>-t</b> <i>number</i>
+<dt><b>--planes</b>,<b>-t</b> <i>number</i>
 
 <dd>Encode only the specified number of most significant bit planes.
 This option allows one to reduce the depth of an input PGM file if not all
 bits per pixel are needed in the output.
 
-<dt><b>-o</b> <i>number</i>
+<dt><b>--order</b>,<b>-o</b> <i>number</i>
 
 <dd>JBIG separates an image into several horizontal stripes,
 resolution layers and planes, were each plane contains one bit per
@@ -173,7 +179,7 @@ lower layers.  Default order is 3 which writes at first all planes of
 the first stripe and then completes layer 0 before continuing with the
 next layer and so on.
 
-<dt><b>-p</b> <i>number</i>
+<dt><b>--algorithm</b>,<b>-p</b> <i>number</i>
 
 <dd>This option allows you to activate or deactivate various optional
 algorithms defined in the JBIG standard.  Just add the numbers of the
@@ -200,7 +206,7 @@ subset implementations) and for debugging purposes you will normally
 not want to change anything here.  The default is 28, which provides
 the best compression result.
 
-<dt><b>-c</b>
+<dt><b>--annexc</b>,<b>-c</b>
 
 <dd>The adaptive template pixel movement is determined as suggested in
 annex C of the standard.  By default the template change takes place
@@ -210,7 +216,7 @@ template change to be delayed until the first line of the next stripe.
 This option selects this special behavior, which is normally not
 required except in order to pass some conformance test suite.
 
-<dt><b>-v</b>
+<dt><b>--verbose</b>,<b>-v</b>
 
 <dd>After <b>pnmtojbig</b> creates the BIE, it lists a few technical
 details of the created file (verbose mode).

@@ -2,7 +2,7 @@
 <html><head><title>Ilbmtoppm User Manual</title></head>
 <body>
 <h1>ilbmtoppm</h1>
-Updated: 12 November 2014
+Updated: 04 July 2026
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -14,9 +14,9 @@ ilbmtoppm - convert an ILBM file into a PPM image
 <b>ilbmtoppm</b>
 [<b>-ignore</b>&lt;chunkID&gt;<b>]</b>
 [
-<b>-isham</b> | <b>-isnotham</b> |
-<b>-isehb</b> | <b>-isnotehb</b> |
-<b>-isdeep</b> | <b>-isnotdeep</b>
+<b>-isham</b> |
+<b>-isehb</b> |
+<b>-isdeep</b>
 ]
 [<b>-cmaponly</b>]
 [<b>-adjustcolors</b>]
@@ -30,8 +30,19 @@ ilbmtoppm - convert an ILBM file into a PPM image
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>ilbmtoppm</b> reads an IFF ILBM file as input and produces a PPM
-image as output.  <b>ilbmtoppm</b> can handle the following ILBM types:
+<p><b>ilbmtoppm</b> reads an IFF FORM file as input and produces a PPM
+  image as output.  <b>ilbmtoppm</b> can handle the following IFF FORM
+  types:
+
+<ul>
+<li>ILBM
+<li>RGBN
+<li>RGB8
+<li>PBM
+</ul>
+
+
+It can handle the following ILBM types:
 
 <ul>
 <li>Normal ILBMs with 1-16 planes.
@@ -75,11 +86,24 @@ the <b>pnm_parsecolor()</b> library routine</a>.
 <dd>Skip a chunk.  <i>chunkID</i> is the 4-letter IFF chunk identifier
 of the chunk to be skipped.
 
-<dt><b>-isham</b> | <b>-isehb</b>
+<dt><b>-isham</b>
 
-<dd>Treat the input file as a HAM or Extra_Halfbrite picture, even if
-these flags are not set in the CAMG chunk (or if there is no CAMG
-chunk).
+<dd>Treat the input file as a HAM picture, even if The CAMG chunk does not say
+it is one (or if there is no CAMG chunk).
+
+<dt><b>-isehb</b>
+
+<dd>Treat the input file as an Extra_Halfbrite picture, even if the CAMG chunk
+does not say it is one (or if there is no CAMG chunk).
+
+<dt><b>-isdeep</b>
+
+<dd>Treat the input file as a deep ILBM image, if it has the right number of
+planes to be one.  If it does not (i.e. the number of planes is not a multiple
+of 3), this option has no effect other than an informational message telling
+you it is being ignored.
+
+<p>If the input file is not ILBM, this option has no effect.
 
 <dt><b>-maskfile</b> <i>filename</i>
 
