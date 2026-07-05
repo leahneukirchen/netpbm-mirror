@@ -44,8 +44,7 @@ space in place of the equals sign to separate an option name from its value.
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>pnmtojpeg</b> converts the named PBM, PGM, or PPM image file, or
-the standard input if no file is named, to a JFIF file on the standard
+<p><b>pnmtojpeg</b> reads a Netpbm image as input and produces a JFIF file as
 output.
 
 <p><b>pnmtojpeg</b> uses the Independent JPEG Group's JPEG library to
@@ -63,6 +62,10 @@ JPEG compression.
 file that contains an EXIF header as an APP1 marker).
 <b>pnmtojpeg</b> creates an EXIF image when you specify the
 <b>-exif</b> option.
+
+<p>The program&apos;s only command line argument names the input file; if
+there is no argument, the input is Standard Input.  The output goes to
+Standard Output.
 
 <h2 id="options">OPTIONS</h2>
 

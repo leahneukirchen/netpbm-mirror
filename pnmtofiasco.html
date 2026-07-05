@@ -20,9 +20,15 @@ pnmtofiasco - Convert PNM file to FIASCO compressed file
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<b>pnmtofiasco</b> compresses the named pbm, pgm, or ppm image files,
-or Standard Input if no file is named, and produces a FIASCO file on
+<p><b>pnmtofiasco</b> reads a Netpbm image as input and produces a FIASCO file
+as output.
+
+<p>The program&apos;s only command line argument names the input file; if
+there is no argument, the input is Standard Input.  The output goes to
 Standard Output.
+
+<p>FIASCO is a compressed image format.
+  
 
 <h2 id="options">OPTIONS</h2>
 
