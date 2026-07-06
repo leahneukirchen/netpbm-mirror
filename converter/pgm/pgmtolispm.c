@@ -20,6 +20,7 @@
 ** Changed code style (ANSI-style function definitions, etc.)
 */
 
+#include "pm_c_util.h"
 #include "pm.h"
 #include "pgm.h"
 
@@ -31,13 +32,13 @@ static unsigned int item;
 static unsigned int bitsperitem, maxbitsperitem, bitshift;
 
 static unsigned int
-depth_to_word_size(unsigned int const depth) {
+wordSzFmDepth(unsigned int const depth) {
 
-    /* Lispm architecture specific - if a bitmap is written    */
-    /* out with a depth of 5, it really has a depth of 8, and  */
-    /* is stored that way in the file.                         */
+    /* Lispm architecture specific - if a bitmap is written out with a depth
+       of 5, it really has a depth of 8, and is stored that way in the file.
+    */
 
-    unsigned int const wordSize =
+    unsigned int const wordSz =
         depth ==  1 ?  1 :
         depth ==  2 ?  2 :
         depth <=  4 ?  4 :
@@ -46,10 +47,10 @@ depth_to_word_size(unsigned int const depth) {
         depth <= 32 ? 32 :
         0;
 
-    if (wordSize == 0)
-        pm_error("depth was %u, which is not in the range 1-32", depth);
+    if (depth > 32)
+        pm_error("depth is %u; must be in the range 1-32", depth);
 
-    return wordSize;
+    return wordSz;
 }
 
 
@@ -59,13 +60,15 @@ putinit(unsigned int const cols,
         unsigned int const rows,
         unsigned int const depth) {
 
-    unsigned int const cols32 = ((cols + 31 ) / 32) * 32;
+    unsigned int const cols32 = ROUNDUP(cols, 32);
 
     unsigned int i;
 
-    /* Lispms are able to write bit files that are not mod32 wide, but we   */
-    /* don't.  This should be ok, since bit arrays which are not mod32 wide */
-    /* are pretty useless on a lispm (can't hand them to bitblt).           */
+    /* Lispms are able to write bit files that are not a multiple of 32 pixels
+       wide, but we don't.  This should be ok, since bit arrays which are not
+       a multiple of 32 pixels wide are pretty useless on a lispm (can't hand
+       them to bitblt).
+    */
 
     if (rows > INT16MAX || cols > INT16MAX || cols32 > INT16MAX)
         pm_error("Input image is too large.");
@@ -82,7 +85,7 @@ putinit(unsigned int const cols,
 
     item           = 0;
     bitsperitem    = 0;
-    maxbitsperitem = depth_to_word_size(depth);
+    maxbitsperitem = wordSzFmDepth(depth);
     bitshift       = 0;
 }
 
@@ -131,7 +134,6 @@ main(int argc, const char * argv[]) {
     int cols;
     unsigned int depth;
     int format;
-    unsigned int padright;
     unsigned int row;
     gray maxval;
     const char * inputFile;
@@ -152,13 +154,11 @@ main(int argc, const char * argv[]) {
 
     pgm_readpgminit(ifP, &cols, &rows, &maxval, &format);
 
-    grayrow = pgm_allocrow(cols);
     depth = pm_maxvaltobits(maxval);
 
-    /* Compute padding to round cols up to the nearest multiple of 32. */
-    padright = ((cols + 31) / 32) * 32 - cols;
-
     putinit(cols, rows, depth);
+
+    grayrow = pgm_allocrow(cols);
 
     for (row = 0; row < rows; ++row) {
         unsigned int col;
@@ -168,9 +168,13 @@ main(int argc, const char * argv[]) {
         for (col = 0; col < cols; ++col)
             putval(grayrow[col]);
 
-        for (col = 0; col < padright; ++col)
+        /* Pad the row to a multiple of 32 pixels */
+
+        for (; col < ROUNDUP(cols, 32); ++col)
             putval(0);
     }
+
+    pgm_freerow(grayrow);
 
     pm_close(ifP);
 
