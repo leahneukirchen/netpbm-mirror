@@ -35,7 +35,17 @@
 #undef ROUNDDN
 #define ROUNDDN(X,M) ((X)/(M)*(M))
 
+/* ROUNDDIV is the quotient of DIVIDEND by DIVISOR rounded to the nearest
+   integer.  E.g. ROUNDDIV(22, 8) == 3
+*/
 #define ROUNDDIV(DIVIDEND,DIVISOR) (((DIVIDEND) + (DIVISOR)/2)/(DIVISOR))
+
+/* ROUNDDIVUP is the quotient of DIVIDEND by DIVISOR rounded up to the nearest
+   integer.  E.g. ROUNDDIV(17, 8) == 3 (which you will note is the minimum
+   number of bytes you need to represent 17 bits).
+*/
+
+#define ROUNDDIVUP(DIVIDEND,DIVISOR) (((DIVIDEND) + (DIVISOR) - 1)/(DIVISOR))
 
 #undef SQR
 #define SQR(a) ((a)*(a))
