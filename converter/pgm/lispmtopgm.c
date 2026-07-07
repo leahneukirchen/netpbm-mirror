@@ -164,9 +164,6 @@ main(int argc, const char * argv[]) {
 
     getinit(ifP, &cols, &rows, &depth, &padright);
 
-    if (depth > 16)
-        pm_error("Invalid depth (%u bits).  Maximum is 15", depth);
-
     maxval = pm_bitstomaxval(depth);
 
     pgm_writepgminit(stdout, cols, rows, maxval, 0);
