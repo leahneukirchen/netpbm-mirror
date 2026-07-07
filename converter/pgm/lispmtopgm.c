@@ -180,8 +180,6 @@ main(int argc, const char * argv[]) {
     }
     pm_close(ifP);
     pm_close(stdout);
-    exit(0);
 }
-
 
 
