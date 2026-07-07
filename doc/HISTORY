@@ -17,6 +17,9 @@ not yet  BJH  Release 11.16.00
               pbmtobrush: fix write to random memory.  Always broken
               (pbmtobrush was new in Netpbm 11.15, June 2026).
 
+              lispmtopgm: fix too-dim output (because maxval is too big).
+              Always broken (lispmtopgm was in primordial Netpbm).
+
 26.06.27 BJH  Release 11.15.00
 
               Add pbmtobrush.
