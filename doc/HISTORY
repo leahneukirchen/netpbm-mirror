@@ -128,8 +128,8 @@ not yet  BJH  Release 11.16.00
               9.6, July 2000).
 
               pnmtofiasco: fix bug: infinite loop with multiple tiles.
-              Always broken (program was new in Netpbm 9.6, July 2000),
-              but made functional by bug fix in 11.10 (March 2025).
+              Always broken (program was new in Netpbm 9.6, July 2000)
+              but made functional by fix above.
 
               pnmtofiasco: fix bug: does wrong level of optimization
               Introduced in Netpbm 11.05 (December 2023).
