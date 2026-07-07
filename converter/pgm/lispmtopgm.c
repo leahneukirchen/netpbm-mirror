@@ -90,10 +90,10 @@ getinit(FILE *         const ifP,
 
     *padrightP = ROUNDUP(*colsP, 32) - *colsP;
 
-# if 0
-    if (*colsP != (cols32 - *padrightP)) {
+    if (*colsP + *padrightP != cols32) {
         pm_message("inconsistent input: "
                    "Width and Width(mod32) fields don't agree" );
+# if 0
         *padrightP = cols32 - *colsP;   /*    hmmmm....   */
 
         /* This is a dilemma.  Usually the output is rounded up to mod32, but
@@ -110,8 +110,8 @@ getinit(FILE *         const ifP,
             The code in 'pgmtolispm.c' always rounds up to mod32, which is
             totally reasonable.
        */
-    }
 #endif
+    }
     bitsperitem = 0;
     maxbitsperitem = wordSizeFmDepth(*depthP);
     bitmask = (1 << maxbitsperitem) - 1;     /* for depth=3, mask=00000111 */
@@ -172,9 +172,13 @@ main(int argc, const char * argv[]) {
 
     for (row = 0; row < rows; ++row) {
         unsigned int col;
+        unsigned int i;
 
         for (col = 0; col < cols; ++col)
             grayrow[col] = getval(ifP);
+
+        for (i = 0; i < padright; ++i)
+            getval(ifP);
 
         pgm_writepgmrow(stdout, grayrow, cols, maxval, 0);
     }

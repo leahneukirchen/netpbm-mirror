@@ -20,6 +20,10 @@ not yet  BJH  Release 11.16.00
               lispmtopgm: fix too-dim output (because maxval is too big).
               Always broken (lispmtopgm was in primordial Netpbm).
 
+              lispmtopgm: fix incorrect output when width not a multiple of
+              32.  Always broken (lispmtopgm was in primordial Netpbm).
+
+
 26.06.27 BJH  Release 11.15.00
 
               Add pbmtobrush.
