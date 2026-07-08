@@ -4,6 +4,20 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+26.07.08 BJH  Release 11.15.02
+    
+              pnmtojbig: fix incorrect output with default -s option.
+              Introduced in Netpbm 10.67 (June 2014).
+
+              pbmtobrush: fix write to random memory.  Always broken
+              (pbmtobrush was new in Netpbm 11.15, June 2026).
+
+              lispmtopgm: fix too-dim output (because maxval is too big).
+              Always broken (lispmtopgm was in primordial Netpbm).
+
+              lispmtopgm: fix incorrect output when width not a multiple of
+              32.  Always broken (lispmtopgm was in primordial Netpbm).
+
 26.06.28 BJH  Release 11.15.01
 
               various: fix literal "\n" in messages.  Introduced in Netpbm

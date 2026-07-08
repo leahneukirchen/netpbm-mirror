@@ -106,16 +106,18 @@ convertRaster(FILE *       const ifP,
     bitrow = pbm_allocrow_packed(cols + 16);
 
     for (row = 0; row < rows; ++row) {
-        unsigned int col;
+        unsigned int const outRowByteCt = ((cols + 15) / 16) * 2;
+
+        unsigned int i;
 
         pbm_readpbmrow_packed(ifP, bitrow, cols, format);
 
-        for (col = 0; col < cols; ++col)
-            bitrow[col] = ~bitrow[col];
+        for (i = 0; i < outRowByteCt; ++i)
+            bitrow[i] = ~bitrow[i];
 
         pbm_cleanrowend_packed(bitrow, cols);
 
-        fwrite(bitrow, 1, 2*((cols + 15)/16), ofP);
+        fwrite(bitrow, 1, outRowByteCt, ofP);
     }
 
     pbm_freerow_packed(bitrow);

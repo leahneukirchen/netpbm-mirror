@@ -928,7 +928,7 @@ void
 jbg_enc_options(struct jbg_enc_state *s,
                 int const order,
                 int const options,
-                unsigned long int const l0,
+                int const l0,
                 int const mx,
                 int const my) {
 
