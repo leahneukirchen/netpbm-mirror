@@ -4,6 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+26.07.12 BJH  Release 11.02.25
+
+              lispmtopgm: fix too-dim output (because maxval is too big).
+              Always broken (lispmtopgm was in primordial Netpbm).
+
+              lispmtopgm: fix incorrect output when width not a multiple of
+              32.  Always broken (lispmtopgm was in primordial Netpbm).
+
 26.06.03 BJH  Release 11.02.24
 
               pamcut: fix incorrect behavior or crash with options that

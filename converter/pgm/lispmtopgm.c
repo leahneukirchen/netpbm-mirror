@@ -52,10 +52,8 @@ main( argc, argv )
 	ifp = stdin;
 
     getinit( ifp, &cols, &rows, &depth, &padright );
-    maxval = 1 << depth;
 
-    if ( maxval > PGM_OVERALLMAXVAL )
-        pm_error( "depth (%d bits) is too large", depth);
+    maxval = pm_bitstomaxval(depth);
 
     pgm_writepgminit( stdout, cols, rows, (gray) maxval, 0 );
     grayrow = pgm_allocrow( ( cols + 7 ) / 8 * 8 );
@@ -64,6 +62,8 @@ main( argc, argv )
 	{
         for ( col = 0, gP = grayrow; col < cols; ++col, ++gP )
 	    *gP = getval( ifp );
+        for ( col = 0; col < padright; ++col)
+            getval( ifp );
 	pgm_writepgmrow( stdout, grayrow, cols, (gray) maxval, 0 );
 	}
     pm_close( ifp );
