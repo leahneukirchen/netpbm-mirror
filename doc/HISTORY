@@ -23,7 +23,6 @@ not yet  BJH  Release 11.16.00
               lispmtopgm: fix incorrect output when width not a multiple of
               32.  Always broken (lispmtopgm was in primordial Netpbm).
 
-
 26.06.27 BJH  Release 11.15.00
 
               Add pbmtobrush.
@@ -36,6 +35,10 @@ not yet  BJH  Release 11.16.00
 
               pbmtopgm: fix incorrect output with absurdly large convolution
               kernel.
+
+              imgtoppm: fix write to arbitrary memory with invalid input
+              (excessively long variable length field).  Always broken
+              (imgtoppm was in primordial Netpbm).
 
               ppmtopict: fix incorrect output with oversize input image.
 
