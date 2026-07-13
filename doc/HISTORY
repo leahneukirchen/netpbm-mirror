@@ -17,6 +17,9 @@ not yet  BJH  Release 11.16.00
               pbmtobrush: fix write to random memory.  Always broken
               (pbmtobrush was new in Netpbm 11.15, June 2026).
 
+              mrftopbm: fix crash with zero width or height in MRF header.
+              Always broken (mrftopbm was new in Netpbm 10.18 (March 2009)).
+
               lispmtopgm: fix too-dim output (because maxval is too big).
               Always broken (lispmtopgm was in primordial Netpbm).
 
