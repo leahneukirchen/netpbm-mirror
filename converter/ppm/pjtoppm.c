@@ -305,20 +305,27 @@ main(int argc, const char ** argv) {
                              "transferring planes");
                 switch (c) {
                 case 'X':
-                    pm_message("can only position in y");
+                    pm_message("can position only in Y");
                     break;
-                case 'Y':
+                case 'Y': {
+                    unsigned int targetRow;
+
                     if (buffer[0] == '+')
-                        val = row + val;
-                    if (buffer[0] == '-')
-                        val = row - val;
-                    for (; val > row; ++row)
+                        targetRow = row + val;
+                    else if (buffer[0] == '-')
+                        targetRow = row - val;
+                    else
+                        targetRow = row;
+
+                    for (; targetRow > row; ++row) {
+                        unsigned int plane;
                         for (plane = 0; plane < 3; ++plane) {
                             imlen[row * planes + plane] = 0;
                             image[row * planes + plane] = NULL;
                         }
-                    row = val;
-                    break;
+                    }
+                    row = targetRow;
+                } break;
                 default:
                     pm_message("uninmplemented <ESC>*%c%d%c", cmd, val, c);
                     break;
