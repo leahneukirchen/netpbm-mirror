@@ -315,7 +315,7 @@ main(int argc, const char ** argv) {
                     else if (buffer[0] == '-')
                         targetRow = row - val;
                     else
-                        targetRow = row;
+                        targetRow = val;
 
                     for (; targetRow > row; ++row) {
                         unsigned int plane;
