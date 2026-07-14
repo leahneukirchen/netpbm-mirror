@@ -20,6 +20,9 @@ not yet  BJH  Release 11.16.00
               mrftopbm: fix crash with zero width or height in MRF header.
               Always broken (mrftopbm was new in Netpbm 10.18 (March 2009)).
 
+              pjtoppm: fix write to arbitrary memory after a position command.
+              Always broken (pjtoppm was in primordial Netpbm, 1991).
+
               lispmtopgm: fix too-dim output (because maxval is too big).
               Always broken (lispmtopgm was in primordial Netpbm).
 

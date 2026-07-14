@@ -31,8 +31,94 @@ uintProduct(unsigned int const multiplicand,
 
 
 
+struct Raster {
+    unsigned int planes;  /* constant */
+    unsigned int allocRowCt;
+    unsigned char ** rowplane;  /* malloc'ed */
+    int * rowLen;  /* malloc'ed */
+};
+
+
+
+static void
+rasterInit(struct Raster * const rasterP,
+           unsigned int    const planes) {
+
+    rasterP->planes = planes;
+
+    rasterP->allocRowCt = 0;
+    rasterP->rowplane = NULL;
+    rasterP->rowLen = NULL;
+}
+
+
+
+static void
+rasterRealloc(struct Raster * const rasterP,
+              unsigned int    const minRowCt) {
+
+    if (minRowCt > rasterP->allocRowCt) {
+        unsigned int const newRowCt = MAX(minRowCt, rasterP->allocRowCt + 100);
+        unsigned int const newRowplaneCt =
+            uintProduct(newRowCt, rasterP->planes);
+
+        REALLOCARRAY(rasterP->rowplane, newRowplaneCt);
+        REALLOCARRAY(rasterP->rowLen,   newRowplaneCt);
+
+        if (rasterP->rowplane == NULL || rasterP->rowLen == NULL)
+            pm_error("Failed to allocate buffer space for %u rows", newRowCt);
+
+        rasterP->allocRowCt = newRowCt;
+    }
+}
+
+
+
+static void
+rasterAddRows(struct Raster * const rasterP,
+              unsigned int    const startRow,
+              unsigned int    const endRow) {
+
+    unsigned int row;
+
+    rasterRealloc(rasterP, endRow);
+
+    for (row = startRow; row < endRow; ++row) {
+        unsigned int plane;
+
+        for (plane = 0; plane < 3; ++plane) {
+            unsigned int const rowplaneIndex = row * rasterP->planes + plane;
+            rasterP->rowLen  [rowplaneIndex] = 0;
+            rasterP->rowplane[rowplaneIndex] = NULL;
+        }
+    }
+}
+
+
+
+static void
+rasterAllocRowplane(struct Raster * const rasterP,
+                    unsigned int    const row,
+                    unsigned int    const plane,
+                    unsigned int    const length) {
+
+    unsigned int const rowplaneIndex = row * rasterP->planes + plane;
+
+    rasterP->rowLen[rowplaneIndex] = length;
+
+    MALLOCARRAY(rasterP->rowplane[rowplaneIndex], length);
+
+    if (rasterP->rowplane[rowplaneIndex] == NULL) {
+        pm_error("out of memory allocating space for %u pixels for Plane %u "
+                 "of Row %u", length, plane, row);
+    }
+}
+
+
+
 static int
 egetc(FILE * const ifP) {
+
     int c;
 
     c = fgetc(ifP);
@@ -46,11 +132,10 @@ egetc(FILE * const ifP) {
 
 
 static void
-modifyImageMode1(unsigned int     const rows,
-                 unsigned int     const planes,
-                 const int *      const imlen,
-                 unsigned char ** const image,
-                 unsigned int *   const colsP) {
+modifyImageMode1(unsigned int          const rows,
+                 unsigned int          const planes,
+                 const struct Raster * const rasterP,
+                 unsigned int *        const colsP) {
 
     unsigned int const newcols = 10240;
     /* It could not be larger than that! */
@@ -60,8 +145,10 @@ modifyImageMode1(unsigned int     const rows,
 
     for (row = 0, cols = 0; row < rows; ++row) {
         unsigned int plane;
-        if (image[row * planes]) {
+        if (rasterP->rowplane[row * planes + 0]) {
             for (plane = 0; plane < planes; ++plane) {
+                unsigned int const rowplaneIndex = row * planes + plane;
+
                 unsigned int i;
                 unsigned int col;
                 unsigned char * buf;
@@ -70,23 +157,23 @@ modifyImageMode1(unsigned int     const rows,
                 if (buf == NULL)
                     pm_error("out of memory");
                 for (i = 0, col = 0;
-                     col < imlen[row * planes + plane];
+                     col < rasterP->rowLen[rowplaneIndex];
                      col += 2) {
                     int cmd, val;
-                    for (cmd = image[row * planes + plane][col],
-                             val = image[plane + row * planes][col+1];
+                    for (cmd = rasterP->rowplane[rowplaneIndex][col],
+                             val = rasterP->rowplane[rowplaneIndex][col+1];
                          cmd >= 0 && i < newcols; --cmd, ++i)
                         buf[i] = val;
                 }
                 cols = MAX(cols, i);
-                free(image[row * planes + plane]);
+                free(rasterP->rowplane[rowplaneIndex]);
 
                 /*
                  * This is less than what we have so it realloc should
                  * not return null. Even if it does, tough! We will
                  * lose a line, and probably die on the next line anyway
                  */
-                image[row * planes + plane] = realloc(buf, i);
+                rasterP->rowplane[rowplaneIndex] = realloc(buf, i);
             }
         }
     }
@@ -96,13 +183,12 @@ modifyImageMode1(unsigned int     const rows,
 
 
 static void
-writePpm(FILE *           const ofP,
-         unsigned int     const cols,
-         unsigned int     const rows,
-         unsigned int     const planes,
-         unsigned char ** const image,
-         int              const mode,
-         const int *      const imlen) {
+writePpm(FILE *                const ofP,
+         unsigned int          const cols,
+         unsigned int          const rows,
+         unsigned int          const planes,
+         const struct Raster * const rasterP,
+         int                   const mode) {
 
     pixel * pixrow;
     unsigned int row;
@@ -111,7 +197,7 @@ writePpm(FILE *           const ofP,
     pixrow = ppm_allocrow(cols);
 
     for (row = 0; row < rows; ++row) {
-        if (image[row * planes + 0] == NULL) {
+        if (rasterP->rowplane[row * planes + 0] == NULL) {
             unsigned int col;
             for (col = 0; col < cols; ++col)
                 PPM_ASSIGN(pixrow[col], 0, 0, 0);
@@ -127,11 +213,15 @@ writePpm(FILE *           const ofP,
                     assert(planes == 3);
 
                     for (plane = 0; plane < planes; ++plane) {
-                        if (mode == 0 && cmd >= imlen[row * planes + plane])
+                        unsigned int const rowplaneIndex =
+                            row * planes + plane;
+                        if (mode == 0 &&
+                            cmd >= rasterP->rowLen[rowplaneIndex])
                             bf[plane] = 0;
                         else
-                            bf[plane] = (image[row * planes + plane][cmd] &
-                                     (1 << (7 - i))) ? 255 : 0;
+                            bf[plane] =
+                                (rasterP->rowplane[rowplaneIndex][cmd] &
+                                 (1 << (7 - i))) ? 255 : 0;
                     }
                     PPM_ASSIGN(pixrow[col + i], bf[0], bf[1], bf[2]);
                 }
@@ -149,18 +239,18 @@ main(int argc, const char ** argv) {
     int cmd, val;
     char buffer[BUFSIZ];
     unsigned int planes;
+    unsigned int height;
     unsigned int rows;
-    unsigned int rowsX;
     unsigned int cols;
     bool colsIsSet;
-    unsigned char ** image;  /* malloc'ed */
-    int * imlen;  /* malloc'ed */
     FILE * ifP;
     int mode;
     bool modeIsSet;
     int c;
     unsigned int plane;
     unsigned int row;
+    struct Raster raster;
+    bool rasterIsSetUp;
 
     pm_proginit(&argc, argv);
 
@@ -170,17 +260,16 @@ main(int argc, const char ** argv) {
         ifP = stdin;
 
     if (argc-1 > 2)
-        pm_error("Too many arguments (%u).  Only possible argument is "
+        pm_error("Too many arguments (%u).  Only possible argument is planes "
                  "input file name", argc-1);
 
     row = 0;  /* initial value */
     plane = 0;  /* initial value */
+    height = 0;  /* initial value */
+    planes = 3;  /* initial value */
     modeIsSet = false;  /* initial value */
     colsIsSet = false;  /* initial value */
-    rowsX = 0;  /* initial value */
-    image = NULL;  /* initial value */
-    imlen = NULL;  /* initial value */
-    planes = 3;  /* initial value */
+    rasterIsSetUp = false;  /* initial value */
 
     while ((c = fgetc(ifP)) != -1) {
         if (c != '\033')
@@ -233,7 +322,7 @@ main(int argc, const char ** argv) {
                     if (val < 0)
                         pm_error ("invalid height value");
                     else
-                        rowsX = val;
+                        height = val;
                     break;
                 case 'U':   /* planes */
                     planes = val;
@@ -264,26 +353,28 @@ main(int argc, const char ** argv) {
                     break;
                 case 'V':   /* send plane */
                 case 'W':   /* send last plane */
-                    if (row >= rowsX || image == NULL) {
-                        if (row >= rowsX)
-                            rowsX += 100;
-                        REALLOCARRAY(image, uintProduct(rowsX, planes));
-                        REALLOCARRAY(imlen, uintProduct(rowsX, planes));
+                    if (!rasterIsSetUp) {
+                        rasterInit(&raster, planes);
+                        rasterRealloc(&raster, height);
+                        rasterIsSetUp = true;
                     }
-                    if (image == NULL || imlen == NULL)
-                        pm_error("out of memory");
+                    rasterRealloc(&raster, row+1);
+
                     if (plane >= planes)
                         pm_error("too many planes");
                     if (!colsIsSet)
                         pm_error("missing width value");
 
                     cols = MAX(cols, val);
-                    imlen[row * planes + plane] = val;
-                    MALLOCARRAY(image[row * planes + plane], val);
-                    if (image[row * planes + plane] == NULL)
-                        pm_error("out of memory");
-                    if (fread(image[row * planes + plane], 1, val, ifP) != val)
-                        pm_error("short data");
+                    rasterAllocRowplane(&raster, row, plane, val);
+                    {
+                        size_t itemReadCt;
+                        itemReadCt =
+                            fread(raster.rowplane[row * planes + plane],
+                                  1, val, ifP);
+                        if (itemReadCt != val)
+                            pm_error("short data");
+                    }
                     if (c == 'V')
                         ++plane;
                     else {
@@ -310,21 +401,30 @@ main(int argc, const char ** argv) {
                 case 'Y': {
                     unsigned int targetRow;
 
-                    if (buffer[0] == '+')
+                    if (buffer[0] == '+') {
+                        if (val > UINT_MAX-row)
+                            pm_error("Relative Y position command generates "
+                                     "uncomputably high row number.");
                         targetRow = row + val;
-                    else if (buffer[0] == '-')
+                    } else if (buffer[0] == '-') {
+                        if (val > row)
+                            pm_error("relative Y position command "
+                                     "positions before top of image");
                         targetRow = row - val;
-                    else
+                    } else
                         targetRow = val;
 
-                    for (; targetRow > row; ++row) {
-                        unsigned int plane;
-                        for (plane = 0; plane < 3; ++plane) {
-                            imlen[row * planes + plane] = 0;
-                            image[row * planes + plane] = NULL;
-                        }
+                    if (!rasterIsSetUp) {
+                        rasterInit(&raster, planes);
+                        rasterIsSetUp = true;
                     }
+                    rasterAddRows(&raster, row, targetRow);
+
                     row = targetRow;
+
+                    if (row > UINT_MAX/planes-100)
+                        pm_error("Too many rows (more than %u) "
+                                 "for computation", row);
                 } break;
                 default:
                     pm_message("uninmplemented <ESC>*%c%d%c", cmd, val, c);
@@ -345,11 +445,11 @@ main(int argc, const char ** argv) {
     rows = row;
 
     if (mode == 1) {
-        modifyImageMode1(rows, planes, imlen, image, &cols);
+        modifyImageMode1(rows, planes, &raster, &cols);
 
     }
 
-    writePpm(stdout, cols, rows, planes, image, mode, imlen);
+    writePpm(stdout, cols, rows, planes, &raster, mode);
 
     pm_close(stdout);
 
