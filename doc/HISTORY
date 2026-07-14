@@ -23,6 +23,9 @@ not yet  BJH  Release 11.16.00
               pjtoppm: fix write to arbitrary memory after a position command.
               Always broken (pjtoppm was in primordial Netpbm, 1991).
 
+              pjtoppm: fix various bugs noticed in reading code.  Always
+              Always broken (pjtoppm was in primordial Netpbm, 1991).
+
               lispmtopgm: fix too-dim output (because maxval is too big).
               Always broken (lispmtopgm was in primordial Netpbm).
 
