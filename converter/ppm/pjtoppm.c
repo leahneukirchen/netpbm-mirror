@@ -278,20 +278,23 @@ main(int argc, const char ** argv) {
         case 'E':   /* reset */
             break;
         case '*': {
+            bool argPresent;
             unsigned int i;
             cmd = egetc(ifP);
-            for (i = 0; i < BUFSIZ; i++) {
+            for (i = 0; i < BUFSIZ-1; ++i) {
                 if (!isdigit(c = egetc(ifP)) && c != '+' && c != '-')
                     break;
                 buffer[i] = c;
             }
-            if (i != 0) {
+            /* 'c' is now the character after the numerial argument */
+            if (i == 0) {
+                argPresent = false;
+            } else {
                 buffer[i] = '\0';
                 if (sscanf(buffer, "%d", &val) != 1)
                     pm_error("bad value `%s' at <ESC>*%c%c", buffer, cmd, c);
+                argPresent = true;
             }
-            else
-                val = -1;
             switch (cmd) {
             case 't':
                 switch (c) {
@@ -311,23 +314,33 @@ main(int argc, const char ** argv) {
             case 'r':
                 switch (c) {
                 case 'S':   /* width */
-                    if (val < 0)
-                        pm_error("invalid width value");
+                    if (!argPresent)
+                        pm_error("Missing argument for <ESC>*rS command");
+                    else if (val < 0)
+                        pm_error("negative width value");
                     else {
                         cols = val;
                         colsIsSet = true;
                     }
                     break;
                 case 'T':   /* height */
-                    if (val < 0)
-                        pm_error ("invalid height value");
+                    if (!argPresent)
+                        pm_error("Missing argument for <ESC>*rT command");
+                    else if (val < 0)
+                        pm_error("negative height value");
                     else
                         height = val;
                     break;
                 case 'U':   /* planes */
-                    planes = val;
-                    if (planes != 3)
-                        pm_error("can handle only 3 plane files");
+                    if (!argPresent)
+                        pm_error("Missing argument for <ESC>*rU command");
+                    else if (val < 0)
+                        pm_error("negative planes value");
+                    else {
+                        planes = val;
+                        if (planes != 3)
+                            pm_error("can handle only 3-plane images");
+                    }
                     break;
                 case 'A':   /* begin raster */
                     break;
@@ -339,13 +352,15 @@ main(int argc, const char ** argv) {
                 case 'H':
                     break;  /* set deci width */
                 default:
-                    pm_message("uninmplemented <ESC>*%c%d%c", cmd, val, c);
+                    pm_message("uninmplemented <ESC>*%c%c command class", cmd, c);
                     break;
                 }
                 break;
             case 'b':
                 switch (c) {
                 case 'M':   /* transmission mode */
+                    if (!argPresent)
+                        pm_error("missing argument for *bM");
                     if (val != 0 && val != 1)
                         pm_error("unimplemented transmission mode %d", val);
                     mode = val;
@@ -363,8 +378,11 @@ main(int argc, const char ** argv) {
                     if (plane >= planes)
                         pm_error("too many planes");
                     if (!colsIsSet)
-                        pm_error("missing width value");
+                        pm_error("missing width command");
 
+                    if (!argPresent)
+                        pm_error("missing argument in "
+                                 "<ESC>*bV or <ESC> *bW command");
                     cols = MAX(cols, val);
                     rasterAllocRowplane(&raster, row, plane, val);
                     {
@@ -391,6 +409,8 @@ main(int argc, const char ** argv) {
                 }
                 break;
             case 'p': /* Position */
+                if (!argPresent)
+                    pm_error("missing argument in <ESC>*p command");
                 if (plane != 0)
                     pm_error("changed position in the middle of "
                              "transferring planes");
@@ -401,16 +421,21 @@ main(int argc, const char ** argv) {
                 case 'Y': {
                     unsigned int targetRow;
 
+                    /* A signed argument is relative to current row; an
+                       unsigned argument is an absolute row.
+                    */
                     if (buffer[0] == '+') {
                         if (val > UINT_MAX-row)
                             pm_error("Relative Y position command generates "
                                      "uncomputably high row number.");
                         targetRow = row + val;
                     } else if (buffer[0] == '-') {
-                        if (val > row)
+                        unsigned int const absval = -val;
+                        assert(val <= 0);
+                        if (absval > row)
                             pm_error("relative Y position command "
                                      "positions before top of image");
-                        targetRow = row - val;
+                        targetRow = row - absval;
                     } else
                         targetRow = val;
 
@@ -427,11 +452,11 @@ main(int argc, const char ** argv) {
                                  "for computation", row);
                 } break;
                 default:
-                    pm_message("uninmplemented <ESC>*%c%d%c", cmd, val, c);
+                    pm_message("uninmplemented <ESC>*p%d%c", val, c);
                     break;
                 }
             default:
-                pm_message("uninmplemented <ESC>*%c%d%c", cmd, val, c);
+                pm_message("uninmplemented <ESC>*%c%c", cmd, c);
                 break;
              }
         } /* case */
