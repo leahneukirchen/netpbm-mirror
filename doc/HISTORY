@@ -4,6 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+26.07.15 BJH  Release 11.15.03
+
+              mrftopbm: fix crash with zero width or height in MRF header.
+              Always broken (mrftopbm was new in Netpbm 10.18 (March 2009)).
+
+              pjtoppm: fix write to arbitrary memory after a position command.
+              Always broken (pjtoppm was in primordial Netpbm, 1991).
+
 26.07.08 BJH  Release 11.15.02
     
               pnmtojbig: fix incorrect output with default -s option.
