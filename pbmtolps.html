@@ -3,7 +3,7 @@
 <body>
 
 <h1>pbmtolps</h1>
-Updated: 06 July 2019
+Updated: 14 July 2026
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -14,6 +14,7 @@ pbmtolps - convert PBM image to PostScript
 
 <b>pbmtolps</b>
 [<b>-dpi</b>=<i>n</i>]
+[<b>-linewidth</b>=<i>n</i>]
 [<i>pbmfile</i>]
 
 <p>Minimum unique abbreviation of option is acceptable.  You may use
@@ -50,8 +51,15 @@ Common Options</a>), <b>pbmtolps</b> recognizes the following
 command line option:
 
 <dl>
-<dt><b>-dpi=</b><i>n</i>
+
+  <dt><b>-dpi=</b><i>n</i>
 <dd>The resolution of the target printer, in dots per inch.
+<p>The default is Postscript&apos;s default, which is 72 DPI.
+
+<dt><b>-linewidth=</b><i>n</i>
+<dd>The thickness of each line, in points.
+<p>The default is Postscript&apos;s default, which is 1 point.
+
 </dl>
 
 
