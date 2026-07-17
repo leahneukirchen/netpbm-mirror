@@ -307,7 +307,7 @@ main(int argc, const char ** argv) {
                 case 'R':
                     break;  /* set resolution */
                 default:
-                    pm_message("uninmplemented <ESC>*%c%d%c", cmd, val, c);
+                    pm_message("unimplemented <ESC>*%c%d%c", cmd, val, c);
                     break;
                 }
                 break;
@@ -352,7 +352,7 @@ main(int argc, const char ** argv) {
                 case 'H':
                     break;  /* set deci width */
                 default:
-                    pm_message("uninmplemented <ESC>*%c%c command class", cmd, c);
+                    pm_message("unimplemented <ESC>*%c%c command class", cmd, c);
                     break;
                 }
                 break;
@@ -404,7 +404,7 @@ main(int argc, const char ** argv) {
                     }
                     break;
                 default:
-                    pm_message("uninmplemented <ESC>*%c%d%c", cmd, val, c);
+                    pm_message("unimplemented <ESC>*%c%d%c", cmd, val, c);
                     break;
                 }
                 break;
@@ -452,11 +452,11 @@ main(int argc, const char ** argv) {
                                  "for computation", row);
                 } break;
                 default:
-                    pm_message("uninmplemented <ESC>*p%d%c", val, c);
+                    pm_message("unimplemented <ESC>*p%d%c", val, c);
                     break;
                 }
             default:
-                pm_message("uninmplemented <ESC>*%c%c", cmd, c);
+                pm_message("unimplemented <ESC>*%c%c", cmd, c);
                 break;
              }
         } /* case */
