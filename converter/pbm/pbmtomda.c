@@ -1,5 +1,4 @@
-/***************************************************************************
-
+/*=============================================================================
     PBMTOMDA: Convert PBM to Microdesign area
     Copyright (C) 1999,2004 John Elliott <jce@seasip.demon.co.uk>
 
@@ -16,17 +15,19 @@
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-******************************************************************************/
+=============================================================================*/
 
 #include <stdbool.h>
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "pbm.h"
+#include "pm_c_util.h"
 #include "mallocvar.h"
 #include "shhopt.h"
+#include "pbm.h"
+
+
 
 struct CmdlineInfo {
     /* All the information the user supplied in the command line,
@@ -81,22 +82,20 @@ parseCommandLine(int argc, const char ** argv,
 
 typedef unsigned char Mdbyte;
 
-/* Encode 8 pixels as a byte */
 
 static Mdbyte
-encode(bit ** const bits,
-       int    const row,
-       int    const col) {
-
-    int n;
-    int mask;
+encode(const bit *  const bitrow,
+       unsigned int const col) {
+/*----------------------------------------------------------------------------
+   One-byte encoding of the 8 pixels in 'bitrow' starting at Column 'col'.
+-----------------------------------------------------------------------------*/
+    unsigned int n;
+    unsigned int mask;
     Mdbyte b;
 
-    mask = 0x80;   /* initial value */
-    b = 0;  /* initial value */
-
-    for (n = 0; n < 8; n++) {
-        if (bits[row][col+n] == PBM_BLACK) b |= mask;
+    for (n = 0, mask = 0x80, b = 0; n < 8; ++n) {
+        if (bitrow[col+n] == PBM_BLACK)
+            b |= mask;
         mask = mask >> 1;
     }
     return b;
@@ -105,89 +104,118 @@ encode(bit ** const bits,
 
 
 static void
-doTranslation(bit **       const bits,
-              unsigned int const nOutCols,
-              unsigned int const nOutRows,
-              unsigned int const nInRows,
-              bool         const mustInvert,
-              bool         const mustScale) {
+encodeRowIntoNonCompressedBitmap(const bit *  const bitrow,
+                                 unsigned int const cols,
+                                 bool         const isPadding,
+                                 bool         const mustInvert,
+                                 Mdbyte *     const mdrow) {
+
+    unsigned int byteIdx;
+
+    for (byteIdx = 0; byteIdx < cols/8; ++byteIdx) {
+        Mdbyte b;
+
+        if (isPadding)
+            b = 0xff;  /* All black */
+        else
+            b = encode(bitrow, byteIdx * 8);
+
+        mdrow[byteIdx] = mustInvert ? b : ~b;
+    }
+}
+
+
+
+static void
+rleCompressRow(const Mdbyte * const mdrow,
+               unsigned int   const rowByteCt,
+               FILE *         const ofP) {
+
+    unsigned int i;
+
+    for (i = 0; i < rowByteCt; ) {
+        Mdbyte const b = mdrow[i];
+
+        if (b != 0xFF && b != 0) {
+            /* Normal byte */
+            putchar(b);
+            ++i;
+        } else {
+            /* RLE a run of 0s or 0xFFs */
+
+            unsigned int x1;
+
+            for (x1 = i; x1 < rowByteCt; ++x1) {
+                if (mdrow[x1] != b) break;
+                assert(x1 >= i);
+                if (x1 - i > 256) break;
+            }
+            assert(x1 >= i);
+            x1 -= i;    /* x1 = no. of repeats */
+            if (x1 == 256) x1 = 0;
+            putc(b, ofP);
+            putc(x1, ofP);
+            i += x1;
+        }
+    }
+}
+
+
+
+static void
+writeRaster(bit **       const bits,
+            unsigned int const cols,
+            unsigned int const outRowCt,
+            unsigned int const inRowCt,
+            bool         const mustInvert,
+            bool         const mustScale,
+            FILE *       const ofP) {
 /*----------------------------------------------------------------------------
-  Translate a pbm to MD2 format, one row at a time
+  Translate a pbm to MD2 format, one row at a time, and write it to *ofP.
+
+  'bits' is the raster.  It is 'inRowCt' by 'cols'.
+
+  'outRowCt' is the number of rows for the MD2 output to have; we pad on
+  the bottom as necessary.
+
+  'cols' is the number of columns in the raster.  Note that 'bits' has one
+  byte per pixel, while MD2 has 8 pixels per byte.
+
+  'mustScale' means to take only every other row of 'bits' ('outRowCt'
+  reflects the reduction in number of MD2 rows).
 -----------------------------------------------------------------------------*/
     unsigned int const step = mustScale ? 2 : 1;
+    unsigned int const rowByteCt = cols/8;
+        /* Number of bytes in an MD2 row, before compression */
 
     unsigned int row;
     Mdbyte * mdrow;  /* malloc'ed */
 
-    MALLOCARRAY(mdrow, nOutCols);
+    MALLOCARRAY(mdrow, rowByteCt);
 
     if (mdrow == NULL)
-        pm_error("Unable to allocate memory for %u columns", nOutCols);
+        pm_error("Unable to allocate memory for %u columns", cols);
 
-    for (row = 0; row < nOutRows; row += step) {
-        unsigned int col;
+    for (row = 0; row < outRowCt; row += step) {
+        encodeRowIntoNonCompressedBitmap(bits[row], cols, row >= inRowCt,
+                                         mustInvert, mdrow);
 
-        /* Encode image into non-compressed bitmap */
-        for (col = 0; col < nOutCols; ++col) {
-            Mdbyte b;
-
-            if (row < nInRows)
-                b = encode(bits, row, col * 8);
-            else
-                b = 0xff;  /* All black */
-
-            mdrow[col] = mustInvert ? b : ~b;
-        }
-
-        /* Encoded. Now RLE it */
-        for (col = 0; col < nOutCols; ) {
-            Mdbyte const b = mdrow[col];
-
-            if (b != 0xFF && b != 0) {
-                /* Normal byte */
-                putchar(b);
-                ++col;
-            } else {
-                /* RLE a run of 0s or 0xFFs */
-
-                unsigned int x1;
-
-                for (x1 = col; x1 < nOutCols; ++x1) {
-                    if (mdrow[x1] != b) break;
-                    assert(x1 >= col);
-                    if (x1 - col > 256) break;
-                }
-                assert(x1 >= col);
-                x1 -= col;    /* x1 = no. of repeats */
-                if (x1 == 256) x1 = 0;
-                putchar(b);
-                putchar(x1);
-                col += x1;
-            }
-        }
+        rleCompressRow(mdrow, rowByteCt, ofP);
     }
     free(mdrow);
 }
 
 
 
-int
-main(int argc, const char ** argv) {
+static void
+writeMdaHeader(unsigned int const rows,
+               unsigned int const cols,
+               FILE *       const ofP) {
 
     const char * const headerValue = ".MDAMicroDesignPCWv1.00\r\npbm2mda\r\n";
 
-    struct CmdlineInfo cmdline;
-    FILE * ifP;
-    unsigned int nOutRowsUnrounded;  /* Before rounding up to multiple of 4 */
-    unsigned int nOutCols, nOutRows;
-    int nInCols, nInRows;
-    bit ** bits;
     Mdbyte header[128];
     int rc;
-
-    pm_proginit(&argc, argv);
-
-    parseCommandLine(argc, argv, &cmdline);
 
     /* Output v2-format MDA images. Simulate MDA header...
      * 2004-01-11: Hmm. Apparently some (but not all) MDA-reading
@@ -198,30 +226,49 @@ main(int argc, const char ** argv) {
            0x00,
            sizeof(header)-strlen(headerValue));
 
-    ifP = pm_openr(cmdline.inputFileNm);
-
-    bits = pbm_readpbm(ifP, &nInCols, &nInRows);
-
-    nOutRowsUnrounded = cmdline.dscale ? nInRows/2 : nInRows;
-
-    nOutRows = ((nOutRowsUnrounded + 3) / 4) * 4;
-        /* MDA wants rows a multiple of 4 */
-    nOutCols = nInCols / 8;
-
-    rc = fwrite(header, 1, 128, stdout);
-    if (rc < 128)
+    rc = fwrite(header, 1, sizeof(header), stdout);
+    if (rc < sizeof(header))
         pm_error("Unable to write header to output file.  errno=%d (%s)",
                  errno, strerror(errno));
 
-    pm_writelittleshort(stdout, nOutRows);
-    pm_writelittleshort(stdout, nOutCols);
+    pm_writelittleshort(stdout, rows);
+    pm_writelittleshort(stdout, cols/8);
+}
 
-    doTranslation(bits, nOutCols, nOutRows, nInRows,
-                  !!cmdline.invert, !!cmdline.dscale);
+
+
+int
+main(int argc, const char ** argv) {
+
+    struct CmdlineInfo cmdline;
+    FILE * ifP;
+    unsigned int outRowCtUnrounded;  /* Before rounding up to multiple of 4 */
+    unsigned int outRowCt;
+    int inRowCt;
+    int cols;
+    bit ** bits;
+
+    pm_proginit(&argc, argv);
+
+    parseCommandLine(argc, argv, &cmdline);
+
+    ifP = pm_openr(cmdline.inputFileNm);
+
+    bits = pbm_readpbm(ifP, &cols, &inRowCt);
+
+    outRowCtUnrounded = cmdline.dscale ? inRowCt/2 : inRowCt;
+
+    outRowCt = ROUNDUP(outRowCtUnrounded, 4);
+        /* MDA wants rows a multiple of 4 */
+
+    writeMdaHeader(outRowCt, cols, stdout);
+
+    writeRaster(bits, cols, outRowCt, inRowCt,
+                !!cmdline.invert, !!cmdline.dscale, stdout);
 
     pm_close(ifP);
     fflush(stdout);
-    pbm_freearray(bits, nInRows);
+    pbm_freearray(bits, inRowCt);
 
     return 0;
 }
