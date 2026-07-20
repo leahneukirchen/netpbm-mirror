@@ -17,6 +17,9 @@ not yet  BJH  Release 11.16.00
               pbmtobrush: fix write to random memory.  Always broken
               (pbmtobrush was new in Netpbm 11.15, June 2026).
 
+              pbmtomda: fix incorrect output (invalid image) with -dscale.
+              Always broken (pbmtomda was new in Netpbm 9.1 (May 2000).
+
               mrftopbm: fix crash with zero width or height in MRF header.
               Always broken (mrftopbm was new in Netpbm 10.18 (March 2009)).
 
@@ -24,7 +27,7 @@ not yet  BJH  Release 11.16.00
               Always broken (pjtoppm was in primordial Netpbm, 1991).
 
               pjtoppm: fix various bugs noticed in reading code.  Always
-              Always broken (pjtoppm was in primordial Netpbm, 1991).
+              broken (pjtoppm was in primordial Netpbm, 1991).
 
               lispmtopgm: fix too-dim output (because maxval is too big).
               Always broken (lispmtopgm was in primordial Netpbm).
@@ -960,6 +963,8 @@ not yet  BJH  Release 11.16.00
               (Pamrubber was new in Netpbm 10.54 (March 2011)).
 
 19.09.28 BJH  Release 10.88.00
+
+              pbmtolps: Add -linewdith .
 
               pnmquant: Fail if user specifies more than one of -meanpixel,
               -meancolor, and -center, rather than just pick one.

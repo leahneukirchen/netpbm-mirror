@@ -104,21 +104,30 @@ encode(const bit *  const bitrow,
 
 
 static void
+makePadRow(unsigned int const cols,
+           bool         const mustInvert,
+           Mdbyte *     const mdrow) {
+
+    Mdbyte const padByte = mustInvert ? 0xff : 0x00;
+
+    unsigned int byteIdx;
+
+    for (byteIdx = 0; byteIdx < cols/8; ++byteIdx)
+        mdrow[byteIdx] = padByte;
+}
+
+
+
+static void
 encodeRowIntoNonCompressedBitmap(const bit *  const bitrow,
                                  unsigned int const cols,
-                                 bool         const isPadding,
                                  bool         const mustInvert,
                                  Mdbyte *     const mdrow) {
 
     unsigned int byteIdx;
 
     for (byteIdx = 0; byteIdx < cols/8; ++byteIdx) {
-        Mdbyte b;
-
-        if (isPadding)
-            b = 0xff;  /* All black */
-        else
-            b = encode(bitrow, byteIdx * 8);
+        Mdbyte const b = encode(bitrow, byteIdx * 8);
 
         mdrow[byteIdx] = mustInvert ? b : ~b;
     }
@@ -171,7 +180,7 @@ writeRaster(bit **       const bits,
             bool         const mustScale,
             FILE *       const ofP) {
 /*----------------------------------------------------------------------------
-  Translate a pbm to MD2 format, one row at a time, and write it to *ofP.
+  Write the raster in MD2 format to *ofP.
 
   'bits' is the raster.  It is 'inRowCt' by 'cols'.
 
@@ -188,7 +197,7 @@ writeRaster(bit **       const bits,
     unsigned int const rowByteCt = cols/8;
         /* Number of bytes in an MD2 row, before compression */
 
-    unsigned int row;
+    unsigned int outrow;
     Mdbyte * mdrow;  /* malloc'ed */
 
     MALLOCARRAY(mdrow, rowByteCt);
@@ -196,9 +205,14 @@ writeRaster(bit **       const bits,
     if (mdrow == NULL)
         pm_error("Unable to allocate memory for %u columns", cols);
 
-    for (row = 0; row < outRowCt; row += step) {
-        encodeRowIntoNonCompressedBitmap(bits[row], cols, row >= inRowCt,
-                                         mustInvert, mdrow);
+    for (outrow = 0; outrow < outRowCt; ++outrow) {
+        unsigned int const inrow = outrow * step;
+
+        if (inrow >= inRowCt)
+            makePadRow(cols, mustInvert, mdrow);
+        else
+            encodeRowIntoNonCompressedBitmap(
+                bits[inrow], cols, mustInvert, mdrow);
 
         rleCompressRow(mdrow, rowByteCt, ofP);
     }
