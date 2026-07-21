@@ -2,7 +2,7 @@
 <html><head><title>Pbmtomda User Manual</title></head>
 <body>
 <h1>pbmtomda</h1>
-Updated: 15 September 2023
+Updated: 20 July 2026
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -29,10 +29,20 @@ from its value.
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>pbmtomda</b> reads a PBM image as input and
-produces a MicroDesign 2 area file (.MDA) as output.
+<p><b>pbmtomda</b> reads a PBM image as input and produces a MicroDesign 2
+area file (.MDA) as output.
 
 <p>If you do not specify <i>pbmfile</i>, <b>pbmtomda</b> uses Standard Input.
+
+<p>MDA images must be a multiple of 8 pixels wide and 4 pixels high.
+<b>pbmtomda</b> truncates any fractional pixels on the right and pads on the
+bottom with black as necessary, even if this creates an image of zero width.
+The program warns you when it does these things.
+
+<p>To avoid truncation and do different padding, pad the image to a multiple
+of 8 pixels wide and 4 pixels high beforehand with <b>pnmpad</b>
+or <b>pamcomp</b>.
+
 
 <h2 id="options">OPTIONS</h2>
 
