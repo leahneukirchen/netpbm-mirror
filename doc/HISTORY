@@ -18,7 +18,10 @@ not yet  BJH  Release 11.16.00
               (pbmtobrush was new in Netpbm 11.15, June 2026).
 
               pbmtomda: fix incorrect output (invalid image) with -dscale.
-              Always broken (pbmtomda was new in Netpbm 9.1 (May 2000).
+              Always broken (pbmtomda was new in Netpbm 9.1 (May 2000)).
+
+              mdatopbm: fix failure when height or width of MDA is 2^15 or
+              more.  Always broken (mdatopbm was new in Netpbm 9.1 (May 2000)).
 
               mrftopbm: fix crash with zero width or height in MRF header.
               Always broken (mrftopbm was new in Netpbm 10.18 (March 2009)).
