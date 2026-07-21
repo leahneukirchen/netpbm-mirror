@@ -1,5 +1,10 @@
 /*=============================================================================
-    PBMTOMDA: Convert PBM to Microdesign area
+                                pbmtomda
+===============================================================================
+    Convert a PBM image to Microdesign area.
+
+    See the file mdaspec.txt for a specification of the MDA format.
+
     Copyright (C) 1999,2004 John Elliott <jce@seasip.demon.co.uk>
 
     This program is free software; you can redistribute it and/or modify
