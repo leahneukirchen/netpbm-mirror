@@ -23,6 +23,8 @@ not yet  BJH  Release 11.16.00
               mdatopbm: fix failure when height or width of MDA is 2^15 or
               more.  Always broken (mdatopbm was new in Netpbm 9.1 (May 2000)).
 
+              mdatopbm: improve error message when input has zero width.
+
               mrftopbm: fix crash with zero width or height in MRF header.
               Always broken (mrftopbm was new in Netpbm 10.18 (March 2009)).
 
