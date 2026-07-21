@@ -227,6 +227,36 @@ writeRaster(bit **       const bits,
 
 
 static void
+warnPadding(unsigned int const outRowCtUnrounded,
+            unsigned int const outRowCt) {
+
+    if (outRowCt != outRowCtUnrounded) {
+        pm_message("Adding %u rows of padding to bottom to reach a multiple "
+                   "of 4 rows as required by the MDA format",
+                   outRowCt - outRowCtUnrounded);
+    }
+}
+
+
+
+static void
+warnTruncating(unsigned int const cols) {
+
+    if (ROUNDDN(cols, 8) != cols) {
+        pm_message("Truncating %u columns on right to reach a multiple "
+                   "of 8 columns as required by the MDA format",
+                   cols - ROUNDDN(cols, 8));
+
+        if (ROUNDDN(cols, 8) == 0) {
+            pm_message("Resulting image has zero width, "
+                       "which may be unusable");
+        }
+    }
+}
+
+
+
+static void
 writeMdaHeader(unsigned int const rows,
                unsigned int const cols,
                FILE *       const ofP) {
@@ -279,6 +309,9 @@ main(int argc, const char ** argv) {
 
     outRowCt = ROUNDUP(outRowCtUnrounded, 4);
         /* MDA wants rows a multiple of 4 */
+
+    warnPadding(outRowCtUnrounded, outRowCt);
+    warnTruncating(cols);
 
     writeMdaHeader(outRowCt, cols, stdout);
 

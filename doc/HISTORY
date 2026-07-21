@@ -20,6 +20,8 @@ not yet  BJH  Release 11.16.00
               pbmtomda: fix incorrect output (invalid image) with -dscale.
               Always broken (pbmtomda was new in Netpbm 9.1 (May 2000)).
 
+              pbmtomda: add warning if padding or truncating.
+
               mdatopbm: fix failure when height or width of MDA is 2^15 or
               more.  Always broken (mdatopbm was new in Netpbm 9.1 (May 2000)).
 
