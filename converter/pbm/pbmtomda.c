@@ -124,7 +124,7 @@ doTranslation(bit **       const bits,
     if (mdrow == NULL)
         pm_error("Unable to allocate memory for %u columns", nOutCols);
 
-    for (row = 0; row < nOutRows; row += step) {
+    for (row = 0; row < nOutRows*step; row += step) {
         unsigned int col;
 
         /* Encode image into non-compressed bitmap */

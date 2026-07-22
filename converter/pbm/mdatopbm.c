@@ -279,8 +279,8 @@ main(int argc, const char **argv) {
 
     {
         short yy;
-        pm_readlittleshort(ifP, &yy); nInRows = yy;
-        pm_readlittleshort(ifP, &yy); nInCols = yy;
+        pm_readlittleshort(ifP, &yy); nInRows = (unsigned short)yy;
+        pm_readlittleshort(ifP, &yy); nInCols = (unsigned short)yy;
     }
 
     nOutCols = 8 * nInCols;

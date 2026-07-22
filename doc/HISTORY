@@ -4,6 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+26.07.22 BJH  Release 11.15.04
+
+              pbmtomda: fix incorrect output (invalid image) with -dscale.
+              Always broken (pbmtomda was new in Netpbm 9.1 (May 2000)).
+
+              mdatopbm: fix failure when height or width of MDA is 2^15 or
+              more.  Always broken (mdatopbm was new in Netpbm 9.1 (May 2000)).
+
 26.07.15 BJH  Release 11.15.03
 
               mrftopbm: fix crash with zero width or height in MRF header.
