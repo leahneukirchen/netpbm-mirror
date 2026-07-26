@@ -4,6 +4,24 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+26.07.26 BJH  Release 11.02.26
+
+              imgtoppm: fix write to arbitrary memory with invalid input
+              (excessively long variable length field).  Always broken.
+              (imgtoppm was in primordial Netpbm).
+
+              pbmtomda: fix incorrect output (invalid image) with -dscale.
+              Always broken (pbmtomda was new in Netpbm 9.1 (May 2000)).
+
+              mdatopbm: fix failure when height or width of MDA is 2^15 or
+              more.  Always broken (mdatopbm was new in Netpbm 9.1 (May 2000)).
+
+              mrftopbm: fix crash with zero width or height in MRF header.
+              Always broken (mrftopbm was new in Netpbm 10.18 (March 2009)).
+
+              pjtoppm: fix write to arbitrary memory after a position command.
+              Always broken (pjtoppm was in primordial Netpbm, 1991).
+
 26.07.12 BJH  Release 11.02.25
 
               lispmtopgm: fix too-dim output (because maxval is too big).

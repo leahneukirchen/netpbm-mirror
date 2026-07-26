@@ -217,6 +217,13 @@ main(int argc, const char ** argv) {
                         val = row + val;
                     if (buffer[0] == '-')
                         val = row - val;
+                    if (val < 0)
+                        pm_error("invalid Y position");
+                    rowsX = MAX(rowsX, val);
+                    REALLOCARRAY(image, uintProduct(rowsX, planes));
+                    REALLOCARRAY(imlen, uintProduct(rowsX, planes));
+                    if (image == NULL || imlen == NULL)
+                        pm_error("out of memory");
                     for (; val > row; ++row)
                         for (plane = 0; plane < 3; ++plane) {
                             imlen[row * planes + plane] = 0;
