@@ -33,6 +33,9 @@ not yet  BJH  Release 11.16.00
               pjtoppm: fix write to arbitrary memory after a position command.
               Always broken (pjtoppm was in primordial Netpbm, 1991).
 
+              pjtoppm: fix invalid PPM output when input skips rows.  Always
+              broken (pjtoppm was in primordial Netpbm, 1991).
+
               pjtoppm: fix various bugs noticed in reading code.  Always
               broken (pjtoppm was in primordial Netpbm, 1991).
 
