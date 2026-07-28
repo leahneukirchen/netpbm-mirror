@@ -132,11 +132,20 @@ egetc(FILE * const ifP) {
 
 
 static void
-modifyImageMode1(unsigned int          const rows,
-                 unsigned int          const planes,
-                 const struct Raster * const rasterP,
-                 unsigned int *        const colsP) {
+decompressImageMode1(unsigned int          const rows,
+                     unsigned int          const planes,
+                     const struct Raster * const rasterP,
+                     unsigned int *        const colsP) {
+/*----------------------------------------------------------------------------
+   Mode 1 appears to be a compressed raster format where each element of
+   a rowplane is two bytes -- the first one is a repeat count and the second
+   is 8 black-or-white pixels.
 
+   As input, *rasterP has that compressed format.  We replace it in its
+   entirety with the decompressed data (one byte per 8 pixels).
+
+   Return as *colsP the number of pixels in the longest line in the raster.
+-----------------------------------------------------------------------------*/
     unsigned int const newcols = 10240;
     /* It could not be larger than that! */
 
@@ -144,8 +153,8 @@ modifyImageMode1(unsigned int          const rows,
     unsigned int row;
 
     for (row = 0, cols = 0; row < rows; ++row) {
-        unsigned int plane;
         if (rasterP->rowplane[row * planes + 0]) {
+            unsigned int plane;
             for (plane = 0; plane < planes; ++plane) {
                 unsigned int const rowplaneIndex = row * planes + plane;
 
@@ -174,6 +183,7 @@ modifyImageMode1(unsigned int          const rows,
                  * lose a line, and probably die on the next line anyway
                  */
                 rasterP->rowplane[rowplaneIndex] = realloc(buf, i);
+                rasterP->rowLen[rowplaneIndex]   = i;
             }
         }
     }
@@ -198,13 +208,13 @@ writePpm(FILE *                const ofP,
 
     for (row = 0; row < rows; ++row) {
         if (rasterP->rowplane[row * planes + 0] == NULL) {
+            /* This row is not present in the raster; make a row of padding */
             unsigned int col;
             for (col = 0; col < cols; ++col)
                 PPM_ASSIGN(pixrow[col], 0, 0, 0);
         } else {
             unsigned int col;
-            unsigned int cmd;
-            for (cmd = 0, col = 0; col < cols; col += 8, ++cmd) {
+            for (col = 0; col < cols; col += 8) {
                 unsigned int i;
                 for (i = 0; i < 8 && col + i < cols; ++i) {
                     unsigned int plane;
@@ -215,19 +225,26 @@ writePpm(FILE *                const ofP,
                     for (plane = 0; plane < planes; ++plane) {
                         unsigned int const rowplaneIndex =
                             row * planes + plane;
-                        if (mode == 0 &&
-                            cmd >= rasterP->rowLen[rowplaneIndex])
+
+                        /* Oddly enough, *rasterP can contain rowplanes of
+                           varying widths ('cols' is just a maximum) and can
+                           skip rowplanes altogether.  rasterP->rowLen[i] tells
+                           how many bytes of data are in rowplane i, and can
+                           be zero to mean the entire rowplane is absent.
+                        */
+                        if (col/8 >= rasterP->rowLen[rowplaneIndex])
                             bf[plane] = 0;
-                        else
+                        else {
                             bf[plane] =
-                                (rasterP->rowplane[rowplaneIndex][cmd] &
+                                (rasterP->rowplane[rowplaneIndex][col/8] &
                                  (1 << (7 - i))) ? 255 : 0;
+                        }
                     }
                     PPM_ASSIGN(pixrow[col + i], bf[0], bf[1], bf[2]);
                 }
             }
-            ppm_writeppmrow(stdout, pixrow, cols, 255, 0);
         }
+        ppm_writeppmrow(stdout, pixrow, cols, 255, 0);
     }
 }
 
@@ -370,11 +387,14 @@ main(int argc, const char ** argv) {
                     break;
                 case 'V':   /* send plane */
                 case 'W':   /* send last plane */
+                {
+                    unsigned int const dataLen = val;
                     if (!rasterIsSetUp) {
                         rasterInit(&raster, planes);
                         rasterRealloc(&raster, height);
                         rasterIsSetUp = true;
                     }
+
                     rasterRealloc(&raster, row+1);
 
                     if (plane >= planes)
@@ -385,14 +405,14 @@ main(int argc, const char ** argv) {
                     if (!argPresent)
                         pm_error("missing argument in "
                                  "<ESC>*bV or <ESC> *bW command");
-                    cols = MAX(cols, val);
-                    rasterAllocRowplane(&raster, row, plane, val);
+                    cols = MAX(cols, dataLen);
+                    rasterAllocRowplane(&raster, row, plane, dataLen);
                     {
                         size_t itemReadCt;
                         itemReadCt =
                             fread(raster.rowplane[row * planes + plane],
-                                  1, val, ifP);
-                        if (itemReadCt != val)
+                                  1, dataLen, ifP);
+                        if (itemReadCt != dataLen)
                             pm_error("short data");
                     }
                     if (c == 'V')
@@ -404,7 +424,7 @@ main(int argc, const char ** argv) {
                                      "for computation", row);
                         ++row;
                     }
-                    break;
+                } break;
                 default:
                     pm_message("Ignoring unimplemented <ESC>*%c%d%c",
                                cmd, val, c);
@@ -473,10 +493,8 @@ main(int argc, const char ** argv) {
 
     rows = row;
 
-    if (mode == 1) {
-        modifyImageMode1(rows, planes, &raster, &cols);
-
-    }
+    if (mode == 1)
+        decompressImageMode1(rows, planes, &raster, &cols);
 
     writePpm(stdout, cols, rows, planes, &raster, mode);
 
