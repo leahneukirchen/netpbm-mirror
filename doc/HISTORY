@@ -4,6 +4,15 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+26.07.29 BJH  Release 11.02.27
+
+              pjtoppm: fix crash due to spurious memory access with compressed
+              (mode 1) input.  Always broken (pjtoppm was in primordial
+              Netpbm, 1991).
+
+              build: fix compile fail of pbmtopgm.c.  Introduced in Netpbm
+              11.02.24 (June 2026).
+
 26.07.26 BJH  Release 11.02.26
 
               imgtoppm: fix write to arbitrary memory with invalid input

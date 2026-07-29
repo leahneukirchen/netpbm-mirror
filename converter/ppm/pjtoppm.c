@@ -280,6 +280,7 @@ main(int argc, const char ** argv) {
                  * lose a line, and probably die on the next line anyway
                  */
                 image[plane + row * planes] = realloc(buf, i);
+                imlen[plane + row * planes] = i;
             }
         }
         cols *= 8;
@@ -303,7 +304,7 @@ main(int argc, const char ** argv) {
                 for (i = 0; i < 8 && col + i < cols; ++i) {
                     unsigned int plane;
                     for (plane = 0; plane < planes; ++plane)
-                        if (mode == 0 && cmd >= imlen[row * planes + plane])
+                        if (cmd >= imlen[row * planes + plane])
                             bf[plane] = 0;
                         else
                             bf[plane] = (image[row * planes + plane][cmd] &
