@@ -39,6 +39,9 @@ not yet  BJH  Release 11.16.00
               pjtoppm: fix various bugs noticed in reading code.  Always
               broken (pjtoppm was in primordial Netpbm, 1991).
 
+              thinkjettopbm: fix failure when input is from Standard Input.
+              Introduced in Netpbm 10.12 (November 2002).
+
               lispmtopgm: fix too-dim output (because maxval is too big).
               Always broken (lispmtopgm was in primordial Netpbm).
 
