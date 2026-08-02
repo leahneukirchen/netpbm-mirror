@@ -154,7 +154,7 @@ DIG             [0-9]
 %%
 
 static void
-parseCommandLine(int argc, char ** const argv,
+parseCommandLine(int argc, const char ** const argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
@@ -174,7 +174,7 @@ parseCommandLine(int argc, char ** const argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
 
@@ -193,11 +193,11 @@ parseCommandLine(int argc, char ** const argv,
  * Application entry point
  */
 int
-main (int argc, char **argv)
-{
+main (int argc, const char **argv) {
+
     struct cmdlineInfo cmdline;
 
-    pbm_init( &argc, argv );
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
@@ -209,9 +209,12 @@ main (int argc, char **argv)
                      cmdline.inputFilespec, errno, strerror(errno));
     }
     debugFlag = cmdline.debug;
-    yylex ();
+
+    yylex();
+
     if (0)
         yyunput(0, NULL);  /* defeat compiler warning about unused fn */
+
     return 0;
 }
 
@@ -219,49 +222,53 @@ main (int argc, char **argv)
  * Finish at end of file
  */
 static int 
-yywrap (void)
-{
-    int row;
-    unsigned char * packed_bitrow;
+yywrap (void) {
 
-    debug ("Got %d rows, %d columns\n", rowCount, maxRowLength);
+    unsigned int row;
+    unsigned char * packedBitrow;
+
+    debug("Got %d rows, %d columns\n", rowCount, maxRowLength);
 
     if (maxRowLength > INT_MAX/8)
         pm_error("A row has an uncomputably large number of columns: %d",
                  maxRowLength);
-    /*
-     * Quite simple since ThinkJet bit arrangement matches PBM
-     */
+
     pbm_writepbminit(stdout, maxRowLength*8, rowCount, 0);
 
-    packed_bitrow = malloc(maxRowLength);
-    if (packed_bitrow == NULL) pm_error("Out of memory");
+    /* Quite simple since ThinkJet bit arrangement matches PBM */
 
-    for (row = 0 ; row < rowCount ; row++) {
-        int col;
-        for (col = 0 ; col < rows[row].length ; col++) 
-            packed_bitrow[col] = rows[row].bits[col];
-        for (        ; col < maxRowLength;      col++)
-            packed_bitrow[col] = 0;
-        pbm_writepbmrow_packed(stdout, packed_bitrow, maxRowLength*8, 0);
+    packedBitrow = malloc(maxRowLength);
+    if (!packedBitrow)
+        pm_error("Out of memory");
+
+    for (row = 0 ; row < rowCount ; ++row) {
+        unsigned int col;
+        for (col = 0 ; col < rows[row].length; ++col) 
+            packedBitrow[col] = rows[row].bits[col];
+        for ( ; col < maxRowLength; ++col)
+            packedBitrow[col] = 0;
+        pbm_writepbmrow_packed(stdout, packedBitrow, maxRowLength*8, 0);
     }
-    free(packed_bitrow);
+    free(packedBitrow);
+
     return 1;
 }
 
-/*
- * Print debugging message
- */
+
+
 static void
-debug (const char *format, ...)
-{
+debug (const char *format, ...) {
+/*-----------------------------------------------------------------------------
+  Print debugging message
+-----------------------------------------------------------------------------*/
     va_list args;
 
     if (debugFlag) {
-        fprintf (stderr, "thinkjettopbm: ");
-        va_start (args, format);
-        vfprintf (stderr, format, args);
-        va_end (args);
+        fprintf(stderr, "thinkjettopbm debug: ");
+        va_start(args, format);
+        vfprintf(stderr, format, args);
+        va_end(args);
     }
 }
+
 
