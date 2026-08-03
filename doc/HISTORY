@@ -4,6 +4,18 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+26.08.03 BJH  Release 11.15.05
+
+              pjtoppm: fix crash due to spurious memory access with compressed
+              (mode 1) input.  Always broken (pjtoppm was in primordial
+              Netpbm, 1991).
+
+              pjtoppm: fix invalid PPM output when input skips rows.  Always
+              broken (pjtoppm was in primordial Netpbm, 1991).
+
+              thinkjettopbm: fix failure when input is from Standard Input.
+              Introduced in Netpbm 10.12 (November 2002).
+
 26.07.22 BJH  Release 11.15.04
 
               pbmtomda: fix incorrect output (invalid image) with -dscale.

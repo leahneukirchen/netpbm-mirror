@@ -48,7 +48,7 @@ egetc(FILE * const ifP) {
 static void
 modifyImageMode1(unsigned int     const rows,
                  unsigned int     const planes,
-                 const int *      const imlen,
+                 int *            const imlen,
                  unsigned char ** const image,
                  unsigned int *   const colsP) {
 
@@ -87,6 +87,7 @@ modifyImageMode1(unsigned int     const rows,
                  * lose a line, and probably die on the next line anyway
                  */
                 image[row * planes + plane] = realloc(buf, i);
+                imlen[row * planes + plane] = i;
             }
         }
     }
@@ -127,7 +128,7 @@ writePpm(FILE *           const ofP,
                     assert(planes == 3);
 
                     for (plane = 0; plane < planes; ++plane) {
-                        if (mode == 0 && cmd >= imlen[row * planes + plane])
+                        if (cmd >= imlen[row * planes + plane])
                             bf[plane] = 0;
                         else
                             bf[plane] = (image[row * planes + plane][cmd] &
@@ -136,8 +137,8 @@ writePpm(FILE *           const ofP,
                     PPM_ASSIGN(pixrow[col + i], bf[0], bf[1], bf[2]);
                 }
             }
-            ppm_writeppmrow(stdout, pixrow, cols, 255, 0);
         }
+        ppm_writeppmrow(stdout, pixrow, cols, 255, 0);
     }
 }
 
@@ -329,7 +330,7 @@ main(int argc, const char ** argv) {
                 default:
                     pm_message("uninmplemented <ESC>*%c%d%c", cmd, val, c);
                     break;
-                }
+                } break;
             default:
                 pm_message("uninmplemented <ESC>*%c%d%c", cmd, val, c);
                 break;

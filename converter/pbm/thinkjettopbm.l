@@ -39,6 +39,7 @@
 #include <unistd.h>
 #include "pm_c_util.h"
 #include "mallocvar.h"
+#include "nstring.h"
 #include "pbm.h"
 #include "shhopt.h"
 
@@ -201,7 +202,12 @@ main (int argc, char **argv)
 
     parseCommandLine(argc, argv, &cmdline);
 
-    if (strlen(cmdline.inputFilespec) > 0) {
+    /* File reader reads Standard Input, so open as Standard Input the file
+       the user specified, unless the user said to use the existing Standard
+       Input
+    */
+
+    if (!streq(cmdline.inputFilespec, "-")) {
         FILE * ifP;
         ifP = freopen(cmdline.inputFilespec, "rb", stdin);
         if (ifP == NULL)
