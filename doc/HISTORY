@@ -8,6 +8,8 @@ not yet  BJH  Release 11.16.00
 
               pnmtojbig: add long options.
 
+              ppmtoarbtxt: add #(hash) substitution specifier class.
+
               various: fix literal "\n" in messages.  Introduced in Netpbm
               11.15 (June 2026).
 

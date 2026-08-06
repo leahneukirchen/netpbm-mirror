@@ -116,11 +116,12 @@ typedef enum {
     OBJTYP_BDATA,
     OBJTYP_IRED, OBJTYP_IGREEN, OBJTYP_IBLUE, OBJTYP_ILUM,
     OBJTYP_FRED, OBJTYP_FGREEN, OBJTYP_FBLUE, OBJTYP_FLUM,
-    OBJTYP_WIDTH, OBJTYP_HEIGHT, OBJTYP_POSX, OBJTYP_POSY
+    OBJTYP_WIDTH, OBJTYP_HEIGHT, OBJTYP_POSX, OBJTYP_POSY,
+    OBJTYP_HASH
 } SkeletonObjectType;
 
 typedef enum {
-    OBJCLS_ICOLOR, OBJCLS_FCOLOR, OBJCLS_INT, OBJCLS_BDATA
+    OBJCLS_ICOLOR, OBJCLS_FCOLOR, OBJCLS_INT, OBJCLS_LITERAL, OBJCLS_BDATA
 } SkeletonObjectClass;
 
 /* Maximum size for a format string ("%d" etc.) */
@@ -279,6 +280,9 @@ writeText(FILE *            const ofP,
         case OBJTYP_BDATA:
             writeBndat(ofP, obj[i]);
             break;
+        case OBJTYP_HASH:
+            fputc('#', ofP);
+            break;
         case OBJTYP_IRED:
             writeIcol(ofP, obj[i], red);
             break;
@@ -344,6 +348,8 @@ objClass(SkeletonObjectType const objType) {
     case OBJTYP_POSX:
     case OBJTYP_POSY:
         return OBJCLS_INT;
+    case OBJTYP_HASH:
+        return OBJCLS_LITERAL;
     case OBJTYP_BDATA:
         return OBJCLS_BDATA;
     }
@@ -726,6 +732,7 @@ interpretObjType(const char * const typstr) {
     else if (streq(typstr, "height")) objType = OBJTYP_HEIGHT;
     else if (streq(typstr, "posx")  ) objType = OBJTYP_POSX;
     else if (streq(typstr, "posy")  ) objType = OBJTYP_POSY;
+    else if (streq(typstr, "hash")  ) objType = OBJTYP_HASH;
     else                              objType = OBJTYP_BDATA;
 
     return objType;
@@ -820,6 +827,20 @@ newISkelFromReplString(const char *       const intObjstr,
 
 
 static SkeletonObject *
+newLiteralObj(SkeletonObjectType const objType) {
+
+    SkeletonObject * objectP;
+
+    MALLOCVAR_NOFAIL(objectP);
+
+    objectP->objType = objType;
+
+    return objectP;
+}
+
+
+
+static SkeletonObject *
 newSkeletonFromReplString(const char * const objstr) {
 /*----------------------------------------------------------------------------
   A new skeleton created from the replacement string 'objstr' (the stuff
@@ -865,6 +886,9 @@ newSkeletonFromReplString(const char * const objstr) {
         break;
     case OBJCLS_INT:
         retval = newISkelFromReplString(&objstr[typlen], objType);
+        break;
+    case OBJCLS_LITERAL:
+        retval = newLiteralObj(objType);
         break;
     case OBJCLS_BDATA:
         retval = NULL;
