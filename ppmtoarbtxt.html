@@ -2,7 +2,7 @@
 <html><head><title>Ppmtoarbtxt User Manual</title></head>
 <body>
 <h1>ppmtoarbtxt</h1>
-Updated: 26 November 2014
+Updated: 05 August 2026
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -42,9 +42,9 @@ at the end of the output.
 <h3 id="templatefiles">Template Files</h3>
 
 <p>The text that <b>ppmtoarbtxt</b> generates from a template file is the
-literal text of the template file, except with substitution specifier replaced
-with something else.  The program recognizes a substitution specifier as
-text of the form <b>#(</b>...<b>)</b>.
+literal text of the template file, except with each substitution specifier
+replaced with something else.  The program recognizes a substitution specifier
+as text of the form <b>#(</b>...<b>)</b>.
 
 <p><b>ppmtoarbtxt</b> treats white space in the template files the same as any
 other characters, placing it in the output, with one exception: If the
@@ -66,7 +66,8 @@ form of a substitution specifier but is not actually valid (e.g.
 close enough to something valid, <b>ppmtoarbtxt</b> assumes you made a mistake
 and fails.
 
-<p>Useful in a body template, to do substitutions based on a particular pixel:
+<p>These are useful in a body template, to do substitutions based on a
+particular pixel:
 
 <dl compact>
 <dt><b>#(ired</b><i> format blackref whiteref</i><b>)</b>
@@ -142,8 +143,8 @@ unsigned integer data type.
 <p>If you use any of the above substitution specifiers in a head or tail
 template, the result is undefined.
 
-<p>Useful in a head or tail template, to do substitutions based on whole-image
-attributes:
+<p>These are useful in a head or tail template, to do substitutions based on
+whole-image attributes:
 
 <dl compact>
 <dt><b>#(width </b><i>format</i><b>)</b>
@@ -159,6 +160,16 @@ has an unsigned integer data type.
 
 <dd>Same as <b>#(width...</b>, but for the height of the image.
 
+</dl>
+
+<p>This is useful anywhere:
+
+<dl compact>
+
+<dt><b>#(hash)</b>
+<dd>Generates a hash character.
+<p>This was new in Netpbm 11.16 (September 2026).
+  
 </dl>
 
 
