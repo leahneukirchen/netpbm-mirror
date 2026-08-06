@@ -113,12 +113,14 @@ parseCommandLine(int argc, const char ** argv,
 
 typedef enum {
 /* The types of object we handle */
-    BDATA, IRED, IGREEN, IBLUE, ILUM, FRED, FGREEN, FBLUE, FLUM,
-    WIDTH, HEIGHT, POSX, POSY
+    OBJTYP_BDATA,
+    OBJTYP_IRED, OBJTYP_IGREEN, OBJTYP_IBLUE, OBJTYP_ILUM,
+    OBJTYP_FRED, OBJTYP_FGREEN, OBJTYP_FBLUE, OBJTYP_FLUM,
+    OBJTYP_WIDTH, OBJTYP_HEIGHT, OBJTYP_POSX, OBJTYP_POSY
 } SkeletonObjectType;
 
 typedef enum {
-    OBJTYP_ICOLOR, OBJTYP_FCOLOR, OBJTYP_INT, OBJTYP_BDATA
+    OBJCLS_ICOLOR, OBJCLS_FCOLOR, OBJCLS_INT, OBJCLS_BDATA
 } SkeletonObjectClass;
 
 /* Maximum size for a format string ("%d" etc.) */
@@ -274,45 +276,45 @@ writeText(FILE *            const ofP,
 
     for (i = 0; i < nObj; ++i) {
         switch (obj[i]->objType) {
-        case BDATA:
+        case OBJTYP_BDATA:
             writeBndat(ofP, obj[i]);
             break;
-        case IRED:
+        case OBJTYP_IRED:
             writeIcol(ofP, obj[i], red);
             break;
-        case IGREEN:
+        case OBJTYP_IGREEN:
             writeIcol(ofP, obj[i], green);
             break;
-        case IBLUE:
+        case OBJTYP_IBLUE:
             writeIcol(ofP, obj[i], blue);
             break;
-        case ILUM:
+        case OBJTYP_ILUM:
             writeIcol(ofP, obj[i],
                       PPM_LUMINR*red + PPM_LUMING*green + PPM_LUMINB*blue);
             break;
-        case FRED:
+        case OBJTYP_FRED:
             writeFcol(ofP, obj[i], red);
             break;
-        case FGREEN:
+        case OBJTYP_FGREEN:
             writeFcol(ofP, obj[i], green);
             break;
-        case FBLUE:
+        case OBJTYP_FBLUE:
             writeFcol(ofP, obj[i], blue);
             break;
-        case FLUM:
+        case OBJTYP_FLUM:
             writeFcol(ofP, obj[i],
                       PPM_LUMINR*red + PPM_LUMING*green + PPM_LUMINB*blue);
             break;
-        case WIDTH:
+        case OBJTYP_WIDTH:
             writeIdat(ofP, obj[i], width);
             break;
-        case HEIGHT:
+        case OBJTYP_HEIGHT:
             writeIdat(ofP, obj[i], height);
             break;
-        case POSX:
+        case OBJTYP_POSX:
             writeIdat(ofP, obj[i], x);
             break;
-        case POSY:
+        case OBJTYP_POSY:
             writeIdat(ofP, obj[i], y);
             break;
         }
@@ -325,25 +327,25 @@ static SkeletonObjectClass
 objClass(SkeletonObjectType const objType) {
 
     switch (objType) {
-    case IRED:
-    case IGREEN:
-    case IBLUE:
-    case ILUM:
-        return OBJTYP_ICOLOR;
+    case OBJTYP_IRED:
+    case OBJTYP_IGREEN:
+    case OBJTYP_IBLUE:
+    case OBJTYP_ILUM:
+        return OBJCLS_ICOLOR;
 
-    case FRED:
-    case FGREEN:
-    case FBLUE:
-    case FLUM:
-        return OBJTYP_FCOLOR;
+    case OBJTYP_FRED:
+    case OBJTYP_FGREEN:
+    case OBJTYP_FBLUE:
+    case OBJTYP_FLUM:
+        return OBJCLS_FCOLOR;
 
-    case WIDTH:
-    case HEIGHT:
-    case POSX:
-    case POSY:
-        return OBJTYP_INT;
-    case BDATA:
-        return OBJTYP_BDATA;
+    case OBJTYP_WIDTH:
+    case OBJTYP_HEIGHT:
+    case OBJTYP_POSX:
+    case OBJTYP_POSY:
+        return OBJCLS_INT;
+    case OBJTYP_BDATA:
+        return OBJCLS_BDATA;
     }
     return 999; /* quiet compiler warning */
 }
@@ -403,8 +405,8 @@ validateParsePrintfFlag(int                const printfConversion,
         case PA_CHAR:
             pm_message("Warning: char type conversion.");
         case PA_INT:
-            if(objClass(ctyp) == OBJTYP_ICOLOR ||
-               objClass(ctyp) == OBJTYP_INT )
+            if(objClass(ctyp) == OBJCLS_ICOLOR ||
+               objClass(ctyp) == OBJCLS_INT )
                 *errorP = NULL;
             else
                 pm_asprintf(errorP, "Conversion specifier requires a "
@@ -412,7 +414,7 @@ validateParsePrintfFlag(int                const printfConversion,
                             "a replacement sequence for a different type");
             break;
         case PA_DOUBLE:
-            if(objClass(ctyp) == OBJTYP_FCOLOR)
+            if(objClass(ctyp) == OBJCLS_FCOLOR)
                 *errorP = NULL;
             else
                 pm_asprintf(errorP, "Conversion specifier requires a "
@@ -500,8 +502,8 @@ validateFormatOne(char               const typeSpecifier,
     case 'i': case 'd': case 'u': case 'o': case 'x': case 'X':
         if (!isLastInString)
             pm_asprintf(errorP, "Extra characters at end");
-        else if(objClass(ctyp) != OBJTYP_ICOLOR &&
-                objClass(ctyp) != OBJTYP_INT )
+        else if(objClass(ctyp) != OBJCLS_ICOLOR &&
+                objClass(ctyp) != OBJCLS_INT )
             pm_asprintf(errorP, "Conversion type mismatch");
         else
             *validatedP = true;
@@ -510,7 +512,7 @@ validateFormatOne(char               const typeSpecifier,
     case 'f': case 'F': case 'g': case 'G': case 'a': case 'A':
         if (!isLastInString)
             pm_asprintf(errorP, "Extra characters at end");
-        else if(objClass(ctyp) != OBJTYP_FCOLOR)
+        else if(objClass(ctyp) != OBJCLS_FCOLOR)
             pm_asprintf(errorP, "Conversion type mismatch");
         else
             *validatedP = true;
@@ -615,7 +617,7 @@ newBinDataObj(unsigned int const nDat,
         pm_error("Failed to allocate memory for binary data object "
                  "with %u bytes", nDat);
 
-    objectP->objType = BDATA;
+    objectP->objType = OBJTYP_BDATA;
     objectP->odata.binData.ndat = nDat;
     objectP->odata.binData.bdat = ((char *)objectP) + sizeof(SkeletonObject);
     memcpy(objectP->odata.binData.bdat, bdat, nDat);
@@ -710,21 +712,21 @@ interpretObjType(const char * const typstr) {
     SkeletonObjectType objType;
 
     /* handle integer colors */
-    if      (streq(typstr, "ired")  ) objType = IRED;
-    else if (streq(typstr, "igreen")) objType = IGREEN;
-    else if (streq(typstr, "iblue") ) objType = IBLUE;
-    else if (streq(typstr, "ilum")  ) objType = ILUM;
+    if      (streq(typstr, "ired")  ) objType = OBJTYP_IRED;
+    else if (streq(typstr, "igreen")) objType = OBJTYP_IGREEN;
+    else if (streq(typstr, "iblue") ) objType = OBJTYP_IBLUE;
+    else if (streq(typstr, "ilum")  ) objType = OBJTYP_ILUM;
     /* handle real colors */
-    else if (streq(typstr, "fred")  ) objType = FRED;
-    else if (streq(typstr, "fgreen")) objType = FGREEN;
-    else if (streq(typstr, "fblue") ) objType = FBLUE;
-    else if (streq(typstr, "flum")  ) objType = FLUM;
+    else if (streq(typstr, "fred")  ) objType = OBJTYP_FRED;
+    else if (streq(typstr, "fgreen")) objType = OBJTYP_FGREEN;
+    else if (streq(typstr, "fblue") ) objType = OBJTYP_FBLUE;
+    else if (streq(typstr, "flum")  ) objType = OBJTYP_FLUM;
     /* handle integer data */
-    else if (streq(typstr, "width") ) objType = WIDTH;
-    else if (streq(typstr, "height")) objType = HEIGHT;
-    else if (streq(typstr, "posx")  ) objType = POSX;
-    else if (streq(typstr, "posy")  ) objType = POSY;
-    else                              objType = BDATA;
+    else if (streq(typstr, "width") ) objType = OBJTYP_WIDTH;
+    else if (streq(typstr, "height")) objType = OBJTYP_HEIGHT;
+    else if (streq(typstr, "posx")  ) objType = OBJTYP_POSX;
+    else if (streq(typstr, "posy")  ) objType = OBJTYP_POSY;
+    else                              objType = OBJTYP_BDATA;
 
     return objType;
 }
@@ -736,7 +738,7 @@ newIcSkelFromReplString(const char *       const icolorObjstr,
                         SkeletonObjectType const objType) {
 /*----------------------------------------------------------------------------
   A new skeleton for an integer color substitution specifier (class
-  OBJTYP_ICOLOR) whose replacement string (the stuff between the parentheses
+  OBJCLS_ICOLOR) whose replacement string (the stuff between the parentheses
   in #(...)) says substitution type 'objType' and the rest of the
   replacement string is 'icolorObjstr'.
 -----------------------------------------------------------------------------*/
@@ -765,7 +767,7 @@ newFcSkelFromReplString(const char *       const fcolorObjstr,
                         SkeletonObjectType const objType) {
 /*----------------------------------------------------------------------------
   A new skeleton for a floating point color substitution specifier (class
-  OBJTYP_FCOLOR) whose replacement string (the stuff between the parentheses
+  OBJCLS_FCOLOR) whose replacement string (the stuff between the parentheses
   in #(...)) says substitution type 'objType' and the rest of the
   replacement string is 'fcolorObjstr'.
 -----------------------------------------------------------------------------*/
@@ -793,7 +795,7 @@ static SkeletonObject *
 newISkelFromReplString(const char *       const intObjstr,
                        SkeletonObjectType const objType) {
 /*----------------------------------------------------------------------------
-  A new skeleton for an integer substitution specifier (class OBJTYP_INT)
+  A new skeleton for an integer substitution specifier (class OBJCLS_INT)
   whose replacement string (the stuff between the parentheses in #(...))
   says substitution type 'objType' and the rest of the replacement string is
   'intObjstr'.
@@ -851,20 +853,20 @@ newSkeletonFromReplString(const char * const objstr) {
         objType = interpretObjType(typstr);
       break;
     default:
-        objType = BDATA;
+        objType = OBJTYP_BDATA;
     }
 
     switch (objClass(objType)) {
-    case OBJTYP_ICOLOR:
+    case OBJCLS_ICOLOR:
         retval = newIcSkelFromReplString(&objstr[typlen], objType);
         break;
-    case OBJTYP_FCOLOR:
+    case OBJCLS_FCOLOR:
         retval = newFcSkelFromReplString(&objstr[typlen], objType);
         break;
-    case OBJTYP_INT:
+    case OBJCLS_INT:
         retval = newISkelFromReplString(&objstr[typlen], objType);
         break;
-    case OBJTYP_BDATA:
+    case OBJCLS_BDATA:
         retval = NULL;
     }
     return retval;
