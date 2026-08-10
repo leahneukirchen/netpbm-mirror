@@ -10,6 +10,13 @@ not yet  BJH  Release 11.16.00
 
               ppmtoarbtxt: add #(hash) substitution specifier class.
 
+              pgmtexture: fix incorrect max correlation coefficient output.
+              Always broken (pgmtexture was in primordial Netpbm in 1991).
+
+              pgmtexture: fix invalid memory reference when image is all a
+              single shade of gray.  Always broken (pgmtexture was in
+              primordial Netpbm in 1991).
+
               various: fix literal "\n" in messages.  Introduced in Netpbm
               11.15 (June 2026).
 
