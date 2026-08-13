@@ -481,8 +481,10 @@ writeAndMask(const struct pam * const pamP,
              uint32_t *         const sizeP) {
 /*----------------------------------------------------------------------------
   Write the AND mask to file *ofP.
+
+  Return as *sizeP the number of bytes we wrote.
 -----------------------------------------------------------------------------*/
-    unsigned int const maxCol =((pamP->width * 1 + 31) & ~31) / 1;
+    unsigned int const maxCol = ((pamP->width * 1 + 31) & ~31) / 1;
 
     int row;
     unsigned int sizeSoFar;
