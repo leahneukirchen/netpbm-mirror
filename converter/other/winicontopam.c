@@ -1054,7 +1054,7 @@ convertBmp(const unsigned char * const image,
     if ((dirEntryP->bits_per_pixel != 0)
         && (dirEntryP->bits_per_pixel != hdr.bits_per_pixel)) {
         pm_message("image %2u "
-                   "mismatch in header and image bpp value"
+                   "mismatch in header and image bpp value "
                    "(%u vs. %u)",
                    dirEntryP->index,
                    dirEntryP->bits_per_pixel,
