@@ -1047,7 +1047,7 @@ convertBmp(const unsigned char * const image,
     if ((dirEntryP->width != hdr.bm_width)
         || (dirEntryP->height != hdr.bm_height / 2)) {
         pm_message("image %2u: "
-                   "mismatch in header and image dimensions "
+                   "mismatch in icon directory and actual image dimensions "
                    "(%u x %u vs. %u x %u)",
                    dirEntryP->index,
                    dirEntryP->width,
@@ -1059,7 +1059,7 @@ convertBmp(const unsigned char * const image,
     if ((dirEntryP->bits_per_pixel != 0)
         && (dirEntryP->bits_per_pixel != hdr.bits_per_pixel)) {
         pm_message("image %2u "
-                   "mismatch in header and image bpp value "
+                   "mismatch in icon directory and actual image bpp value "
                    "(%u vs. %u)",
                    dirEntryP->index,
                    dirEntryP->bits_per_pixel,
