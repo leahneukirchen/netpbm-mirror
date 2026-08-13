@@ -10,6 +10,8 @@ not yet  BJH  Release 11.16.00
 
               ppmtoarbtxt: add #(hash) substitution specifier class.
 
+              winicontopam: Add compression type to image info message.
+
               winicontopam: fix incorrect message saying all pixels in the
               transparency map are fully transparent when there is no
               transparency map.  Introduced in Netpbm 10.92 (September 2020).

@@ -1010,11 +1010,16 @@ reportImage(unsigned int            const imageIndex,
         "RGB"
         ;
 
+    const char * const compressionMethod =
+        hdr.compression_method == BI_RGB ? "RGB" :
+        hdr.compression_method == BI_BITFIELDS ? "BITFIELDS" :
+        "<invalid>";
+
     pm_message("image %2u: "
-               "BMP %3u x %3u x %2u (%s)",
+               "BMP %3u x %3u x %2u (%s) compression %s",
                imageIndex,
                hdr.bm_width, hdr.bm_height / 2, hdr.bits_per_pixel,
-               style);
+               style, compressionMethod);
 }
 
 
