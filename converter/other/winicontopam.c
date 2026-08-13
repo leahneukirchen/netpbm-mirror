@@ -748,6 +748,7 @@ readXorBitfields(struct BitmapInfoHeader * const hdrP,
             unsigned int col;
             for (col = 0; col < hdrP->bm_width; ++col) {
                 uint32_t const pixel = u32_le(bitmapCursor, offset);
+
                 offset += bytesPerSample;
 
                 tuples[row][col][PAM_RED_PLANE] =
@@ -756,11 +757,12 @@ readXorBitfields(struct BitmapInfoHeader * const hdrP,
                 tuples[row][col][PAM_GRN_PLANE] =
                     pnm_scalesample((pixel & bitfields[GRN]) >> shift[GRN],
                                     maxval[GRN], 255);
-                tuples [row][col][PAM_BLU_PLANE]
-                    = pnm_scalesample((pixel & bitfields[BLU]) >> shift[BLU],
-                                      maxval[BLU], 255);
+                tuples[row][col][PAM_BLU_PLANE] =
+                    pnm_scalesample((pixel & bitfields[BLU]) >> shift[BLU],
+                                    maxval[BLU], 255);
 
-                if (bitfields [ALPHA] != 0) {
+                if (bitfields[ALPHA] != 0) {
+                    /* The winicon XOR mask has transparency info */
                     tuples[row][col][PAM_TRN_PLANE]
                         = pnm_scalesample(
                             (pixel & bitfields[ALPHA]) >> shift[ALPHA],
@@ -769,11 +771,12 @@ readXorBitfields(struct BitmapInfoHeader * const hdrP,
                     if (tuples[row][col][PAM_TRN_PLANE] != 0)
                         allTransparent = false;
 
-                    if (tuples [row][col][PAM_TRN_PLANE] != 255)
+                    if (tuples[row][col][PAM_TRN_PLANE] != 255)
                         allOpaque = false;
 
                     alphas[tuples[row][col][PAM_TRN_PLANE]] = !0;
-                }
+                } else
+                    allTransparent = false;
             }
         }
     }
@@ -782,10 +785,10 @@ readXorBitfields(struct BitmapInfoHeader * const hdrP,
     sizeRemaining -= truncatedXorSize;
     bytesConsumed += truncatedXorSize;
 
-    /*  A fully transparent alpha channel (all zero) in XOR mask is
-        defined to be void by Microsoft.
-    */
     if (verbose) {
+        /*  A fully transparent alpha channel (all zero) in XOR mask is
+            defined to be void by Microsoft.
+        */
         if (allTransparent)
             pm_message("image %2u: All pixels are nominally coded in the "
                        "transparency map as fully transparent, "
@@ -1085,8 +1088,11 @@ convertBmp(const unsigned char * const image,
            the transparency plane.  Else, there are two transparency
            maps. If requested, return the AND mask as a fifth PAM plane.
         */
-        bool haveAnd;
+        bool haveAnd;  /* Our output PAM shall have an and mask plane */
         unsigned int andPlane;
+            /* PAM plane number of the and mask.  Meaningful only if 'haveAnd'
+               is true.
+            */
 
         if (!haveAlpha) {
             haveAnd = true;
@@ -1100,7 +1106,7 @@ convertBmp(const unsigned char * const image,
             strcpy(outpam.tuple_type, "RGB_ALPHA_ANDMASK");
         } else {
             haveAnd = false;
-            strcpy (outpam.tuple_type, "RGB_ALPHA");
+            strcpy(outpam.tuple_type, "RGB_ALPHA");
             outpam.depth  = 4;
         }
         if (haveAnd) {
