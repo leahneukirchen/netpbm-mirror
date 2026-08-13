@@ -16,6 +16,11 @@ not yet  BJH  Release 11.16.00
               transparency map are fully transparent when there is no
               transparency map.  Introduced in Netpbm 10.92 (September 2020).
 
+              pamtowinicon: fix incorrect icon directory entry for an image
+              that is BMP truecolor, but only because it would be larger as a
+              paletted BMP.  Always broken (pamtowinicon was new in Netpbm
+              10.63 (June 2013).
+
               pgmtexture: fix incorrect max correlation coefficient output.
               Always broken (pgmtexture was in primordial Netpbm in 1991).
 

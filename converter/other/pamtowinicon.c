@@ -432,6 +432,35 @@ writeXorMask(const struct pam *     const pamP,
 
 
 
+static unsigned int
+paletteBmpSize(unsigned int const height,
+               unsigned int const width,
+               unsigned int const colorCt) {
+/*----------------------------------------------------------------------------
+  What size in bytes an image 'height' x 'width' pixels and 'colorCt' colors
+  would be as a paletted BMP image, not counting the header.
+-----------------------------------------------------------------------------*/
+    unsigned int const bpp         = colorCt <= 2 ? 1 : colorCt <= 16 ? 4 : 8;
+    unsigned int const rasterSize  = height *((width * bpp + 31) & ~31) / 8;
+    unsigned int const paletteSize = (1 << bpp) * 4;
+
+    return paletteSize + rasterSize;
+}
+
+
+
+static unsigned int
+bmp32Size(unsigned int const height,
+          unsigned int const width) {
+/*----------------------------------------------------------------------------
+  What size in bytes an image with 'height' x 'width' pixels
+  would be as a 32-bit truecolor BMP image, not counting the header.
+-----------------------------------------------------------------------------*/
+    return height * width * 4;
+}
+
+
+
 static void
 writePaletteBmp(unsigned int           const bpp,
                 const struct pam   *   const pamP,
@@ -442,30 +471,20 @@ writePaletteBmp(unsigned int           const bpp,
                 uint32_t *             const sizeP) {
 /*----------------------------------------------------------------------------
   Write a `BMP with palette' encoded image to file *ofP.
-
-  Unless it would be smaller as a 32-bit direct image, in which case
-  write that instead.
 -----------------------------------------------------------------------------*/
-    unsigned int const maxColors = 1 << bpp;
-
+    unsigned int const maxColorCt = 1 << bpp;
     unsigned int const rasterSize =
         pamP->height *((pamP->width * bpp + 31) & ~31) / 8;
+    unsigned int const headerSize = 40;
+    unsigned int const paletteSize = maxColorCt * 4;
 
-    if (pamP->height * pamP->width * 4 <= maxColors * 4 + rasterSize)
-        write32BitBmp(pamP, tuples, getPixel, false /*haveAlpha*/, 0,
-                      ofP, sizeP);
-    else {
-        unsigned int const headerSize = 40;
-        unsigned int const paletteSize = maxColors * 4;
+    writeBmpImageHeader(pamP->width, pamP->height, bpp, rasterSize, ofP);
 
-        writeBmpImageHeader(pamP->width, pamP->height, bpp, rasterSize, ofP);
+    writeBmpPalette(paletteP, maxColorCt, ofP);
 
-        writeBmpPalette(paletteP, maxColors, ofP);
+    writeXorMask(pamP, tuples, getPixel, paletteP, bpp, ofP);
 
-        writeXorMask(pamP, tuples, getPixel, paletteP, bpp, ofP);
-
-        *sizeP = headerSize + paletteSize + rasterSize;
-    }
+    *sizeP = headerSize + paletteSize + rasterSize;
 }
 
 
@@ -863,12 +882,6 @@ writeIconAndCreateDirEntry(const struct pam *     const pamP,
    *paletteP is the color palette for the icon; it contains an entry for each
    color in 'tuples'.  Except: it may simply indicate that there are too many
    colors in 'tuples' to have a palette.
-
-   The 'bits_per_pixel' member of the directory entry is supposed to tell the
-   color resolution of the image so the user can decide which of many versions
-   of the icon in the file to use.  But we just call it 32 bits in every case
-   except paletted BMP, where it actually relates to how many colors are in
-   the image.
 -----------------------------------------------------------------------------*/
     dirEntryP->width          = pamP->width;
     dirEntryP->height         = pamP->height;
@@ -903,26 +916,39 @@ writeIconAndCreateDirEntry(const struct pam *     const pamP,
             write32BitBmp(pamP, tuples, getPixel, false /*haveAlpha*/, 0,
                           ofP, &bmpSize);
         } else {
-            /* Do a paletted image */
+            if (paletteBmpSize(pamP->height, pamP->width, paletteP->colorCt) >=
+                bmp32Size(pamP->height, pamP->width)) {
 
-            if (paletteP->colorCt <= 2) {
-                dirEntryP->color_count    = paletteP->colorCt;
-                dirEntryP->bits_per_pixel = 1;
+                /* Using a palette wouldn't save any space. */
 
-                writePaletteBmp(1, pamP, tuples, getPixel, paletteP,
-                                ofP, &bmpSize);
-            } else if (paletteP->colorCt <= 16) {
-                dirEntryP->color_count    = paletteP->colorCt;
-                dirEntryP->bits_per_pixel = 4;
-
-                writePaletteBmp(4, pamP, tuples, getPixel,paletteP,
-                                ofP, &bmpSize);
-            } else {
                 dirEntryP->color_count    = 0;
-                dirEntryP->bits_per_pixel = 8;
+                dirEntryP->bits_per_pixel = 32;
 
-                writePaletteBmp(8, pamP, tuples, getPixel, paletteP,
-                                ofP, &bmpSize);
+                write32BitBmp(pamP, tuples, getPixel,
+                              false /*haveAlpha*/, 0 /*alphaPlane*/,
+                              ofP, &bmpSize);
+            } else {
+                /* Do a paletted image */
+
+                if (paletteP->colorCt <= 2) {
+                    dirEntryP->color_count    = paletteP->colorCt;
+                    dirEntryP->bits_per_pixel = 1;
+
+                    writePaletteBmp(1, pamP, tuples, getPixel, paletteP,
+                                    ofP, &bmpSize);
+                } else if (paletteP->colorCt <= 16) {
+                    dirEntryP->color_count    = paletteP->colorCt;
+                    dirEntryP->bits_per_pixel = 4;
+
+                    writePaletteBmp(4, pamP, tuples, getPixel,paletteP,
+                                    ofP, &bmpSize);
+                } else {
+                    dirEntryP->color_count    = 0;
+                    dirEntryP->bits_per_pixel = 8;
+
+                    writePaletteBmp(8, pamP, tuples, getPixel, paletteP,
+                                    ofP, &bmpSize);
+                }
             }
         }
         writeAndMask(pamP, tuples, haveAlpha, alphaPlane, haveAnd, andPlane,
