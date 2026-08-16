@@ -321,7 +321,8 @@ write32BitBmp(const struct pam *   const pamP,
               FILE *               const ofP,
               uint32_t *           const sizeP) {
 /*----------------------------------------------------------------------------
-  Write a 32-bit BMP encoded image to file *ofP.
+  Write a 32-bit (truecolor with transparency) BMP encoded image,
+  not counting any And mask, to file *ofP.
 -----------------------------------------------------------------------------*/
     int row;
 
@@ -382,7 +383,7 @@ writeXorMask(const struct pam *     const pamP,
              unsigned int           const bpp,
              FILE *                 const ofP) {
 /*----------------------------------------------------------------------------
-   Write the "XOR mask" part of a BMP image.
+   Write the "XOR mask" part of a paletted BMP image.
 
    This is what one normally thinks of as the foreground image raster.
 -----------------------------------------------------------------------------*/
