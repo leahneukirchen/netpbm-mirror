@@ -179,21 +179,27 @@ get_rgbPixel(tuple **     const tuples,
 
 
 static bool
-andMakesOpaque(const struct pam * const pamP,
-               tuple **           const tuples,
-               unsigned int       const row,
-               unsigned int       const col,
-               bool               const haveAlpha,
-               unsigned int       const alphaPlane,
-               bool               const haveAnd,
-               unsigned int       const andPlane) {
+pixelIsOpaque(const struct pam * const pamP,
+              tuple **           const tuples,
+              unsigned int       const row,
+              unsigned int       const col,
+              bool               const haveAlpha,
+              unsigned int       const alphaPlane,
+              bool               const haveAnd,
+              unsigned int       const andPlane) {
 /*----------------------------------------------------------------------------
-   The AND mask makes a pixel opaque
+   The pixel at 'row' and 'col' in 'tuples' is opaque.
+
+   'haveAlpha' means 'tuples' contains an alpha plane, which is plane
+   'alphaPlane'.
+
+   'haveAnd' means 'tuples' contains an And plane, which is plane
+   'andPlane'.
 -----------------------------------------------------------------------------*/
     if (haveAnd)
-        return (pamP->maxval <= tuples[row][col][andPlane]);
+        return (tuples[row][col][andPlane] >= pamP->maxval);
     else if (haveAlpha)
-        return (pamP->maxval <= tuples[row][col][alphaPlane]);
+        return (tuples[row][col][alphaPlane] >= pamP->maxval);
     else
         /* neither alpha channel nor AND mask: full opacity */
         return true;
@@ -522,8 +528,8 @@ writeAndMask(const struct pam * const pamP,
             mask <<= 1;
             val  <<= 1;
 
-            if (!andMakesOpaque(pamP, tuples, row, col,
-                                haveAlpha, alphaPlane, haveAnd, andPlane))
+            if (!pixelIsOpaque(pamP, tuples, row, col,
+                               haveAlpha, alphaPlane, haveAnd, andPlane))
                 val |= 0x1;
 
             if (mask > 0xFF) {
@@ -708,8 +714,8 @@ blackenXor(const struct pam * const pamP,
     for (row = 0; row < pamP->height; ++row) {
         unsigned int col;
         for (col = 0; col < pamP->width; ++col) {
-            if (!andMakesOpaque(pamP, tuples, row, col,
-                                haveAlpha, alphaPlane, haveAnd, andPlane)) {
+            if (!pixelIsOpaque(pamP, tuples, row, col,
+                               haveAlpha, alphaPlane, haveAnd, andPlane)) {
                 tuples[row][col][0] = PAM_BLACK;
 
                 if (pamP->depth >= 3) {
