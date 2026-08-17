@@ -47,7 +47,7 @@ struct Cmap {
     /* This is the information for the GIF colormap (aka palette). */
 
     struct pam pam;
-        /* Gives depth and maxval for colors in color[] */
+        /* Gives depth and maxval for colors in color[] and 'tuplehash' */
     tuple color[MAXCMAPSIZE];
         /* Maps a color index, as is found in the raster part of the
            GIF, to color.
@@ -224,20 +224,18 @@ closestColor(tuple               const color,
    are returning.  Caller must ensure that the color is not already in
    there.
 -----------------------------------------------------------------------------*/
-    unsigned int const nComp = pamP->depth >= 3 ? 3 : 1;
-        /* Number of color components (not alpha) in 'color' */
-
     unsigned int i;
     unsigned int imin, dmin;
     int fits;
 
-    dmin = UINT_MAX;
-    imin = 0;
-    for (i = 0; i < cmapP->cmapSize; ++i) {
+    assert(pamP->maxval == cmapP->pam.maxval);
+    assert(pamP->depth >= cmapP->pam.depth);
+
+    for (i = 0, dmin = UINT_MAX, imin = 0; i < cmapP->cmapSize; ++i) {
         unsigned int distance;
         unsigned int plane;
 
-        for (distance = 0, plane = 0; plane < nComp; ++plane)
+        for (distance = 0, plane = 0; plane < cmapP->pam.depth; ++plane)
             /* Divide by 4 is to avoid arithmetic overflow */
             distance += SQR(color[plane] - cmapP->color[i][plane]) / 4;
 
@@ -246,7 +244,8 @@ closestColor(tuple               const color,
             imin = i;
         }
     }
-    pnm_addtotuplehash(pamP, cmapP->tuplehash, color, imin, &fits);
+    pnm_addtotuplehash(&cmapP->pam, cmapP->tuplehash, color,
+                       imin, &fits);
 
     return imin;
 }
@@ -469,7 +468,10 @@ gifPixel(struct pam *        const pamP,
     } else {
         int found;
 
-        pnm_lookuptuple(pamP, cmapP->tuplehash, tuple,
+        assert(pamP->maxval == cmapP->pam.maxval);
+        assert(pamP->depth >= cmapP->pam.depth);
+
+        pnm_lookuptuple(&cmapP->pam, cmapP->tuplehash, tuple,
                         &found, &colorIndex);
 
         if (!found)
@@ -1930,7 +1932,7 @@ computeColormapFromInput(struct pam *   const pamP,
     tuplefreq = pnm_computetuplefreqtable3(
         pamP, NULL, maxcolors, nInputComp, pamP->maxval, colorCountP);
 
-    *mapPamP = *pamP;
+    *mapPamP = *pamP;  /* initial value */
     mapPamP->depth = nInputComp;
 
     *tuplefreqP = tuplefreq;
@@ -2069,6 +2071,7 @@ main(int argc, const char ** argv) {
                              &cmap.pam, &cmap.cmapSize, cmdline.sort);
 
     assert(cmap.pam.maxval == pam.maxval);
+    assert(pam.depth >= cmap.pam.depth);
 
     if (transType == TRANS_ALPHA) {
         /* Add a fake entry to the end of the colormap for transparency.
