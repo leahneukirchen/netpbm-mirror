@@ -28,8 +28,8 @@
 #define HASH_SIZE 20023
 
 unsigned int
-pnm_hashtuple(struct pam * const pamP,
-              tuple        const tuple) {
+pnm_hashtuple(const struct pam * const pamP,
+              tuple              const tuple) {
 /*----------------------------------------------------------------------------
    Return the hash value of the tuple 'tuple' -- i.e. an index into a hash
    table.
@@ -99,7 +99,7 @@ pnm_destroytuplehash(tuplehash const tuplehash) {
 
 
 static struct tupleint_list_item *
-allocTupleIntListItem(struct pam * const pamP) {
+allocTupleIntListItem(const struct pam * const pamP) {
 
 
     /* This is complicated by the fact that the last member of a
@@ -123,11 +123,11 @@ allocTupleIntListItem(struct pam * const pamP) {
 
 
 void
-pnm_addtotuplehash(struct pam *   const pamP,
-                   tuplehash      const tuplehash,
-                   tuple          const tupletoadd,
-                   int            const value,
-                   int *          const fitsP) {
+pnm_addtotuplehash(const struct pam * const pamP,
+                   tuplehash          const tuplehash,
+                   tuple              const tupletoadd,
+                   int                const value,
+                   int *              const fitsP) {
 /*----------------------------------------------------------------------------
    Add a tuple value to the hash -- assume it isn't already there.
 
@@ -154,11 +154,11 @@ pnm_addtotuplehash(struct pam *   const pamP,
 
 
 void
-pnm_lookuptuple(struct pam *    const pamP,
-                const tuplehash       tuplehash,
-                const tuple           searchval,
-                int *           const foundP,
-                int *           const retvalP) {
+pnm_lookuptuple(const struct pam * const pamP,
+                tuplehash          const tuplehash,
+                tuple              const searchval,
+                int *              const foundP,
+                int *              const retvalP) {
 /*----------------------------------------------------------------------------
    Return as *revtvalP the index of the tuple value 'searchval' in the
    tuple hash 'tuplehash'.
@@ -167,18 +167,21 @@ pnm_lookuptuple(struct pam *    const pamP,
    and nothing as *retvalP.
 -----------------------------------------------------------------------------*/
     unsigned int const hashvalue = pnm_hashtuple(pamP, searchval);
+
     struct tupleint_list_item * p;
-    struct tupleint_list_item * found;
+    struct tupleint_list_item * foundEntP;
 
-    found = NULL;  /* None found yet */
-    for (p = tuplehash[hashvalue]; p && !found; p = p->next)
+    for (p = tuplehash[hashvalue], foundEntP = NULL;
+         p && !foundEntP;
+         p = p->next) {
+
         if (pnm_tupleequal(pamP, p->tupleint.tuple, searchval)) {
-            found = p;
+            foundEntP = p;
         }
-
-    if (found) {
+    }
+    if (foundEntP) {
         *foundP = TRUE;
-        *retvalP = found->tupleint.value;
+        *retvalP = foundEntP->tupleint.value;
     } else
         *foundP = FALSE;
 }
@@ -226,10 +229,10 @@ addColorOccurrenceToHash(tuple          const color,
 
 
 void
-pnm_addtuplefreqoccurrence(struct pam *   const pamP,
-                           tuple          const value,
-                           tuplehash      const tuplefreqhash,
-                           int *          const firstOccurrenceP) {
+pnm_addtuplefreqoccurrence(const struct pam * const pamP,
+                           tuple              const value,
+                           tuplehash          const tuplefreqhash,
+                           int *              const firstOccurrenceP) {
 /*----------------------------------------------------------------------------
   Tally one more occurrence of the tuple value 'value' to the tuple frequency
   hash 'tuplefreqhash', adding the tuple to the hash if it isn't there
