@@ -6,6 +6,7 @@
 
 #include <assert.h>
 #include <math.h>
+#include <float.h>
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
@@ -1011,7 +1012,7 @@ f14_maxcorr (float **     const p,
     float ** q;
     float * x;
     float * iy;
-    float tmp;
+    float retval2;  /* square of our return value */
 
     px = vector(0, ng);
     py = vector(0, ng);
@@ -1049,11 +1050,38 @@ f14_maxcorr (float **     const p,
     /* Finding eigenvalue for nonsymetric matrix using QR algorithm */
     hessenberg(q, ng, x, iy);
 
-    /* Return the sqrt of the second largest eigenvalue of q */
-    for (i = 2, tmp = x[1]; i <= ng; ++i)
-        tmp = (tmp > x[i]) ? tmp : x[i];
+    /*
+      If only one non-NaN eigenvalue is detected, retval2 = - FLT_MAX .
 
-    return sqrt(x[ng - 1]);
+      If there is only one member in the eigenvalue array return 0.0 .  (This
+      happens when all pixels in the image are one shade of gray.)
+
+      July 2026 afu
+    */
+
+    if (ng == 1)
+        retval2 = 0.0;
+    else {
+        /* Find the the second largest eigenvalue of q */
+
+        unsigned int i;
+        float max1; /* largest square of eigenvalue found so far */
+        float max2; /* second largest square of eigenvalue found so far */
+
+        for (i = 1, max1 = -FLT_MAX, max2 = -FLT_MAX; i <= ng; ++i) {
+            if (!isnan(x[i])) {
+                if (x[i] > max1) {
+                    max2 = max1;
+                    max1 = x[i];
+                } else if (x[i] > max2)
+                    max2 = x[i];
+            }
+        }
+        if (max1 < 0.9)
+            retval2 = max2;
+    }
+
+    return sqrt(retval2);
 }
 
 

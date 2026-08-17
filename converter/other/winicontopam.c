@@ -773,7 +773,8 @@ readXorBitfields(struct BitmapInfoHeader * const hdrP,
                         allOpaque = false;
 
                     alphas[tuples[row][col][PAM_TRN_PLANE]] = !0;
-                }
+                } else
+                    allTransparent = false;
             }
         }
     }
