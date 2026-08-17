@@ -246,7 +246,7 @@ closestColor(tuple         const color,
             imin = i;
         }
     }
-    pnm_addtotuplehash(pamP, cmapP->tuplehash, color, imin, &fits);
+    pnm_addtotuplehash((struct pam *)&cmapP->pam, cmapP->tuplehash, color, imin, &fits);
 
     return imin;
 }
@@ -470,7 +470,7 @@ gifPixel(struct pam *   const pamP,
     } else {
         int found;
 
-        pnm_lookuptuple(pamP, cmapP->tuplehash, tuple,
+        pnm_lookuptuple((struct pam*)&cmapP->pam, cmapP->tuplehash, tuple,
                         &found, &colorIndex);
 
         if (!found)

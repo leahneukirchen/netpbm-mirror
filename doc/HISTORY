@@ -4,6 +4,31 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+26.08.17 BJH  Release 11.02.28
+
+              pamtogif: fix spurious memory reference and incorrect output
+              when input image has an alpha channel.  Always broken (pamtogif
+              was new in Netpbm 10.37 (December 2006)).
+
+              winicontopam: fix incorrect message saying all pixels in the
+              transparency map are fully transparent when there is no
+              transparency map.  Introduced in Netpbm 10.92 (September 2020).
+
+              pamtowinicon: fix incorrect icon directory entry for an image
+              that is BMP truecolor, but only because it would be larger as a
+              paletted BMP.  Always broken (pamtowinicon was new in Netpbm
+              10.63 (June 2013).
+
+              pgmtexture: fix incorrect max correlation coefficient output.
+              Always broken (pgmtexture was in primordial Netpbm in 1991).
+
+              pgmtexture: fix invalid memory reference when image is all a
+              single shade of gray.  Always broken (pgmtexture was in
+              primordial Netpbm in 1991).
+
+              thinkjettopbm: fix failure when input is from Standard Input.
+              Introduced in Netpbm 10.12 (November 2002).
+
 26.07.29 BJH  Release 11.02.27
 
               pjtoppm: fix crash due to spurious memory access with compressed
