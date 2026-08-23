@@ -348,8 +348,9 @@ computetuplefreqhash(struct pam *   const pamP,
                      unsigned int * const sizeP) {
 /*----------------------------------------------------------------------------
   Compute a tuple frequency hash from a PAM.  This is a hash that gives
-  you the number of times a given tuple value occurs in the PAM.  You can
-  supply the input PAM in one of two ways:
+  you the number of times a given tuple value occurs in the PAM.
+
+  You can supply the input PAM in one of two ways:
 
   1) a two-dimensional array of tuples tupleArray[][];  In this case,
      'tupleArray' is non-NULL.
@@ -522,16 +523,18 @@ tuplehashtotable(const struct pam * const pamP,
                  tuplehash          const tuplehash,
                  unsigned int       const allocsize) {
 /*----------------------------------------------------------------------------
-   Create a tuple table containing the info from a tuple hash.  Allocate
-   space in the table for 'allocsize' elements even if there aren't that
-   many tuple values in the input hash.  That's so the caller has room
-   for expansion.
+  Create a tuple table containing the info from a tuple hash.  Allocate
+  space in the table for 'allocsize' elements even if there aren't that
+  many tuple values in the input hash.  That's so the caller has room
+  for expansion.
 
-   Caller must ensure that 'allocsize' is at least as many tuple values
-   as there are in the input hash.
+  Caller must ensure that 'allocsize' is at least as many tuple values
+  as there are in the input hash.
 
-   We allocate new space for all the table contents; there are no pointers
-   in the table to tuples or anything else in existing space.
+  *pamP describes the tuples in 'tuplehash' and our return value.
+
+  We allocate new space for all the table contents; there are no pointers
+  in the table to tuples or anything else in existing space.
 -----------------------------------------------------------------------------*/
     tupletable tupletable;
     const char * error;
@@ -622,38 +625,48 @@ pnm_computetuplefreqtable3(struct pam *   const pamP,
                            sample         const newMaxval,
                            unsigned int * const countP) {
 /*----------------------------------------------------------------------------
-   Compute a tuple frequency table from a PAM image.  This is an
-   array that tells how many times each tuple value occurs in the
-   image.
+  Compute a tuple frequency table from a PAM image.  This is an array that
+  tells how many times each tuple value occurs in the image.
 
-   Except for the format of the output, this function is the same as
-   computetuplefreqhash().
+  Except for the format of the output, this function is the same as
+  computetuplefreqhash().
 
-   If there are more than 'maxsize' unique tuple values in tupleArray[][],
-   give up.
+  You can supply the input PAM in one of two ways:
 
-   Return the array in newly malloc'ed storage.  Allocate space for
-   'maxsize' entries even if there aren't that many distinct tuple
-   values in tupleArray[].  That's so the caller has room for
-   expansion.
+  1) a two-dimensional array of tuples tupleArray[][]; In this case,
+     'tupleArray' is non-NULL.
 
-   If 'maxsize' is zero, allocate exactly as much space as there are
-   distinct tuple values in tupleArray[], and don't give up no matter
-   how many tuple values we find (except, of course, we abort if we
-   can't get enough memory).
+  2) an open PAM file, positioned to the raster.  In this case, 'tupleArray'
+     is NULL.  *pamP contains the file descriptor.
 
-   Return the number of unique tuple values in tupleArray[][] as
-   *countP.
+     We return with the file still open and its position undefined.
 
-   The tuples in the table have depth 'newDepth'.  We look at
-   only the first 'newDepth' planes of the input.  If the input doesn't
-   have that many planes, we throw an error.
+  In either case, *pamP contains parameters of the tuple array.
 
-   Scale the tuple values to a new maxval of 'newMaxval' before
-   processing them.  E.g. if the input has maxval 100 and 'newMaxval'
-   is 50, and a particular tuple has sample value 50, it would be
-   listed as sample value 25 in the output table.  This makes the
-   output table smaller and the processing time less.
+  Return the array in newly malloc'ed storage.
+
+  Return the number of unique tuple values in tupleArray[][] as *countP.
+
+  If 'maxsize' is nonzero, allocate space for 'maxsize' entries even if there
+  aren't that many distinct tuple values in tupleArray[].  That's so the
+  caller has room for expansion.  If there are more than 'maxsize' unique
+  tuple values in tupleArray[][], fail and return a NULL return value and
+  meaningless value as *countP.
+
+  If 'maxsize' is zero, allocate exactly as much space as there are
+  distinct tuple values in tupleArray[], and don't give up no matter
+  how many tuple values we find (except, of course, we abort if we
+  can't get enough memory).
+
+  The tuples in the table have depth 'newDepth'.  We look at only the first
+  'newDepth' planes of the input.  If the input doesn't have that many
+  planes, we throw an error.
+
+  Scale the tuple values to a new maxval of 'newMaxval' before
+  processing them.  E.g. if the input has maxval 100 and 'newMaxval'
+  is 50, and a particular tuple has sample value 50, it would be
+  listed as sample value 25 in the output table.  This makes the
+  output table smaller and the processing time less.
 -----------------------------------------------------------------------------*/
     tuplehash tuplefreqhash;
     tupletable tuplefreqtable;
@@ -669,10 +682,24 @@ pnm_computetuplefreqtable3(struct pam *   const pamP,
     if (tuplefreqhash == NULL)
         tuplefreqtable = NULL;
     else {
-        unsigned int tableSize = (maxsize == 0 ? uniqueCount : maxsize);
+        unsigned int const tableSize = (maxsize == 0 ? uniqueCount : maxsize);
+
+        struct pam tuplefreqpam;
+            /* This describes the tuples in the tuple frequency hash and
+               table.
+            */
+
+        tuplefreqpam = *pamP;
+        tuplefreqpam.depth  = newDepth;
+        tuplefreqpam.maxval = newMaxval;
+
         assert(tableSize >= uniqueCount);
-        tuplefreqtable = tuplehashtotable(pamP, tuplefreqhash, tableSize);
+
+        tuplefreqtable =
+            tuplehashtotable(&tuplefreqpam, tuplefreqhash, tableSize);
+
         pnm_destroytuplehash(tuplefreqhash);
+
         if (tuplefreqtable == NULL)
             pm_error("Out of memory generating tuple table");
     }
