@@ -2,7 +2,7 @@
 <html><head><title>Pnmstitch User Manual</title></head>
 <body>
 <h1>pnmstitch</h1>
-Updated: July 2002
+Updated: August 2026
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -24,7 +24,7 @@ pnmstitch - stitch together two panoramic (side-by-side) photographs
 [<b>-yrightpos=</b><i>row</i>]
 [<b>-stitcher=</b>{<b>RotateSliver</b>,
 <b>BiLinearSliver</b>,<b>LinearSliver</b>}]
-[<b>-filter=</b>{<b>LineAtATime</b>,<b>HorizontalCrop</b>}]
+[<b>-filter=</b>{<b>StraightThrough</b>,<b>HorizontalCrop</b>}]
 [<b>-output=</b><i>output_filespec</i>]
 [<b>-verbose</b>]
 
@@ -89,12 +89,15 @@ left hand image.
 <dt><b>-stitcher=</b>{<b>RotateSliver</b>,<b>BiLinearSliver</b>,
 <b>LinearSliver</b>}
 
-<dd>The default is <b>RotateSliver</b>.
+<dd>The default is <b>BiLinearSliver</b>.
 
-<dt><b>-filter=</b>{<b>LineAtATime</b>,<b>HorizontalCrop</b>}
+<dt><b>-filter=</b>{<b>StraightThrough</b>,<b>HorizontalCrop</b>}
+
 
 <dd>No details available.
-     
+
+<p>The default is <b>StraightThrough</b>
+
 <dt><b>-output=</b><i>output_filespec</i>
 
 <dd>Name of output file.  If you don't specify this option, the output image

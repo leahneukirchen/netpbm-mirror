@@ -2,7 +2,7 @@
 <html><head><title>Pamtowinicon User Manual</title></head>
 <body>
 <h1>pamtowinicon</h1>
-Updated: 12 April 2013
+Updated: 16 August 2026
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -111,8 +111,7 @@ used for e.g. shading the icon while dragging.  See
 
 <p>If there is no explicit AND mask, but transparency data in the
 input image, <b>pamtowinicon</b> sets the AND mask to opaque where the
-sample in the transparency channel is below maxval, and to transparent
-elsewhere.
+pixel is <em>fully</em> opaque and to transparent elsewhere.
 
 <p>If no transparency data is present in the input image,
 <b>pamtowinicon</b> assumes the whole image to be fully opaque.
@@ -120,13 +119,27 @@ elsewhere.
 
 <h3 id="bmpoutput">BMP Output</h3>
 
-When BMP encoding an image, <b>pamtowinicon</b> tries to use the most
-compact <b>BI_RGB</b> format allowed for icon images with a color
-depth of eight bits per channel.
+<p>When BMP encoding an image with 256 or fewer colors and does not contain
+  transparency information, <b>pamtowinicon</b> uses <b>BI_RGB</b> format with
+  a color palette.  It generates 1, 4, or 8 bits per pixel, based on how many
+  colors there are.
 
-<p><b>pamtowinicon</b> generates neither 16-bit <b>BI_RGB</b> nor
-<b>BI_BITFIELDS</b> BMP encoded images, even if the maxval of the input
-PAM is not 255.
+<p>If the image has more than 256 colors or contains transparency information,
+the program uses <b>BI_RGB</b> format with no palette, 32 bits per pixel.
+
+<p><b>pamtowinicon</b> never generates 16-bit <b>BI_RGB</b> or
+<b>BI_BITFIELDS</b> BMP encoded images.
+
+<p>As of August 2026, Safari has been observed to display some BMP-encoded
+  Windows icons incorrectly.  It displays a no-palette BMP-encoded icon that
+  has zero for the opacity value of every pixel as blank; it apparently
+  assumes the icon is fully transparent -- invisible.  But there is a special
+  part of the Windows icon format definition that says that while a zero
+  opacity value normally means transparent, if <em>every</em> pixel has a zero
+  opacity value, that means every pixel is opaque.  Safari apparently is not
+  aware of that special rule.  To work around this and still have more than
+  256 colors, you can use <b>pamtowinicon</b>&apos;s <b>-pngthreshold=1</b>
+  option to force the icon to use PNG encoding instead of BMP.
 
 
 <h2 id="seealso">SEE ALSO</h2>
