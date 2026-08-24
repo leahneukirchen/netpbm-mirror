@@ -1707,7 +1707,7 @@ computeTransparent(enum TransparencyType const transType,
      color and that color is not in the image.  Also issue an
      informational message.
 
-   If 'transType' says an input alpha channel will dtermine what pixels are
+   If 'transType' says an input alpha channel will determine what pixels are
    transparent:
 
      'fakeTransparent' is the special color map index for transparent pixels.
