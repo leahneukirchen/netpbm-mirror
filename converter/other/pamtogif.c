@@ -119,7 +119,7 @@ pamColorPlaneCt(const  struct pam * const pamP) {
 
 
 static unsigned int
-pamAlphaPlane(struct pam * const pamP) {
+pamAlphaPlane(const struct pam * const pamP) {
 /*----------------------------------------------------------------------------
    The number of the alpha plane, or zero if there is no alpha plane, as
    indicated by *pamP.
