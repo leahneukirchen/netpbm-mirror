@@ -207,7 +207,7 @@ for color in "0f/0f/0f" "ff/00/00" "00/ff/00"
     giftopnm -alphaout=${a0_out_pbm} > ${out0_ppm}
     cmp -s ${madras_ppm} ${out0_ppm}; echo $?   # Should match 
 
-  pbmmake -g 40 24 | pamdepth 255 | pamstack ${madras_ppm} - | 
+  pbmmake -g 40 24 | pamdepth 255 | pamstack -tupletype="RGB_ALPHA" ${madras_ppm} - | 
   pamtogif -transparent=rgb:${color} - | \
     giftopnm -alphaout=${a1_out_pbm} > ${out1_ppm}
     cmp -s ${madras_ppm} ${out1_ppm}; echo $?   # Should match 
