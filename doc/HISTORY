@@ -77,6 +77,9 @@ not yet  BJH  Release 11.16.00
               lispmtopgm: fix incorrect output when width not a multiple of
               32.  Always broken (lispmtopgm was in primordial Netpbm).
 
+              build: fix omission of 'pbm_dumpfont' from libnetpbm.  Broken in
+              Netpbm 10.84 (September 2018).
+
 26.06.27 BJH  Release 11.15.00
 
               Add pbmtobrush.
