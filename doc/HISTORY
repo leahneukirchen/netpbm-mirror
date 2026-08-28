@@ -6,6 +6,15 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.16.00
 
+              pnmtojbig: add long options.
+
+              ppmtoarbtxt: add #(hash) substitution specifier class.
+
+              winicontopam: Improve some informational messages.
+
+              pamrecolor: fix bug: uses the same colors on every row when doing
+              random colors.
+
               pamtogif: fix spurious memory reference and incorrect output
               when input image has an alpha channel.  Always broken (pamtogif
               was new in Netpbm 10.37 (December 2006)).
@@ -14,12 +23,6 @@ not yet  BJH  Release 11.16.00
               when input image has a nonstandard visual image tuple type.
               Always broken (pamtogif was new in Netpbm 10.37 (December
               2006)).
-
-              pnmtojbig: add long options.
-
-              ppmtoarbtxt: add #(hash) substitution specifier class.
-
-              winicontopam: Improve some informational messages.
 
               winicontopam: fix incorrect message saying all pixels in the
               transparency map are fully transparent when there is no
