@@ -12,9 +12,6 @@ not yet  BJH  Release 11.16.00
 
               winicontopam: Improve some informational messages.
 
-              pamrecolor: fix bug: uses the same colors on every row when doing
-              random colors.
-
               pamtogif: fix spurious memory reference and incorrect output
               when input image has an alpha channel.  Always broken (pamtogif
               was new in Netpbm 10.37 (December 2006)).
@@ -42,6 +39,10 @@ not yet  BJH  Release 11.16.00
 
               various: fix literal "\n" in messages.  Introduced in Netpbm
               11.15 (June 2026).
+
+              pamrecolor: fix bug: uses the same colors on every row when doing
+              random colors.  Broken in Netpbm 10.94 (March 2021).  Thanks
+              Scott Pakin.
 
               pnmtojbig: fix empty output with default -s option.
               Introduced in Netpbm 10.67 (June 2014).
@@ -2430,6 +2431,8 @@ not yet  BJH  Release 11.16.00
 
               pnmcat: set don't care bits in packed PBM output to zero so
               they are predictable.
+
+              pamrecolor: add -randomseed.
 
               libpam, pamcomp: fix bug: treats tuple type GRAYSCALE_ALPHA like
               GRAYSCALE on 32-bit machine.  Actually, looks only at first 4
