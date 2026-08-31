@@ -12,6 +12,8 @@ not yet  BJH  Release 11.16.00
 
               winicontopam: Improve some informational messages.
 
+              pnmhisteq: improve precision by reducing rounding error.
+
               pamtogif: fix spurious memory reference and incorrect output
               when input image has an alpha channel.  Always broken (pamtogif
               was new in Netpbm 10.37 (December 2006)).

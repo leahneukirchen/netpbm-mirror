@@ -254,6 +254,13 @@ equalize(const unsigned int * const lumahist,
 
     unsigned int const range = brightestRemap - darkestRemap;
 
+    double * lumamap0;  /* malloced */
+
+    MALLOCARRAY(lumamap0, brightestRemap + 1);
+
+    if (!lumamap0)
+        pm_error("Couldn't allocate memory for table of %u luminosities",
+                 brightestRemap + 1);
     {
         xelval origLum;
         unsigned int pixsum;
@@ -262,30 +269,30 @@ equalize(const unsigned int * const lumahist,
              origLum <= brightestRemap;
              ++origLum) {
 
-            lumamap[origLum] =
-                darkestRemap +
-                ROUNDU((((double) pixsum / remapPixelCount) * range));
+            lumamap0[origLum] =
+                (double)darkestRemap +
+                ((double)pixsum / remapPixelCount) * range;
 
             pixsum += lumahist[origLum];
         }
-
     }
     {
         double const lscale = (double)range /
-            ((lumamap[maxluma] > darkestRemap) ?
-             (double) lumamap[maxluma] - darkestRemap : (double) range);
+            ((lumamap0[maxluma] > darkestRemap) ?
+             lumamap0[maxluma] - darkestRemap : range);
 
         xelval origLum;
 
         /* Normalize so that the brightest pixels actually present map to
            'brightestRemap'.
         */
-
-        for (origLum = darkestRemap; origLum <= brightestRemap; ++origLum)
+        for (origLum = darkestRemap; origLum <= brightestRemap; ++origLum) {
             lumamap[origLum] =
                 MIN(brightestRemap,
-                    darkestRemap + ROUNDU(lumamap[origLum] * lscale));
+                    darkestRemap + ROUNDU(lumamap0[origLum] * lscale));
+        }
     }
+    free(lumamap0);
 }
 
 
