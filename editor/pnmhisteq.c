@@ -240,6 +240,12 @@ equalize(const unsigned int * const lumahist,
    histogram 'lumahist'.  lumahist[N] is the number of pixels in the original
    image of luminosity N.
 
+   The map maps luminosity 'darkestRemap' to the same luminosity and maps the
+   maximum luminosity in the image (i.e. in 'lumahist') less than or equal to
+   'brightestRemap' to 'brightestRemap' and maps everything in between to
+   something in between.  The map does not contain a mapping for luminosities
+   below 'darkestRemap' or above 'brightestRemap'.
+
    'remapPixelCount' is the number of pixels in the given luminosity range.
    It is redundant with 'lumahist'; we get it for computational convenience.
 -----------------------------------------------------------------------------*/
@@ -256,13 +262,9 @@ equalize(const unsigned int * const lumahist,
              origLum <= brightestRemap;
              ++origLum) {
 
-            /* With 16 bit grays, the following calculation can overflow a 32
-               bit long.  So, we do it in floating point.
-            */
-
             lumamap[origLum] =
                 darkestRemap +
-                ROUNDU((((double) pixsum * range)) / remapPixelCount);
+                ROUNDU((((double) pixsum / remapPixelCount) * range));
 
             pixsum += lumahist[origLum];
         }
@@ -275,7 +277,9 @@ equalize(const unsigned int * const lumahist,
 
         xelval origLum;
 
-        /* Normalize so that the brightest pixels are set to maxval. */
+        /* Normalize so that the brightest pixels actually present map to
+           'brightestRemap'.
+        */
 
         for (origLum = darkestRemap; origLum <= brightestRemap; ++origLum)
             lumamap[origLum] =
