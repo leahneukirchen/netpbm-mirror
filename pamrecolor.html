@@ -45,11 +45,15 @@ target colors from a target image.
 images based on arbitrary color spaces.  You can define the color space
 explicitly or choose one of many that <b>pamrecolor</b> knows by name.
 
-<p>The output is a PAM image on standard output.  Options control the
-exact format of the PAM.  If you want a PNM (PBM, PGM, or PPM) image,
-use <a href="pamtopnm.html">pamtopnm</a> on the output.  There is no
-need to convert if you will use the image as input to a current Netpbm
-program, but many other programs don't know what a PAM is.
+<p>Control the target colors with the <b>-targetcolor</b> and <b>colorfile</b>
+options.  If you specify neither, the program simply chooses a random color
+with the same luminosity for each pixel.
+  
+<p>The output is a PAM image on standard output.  Options control the exact
+format of the PAM.  If you want a PNM (PBM, PGM, or PPM) image,
+use <a href="pamtopnm.html">pamtopnm</a> on the output.  There is no need to
+convert if you will use the image as input to a current Netpbm program, but
+many other programs don't know what a PAM is.
 
 
 <h2 id="options">OPTIONS</h2>
@@ -169,6 +173,9 @@ pixels.
 and process ID, which gives you fairly uncorrelated results in multiple
 invocations.
 
+<p>This option has no effect if you specify <b>-targetcolor</b> or
+<b>-colorfile</b>.
+  
 <p>This option was new in Netpbm 10.61 (December 2012).
 
 </dl>
