@@ -287,9 +287,14 @@ readHeader(FILE *       const ifP,
 
 
 static TabEntry *
-readTable(FILE * const ifP,
-          int    const tablen) {
+readTable(FILE *       const ifP,
+          unsigned int const tablen) {
+/*----------------------------------------------------------------------------
+   Read the offset table from the current position in file *ifP.  It is
+   'tablen' entries long.
 
+   Return a pointer to the table in newly malloced memory.
+-----------------------------------------------------------------------------*/
     TabEntry * table;
     unsigned int i;
 
@@ -319,7 +324,8 @@ rleDecompress(ScanElem * const srcStart,
     for (src = srcStart,
              srcleft = srcleftStart,
              dest = destStart,
-             destleft = destleftStart; srcleft; ) {
+             destleft = destleftStart;
+         srcleft; ) {
 
         unsigned char const el = (unsigned char)(*src++ & 0xff);
         unsigned int const count = (unsigned int)(el & 0x7f);
@@ -355,6 +361,50 @@ rleDecompress(ScanElem * const srcStart,
 
 
 
+static void
+readLineViaTableEntry(TabEntry     const tableEntry,
+                      FILE *       const ifP,
+                      unsigned int const bpc,
+                      ScanLine     const imageLine,
+                      unsigned int const maxLineSize) {
+/*----------------------------------------------------------------------------
+   Read the line from file *ifP described by RLE offset table entry
+   'tableEntry'.
+
+   Read it, decompressed, into *imageLine, but fail if it more than
+   'maxLineSize' bytes.
+-----------------------------------------------------------------------------*/
+    pm_filepos const offset = (pm_filepos) tableEntry.start;
+    long const length = bpc == 2 ? tableEntry.length / 2 : tableEntry.length;
+
+    ScanElem * compressedLine;
+
+    MALLOCARRAY(compressedLine, length);
+
+    if (!compressedLine) {
+        pm_error("Can't get memory for a buffer of %ld "
+                 "scan elements", length);
+    }
+
+    unsigned int i;
+
+    /* Note: (offset < currentPosition) can happen */
+
+    pm_seek2(ifP, &offset, sizeof(offset));
+
+    for (i = 0; i < length; ++i) {
+        if (bpc == 1)
+            compressedLine[i] = getByteAsShort(ifP);
+        else
+            compressedLine[i] = getBigShort(ifP);
+    }
+    rleDecompress(compressedLine, length, imageLine, maxLineSize);
+
+    free(compressedLine);
+}
+
+
+
 static ScanLine *
 readChannels(FILE *       const ifP,
              Header *     const head,
@@ -363,7 +413,6 @@ readChannels(FILE *       const ifP,
              unsigned int const outChannel) {
 
     ScanLine * image;
-    ScanElem * temp;
     unsigned int channel;
     unsigned int maxchannel;
 
@@ -377,40 +426,21 @@ readChannels(FILE *       const ifP,
         maxchannel = 3;
         MALLOCARRAY_NOFAIL(image, head->ysize * maxchannel);
     }
-    if (table)
-        MALLOCARRAY_NOFAIL(temp, WORSTCOMPR(head->xsize));
 
     for (channel = 0; channel < maxchannel; ++channel) {
         unsigned int row;
         for (row = 0; row < head->ysize; ++row) {
-            int const sgiIndex = channel * head->ysize + row;
+            unsigned int      const sgiIndex = channel * head->ysize + row;
+            unsigned long int const iindex   = outChannelSpec ? row : sgiIndex;
 
-            unsigned long int iindex;
-
-            iindex = outChannelSpec ? row : sgiIndex;
             if (!outChannelSpec || outChannel == channel)
                 MALLOCARRAY_NOFAIL(image[iindex], head->xsize);
 
             if (table) {
                 if (!outChannelSpec || channel >= outChannel) {
-                    pm_filepos const offset = (pm_filepos)
-                        table[sgiIndex].start;
-                    long const length = head->bpc == 2 ?
-                        table[sgiIndex].length / 2 :
-                        table[sgiIndex].length;
-
-                    unsigned int i;
-
-                    /* Note: (offset < currentPosition) can happen */
-
-                    pm_seek2(ifP, &offset, sizeof(offset));
-
-                    for (i = 0; i < length; ++i)
-                        if (head->bpc == 1)
-                            temp[i] = getByteAsShort(ifP);
-                        else
-                            temp[i] = getBigShort(ifP);
-                    rleDecompress(temp, length, image[iindex], head->xsize);
+                    readLineViaTableEntry(table[sgiIndex], ifP,
+                                          (unsigned char)head->bpc,
+                                          image[iindex], head->xsize);
                 }
             } else {
                 unsigned int i;
@@ -427,8 +457,6 @@ readChannels(FILE *       const ifP,
             }
         }
     }
-    if (table)
-        free(temp);
     return image;
 }
 

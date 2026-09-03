@@ -14,6 +14,9 @@ not yet  BJH  Release 11.16.00
 
               pnmhisteq: improve precision by reducing rounding error.
 
+              sgitopnm: fix buffer overrun with corrupted RLE input.  Always
+              broken (sgitopnm was in primordial Netpbm in 1994).
+
               pamtogif: fix spurious memory reference and incorrect output
               when input image has an alpha channel.  Always broken (pamtogif
               was new in Netpbm 10.37 (December 2006)).
