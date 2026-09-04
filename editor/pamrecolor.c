@@ -176,26 +176,23 @@ explicitlyColorRow(struct pam *   const pamP,
 
 
 static void
-randomlyColorRow(struct pam *   const pamP,
-                 tuplen *       const rowData,
-                 bool           const randomseedSpec,
-                 unsigned int   const randomseed) {
+randomlyColorRow(struct pam *        const pamP,
+                 tuplen *            const rowData,
+                 struct pm_randSt *  const randStP) {
 /*----------------------------------------------------------------------
-  Assign each tuple in a row a random color.
+  Assign each tuple in row 'rowData' a random color.
+
+  'rowData' is described by *pamP.
+
+  Use *randStP as the source for randomness.
 ------------------------------------------------------------------------*/
     unsigned int col;
-    struct pm_randSt randSt;
-
-    pm_randinit(&randSt);
-    pm_srand2(&randSt, randomseedSpec, randomseed);
 
     for (col = 0; col < pamP->width; ++col) {
-        rowData[col][PAM_RED_PLANE] = pm_drand(&randSt);
-        rowData[col][PAM_GRN_PLANE] = pm_drand(&randSt);
-        rowData[col][PAM_BLU_PLANE] = pm_drand(&randSt);
+        rowData[col][PAM_RED_PLANE] = pm_drand(randStP);
+        rowData[col][PAM_GRN_PLANE] = pm_drand(randStP);
+        rowData[col][PAM_BLU_PLANE] = pm_drand(randStP);
     }
-
-    pm_randterm(&randSt);
 }
 
 
@@ -466,6 +463,7 @@ main(int argc, const char *argv[]) {
     tuplen *           outRow;
     tuplen **          colorData;
     tuplen *           colorRowBuffer;
+    struct pm_randSt   randSt;
     unsigned int       row;
 
     pm_proginit(&argc, argv);
@@ -501,6 +499,9 @@ main(int argc, const char *argv[]) {
 
     pnm_writepaminit(&outPam);
 
+    pm_randinit(&randSt);
+    pm_srand2(&randSt, cmdline.randomseedSpec, cmdline.randomseed);
+
     for (row = 0; row < inPam.height; ++row) {
         tuplen * colorRow;
 
@@ -514,8 +515,7 @@ main(int argc, const char *argv[]) {
             if (cmdline.targetcolorSpec)
                 explicitlyColorRow(&colorPam, colorRow, cmdline.targetcolor);
             else
-                randomlyColorRow(&colorPam, colorRow,
-                                 cmdline.randomseedSpec, cmdline.randomseed);
+                randomlyColorRow(&colorPam, colorRow, &randSt);
         }
         recolorRow(&inPam, inRow,
                    &cmdline.color2gray, colorRow,
@@ -531,8 +531,8 @@ main(int argc, const char *argv[]) {
 
     if (colorfP)
         pm_close(colorfP);
+    pm_randterm(&randSt);
     pm_close(ifP);
 
     return 0;
 }
-

@@ -4,6 +4,22 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+26.09.04 BJH  Release 11.02.29
+
+              pamtogif: fix spurious memory reference and incorrect output
+              when input image has a nonstandard visual image tuple type.
+              Always broken (pamtogif was new in Netpbm 10.37 (December
+              2006)).
+
+              sgitopnm: fix buffer overrun with corrupted RLE input.  Always
+              broken (sgitopnm was in primordial Netpbm in 1994).
+
+              pamrecolor: fix bug: uses the same colors on every row when doing
+              random colors.  Broken in Netpbm 10.94 (March 2021).
+
+              build: fix omission of 'pbm_dumpfont' from libnetpbm.  Broken in
+              Netpbm 10.84 (September 2018).
+
 26.08.17 BJH  Release 11.02.28
 
               pamtogif: fix spurious memory reference and incorrect output
