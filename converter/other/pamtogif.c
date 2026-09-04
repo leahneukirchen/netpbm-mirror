@@ -87,6 +87,35 @@ struct CmdlineInfo {
 
 
 
+static unsigned int
+pamColorPlaneCt(const  struct pam * const pamP) {
+/*----------------------------------------------------------------------------
+   The number of planes of color in the image described by *pamP, i.e.  1 for
+   black and white or grayscale and 3 for color.  These are the first planes
+   in the image (e.g. if we return 3, that means the color is in Planes 0
+   through 2).
+-----------------------------------------------------------------------------*/
+    unsigned int retval;
+
+    if (strneq(pamP->tuple_type, "RGB", 3))
+        retval = 3;
+    else if (strneq(pamP->tuple_type, "GRAYSCALE", 9))
+        retval = 1;
+    else if (strneq(pamP->tuple_type, "BLACKANDWHITE", 13))
+        retval = 1;
+    else
+        pm_error("Unrecognized tuple type '%s' for input.  Cannot tell "
+                 "where the color planes are to create a GIF colormap",
+                 pamP->tuple_type);
+
+    if (pamP->depth < retval) {
+        pm_error("Inconsistent tuple type ('%s') and depth (%u) "
+                 "in input", pamP->tuple_type, pamP->depth);
+    }
+
+    return retval;
+}
+
 
 
 static unsigned int
@@ -1975,8 +2004,7 @@ computeLibnetpbmColormap(struct pam *          const pamP,
            our own made-up entry in the colormap for transparency, it
            isn't included in this count.
         */
-    unsigned int const nInputComp =
-        pamAlphaPlane(pamP) ? pamP->depth - 1 : pamP->depth;
+    unsigned int const nInputComp = pamColorPlaneCt(pamP);
         /* Number of color components (not alpha) in the input image */
 
     unsigned int i;

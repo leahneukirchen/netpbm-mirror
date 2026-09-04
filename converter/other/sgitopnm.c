@@ -377,8 +377,6 @@ readChannels(FILE *       const ifP,
         maxchannel = 3;
         MALLOCARRAY_NOFAIL(image, head->ysize * maxchannel);
     }
-    if (table)
-        MALLOCARRAY_NOFAIL(temp, WORSTCOMPR(head->xsize));
 
     for (channel = 0; channel < maxchannel; ++channel) {
         unsigned int row;
@@ -401,6 +399,7 @@ readChannels(FILE *       const ifP,
 
                     unsigned int i;
 
+                    MALLOCARRAY_NOFAIL(temp, length);
                     /* Note: (offset < currentPosition) can happen */
 
                     pm_seek2(ifP, &offset, sizeof(offset));
@@ -411,6 +410,8 @@ readChannels(FILE *       const ifP,
                         else
                             temp[i] = getBigShort(ifP);
                     rleDecompress(temp, length, image[iindex], head->xsize);
+
+                    free(temp);
                 }
             } else {
                 unsigned int i;
@@ -427,8 +428,6 @@ readChannels(FILE *       const ifP,
             }
         }
     }
-    if (table)
-        free(temp);
     return image;
 }
 
