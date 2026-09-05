@@ -85,15 +85,15 @@ typedef struct {
     unsigned long x;
     unsigned long y;
     unsigned long z;
-} cieXyz;
+} CieXyz;
 
 typedef struct {
-    cieXyz red;
-    cieXyz grn;
-    cieXyz blu;
-} cieXyzTriple;
+    CieXyz red;
+    CieXyz grn;
+    CieXyz blu;
+} CieXyzTriple;
 
-struct bmpInfoHeader {
+struct BmpInfoHeader {
     enum rowOrder rowOrder;
     unsigned int cols;
     unsigned int rows;
@@ -110,18 +110,18 @@ struct bmpInfoHeader {
 
            Zero means there is no colormap.
         */
-    unsigned int imageSize;
+    unsigned long imageSize;
         /* Size in bytes of the image data.  We only reference this
            when the image is compressed. */
     unsigned short cPlanes;
     BMPCompType compression;
     struct pixelformat pixelformat;
-    cieXyzTriple endPoints;
+    CieXyzTriple endPoints;
 };
 
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -135,7 +135,7 @@ static const char * ifname;
 
 static void
 parseCommandLine(int argc, const char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -170,82 +170,24 @@ parseCommandLine(int argc, const char ** argv,
 
 static const char er_read[] = "%s: read error";
 
-static int
-GetByte(FILE * const fp) {
+static void
+readCieXyz(FILE *   const ifP,
+           CieXyz * const cieXyzP) {
 
-    int             v;
-
-    if ((v = getc(fp)) == EOF)
-        pm_error(er_read, ifname);
-
-    return v;
+    pm_readlittlelongu(ifP, &cieXyzP->x);
+    pm_readlittlelongu(ifP, &cieXyzP->y);
+    pm_readlittlelongu(ifP, &cieXyzP->z);
 }
 
 
 
-static short
-GetShort(FILE * const fp) {
+static void
+readCieXyzTriple(FILE *         const ifP,
+                 CieXyzTriple * const cieXyzTripleP) {
 
-    short           v;
-
-    if (pm_readlittleshort(fp, &v) == -1)
-        pm_error(er_read, ifname);
-
-    return v;
-}
-
-
-
-static short
-GetBigShort(FILE * const fp) {
-
-    short           v;
-
-    if (pm_readbigshort(fp, &v) == -1)
-        pm_error(er_read, ifname);
-
-    return v;
-}
-
-
-
-static long
-GetLong(FILE * const fp) {
-
-    long v;
-
-    if (pm_readlittlelong(fp, &v) == -1)
-        pm_error(er_read, ifname);
-
-    return v;
-}
-
-
-
-static cieXyz
-GetCieXyz(FILE * const ifP) {
-
-    cieXyz retval;
-
-    retval.x = GetLong(ifP);
-    retval.y = GetLong(ifP);
-    retval.z = GetLong(ifP);
-
-    return retval;
-}
-
-
-
-static cieXyzTriple
-GetCieXyzTriple(FILE *         const ifP) {
-
-    cieXyzTriple retval;
-
-    retval.red = GetCieXyz(ifP);
-    retval.grn = GetCieXyz(ifP);
-    retval.blu = GetCieXyz(ifP);
-
-    return retval;
+    readCieXyz(ifP, &cieXyzTripleP->red);
+    readCieXyz(ifP, &cieXyzTripleP->grn);
+    readCieXyz(ifP, &cieXyzTripleP->blu);
 }
 
 
@@ -315,20 +257,28 @@ bmpReadfileheader(FILE *         const ifP,
                   unsigned int * const bytesReadP,
                   unsigned int * const offBitsP) {
 
-    unsigned long     offBits;
+    char c;
+    long offBits;
+    short dontcareshort;
+    long dontcarelong;
 
-    if (GetByte(ifP) != 'B')
+    pm_readchar(ifP, &c);
+
+    if (c != 'B')
         pm_error("'%s' is not a BMP file.  (It doesn't start with 'BM')",
                  ifname);
-    if (GetByte(ifP) != 'M')
+
+    pm_readchar(ifP, &c);
+
+    if (c != 'M')
         pm_error("'%s' is not a BMP file.  (It doesn't start with 'BM')",
                  ifname);
 
-
-    /* fileSize = */ GetLong(ifP);  /* This is not always reliable. */
-    /* xHotSpot = */ GetShort(ifP);
-    /* yHotSpot = */ GetShort(ifP);
-    offBits  = GetLong(ifP);
+    /* fileSize = */ pm_readlittlelong(ifP, &dontcarelong);
+        /* This is not always reliable. */
+    /* xHotSpot = */ pm_readlittleshort(ifP, &dontcareshort);
+    /* yHotSpot = */ pm_readlittleshort(ifP, &dontcareshort);
+    pm_readlittlelong(ifP, &offBits);
 
     *offBitsP = offBits;
 
@@ -341,7 +291,7 @@ bmpReadfileheader(FILE *         const ifP,
 
 static void
 readOs2InfoHeaderRest(FILE *                 const ifP,
-                      struct bmpInfoHeader * const headerP) {
+                      struct BmpInfoHeader * const headerP) {
 /*----------------------------------------------------------------------------
    Read the rest of the info header, after its size field, of an OS2 BMP from
    *ifP.
@@ -433,7 +383,7 @@ validateCompression(unsigned long const compression,
 
 static void
 readWindowsBasic40ByteInfoHeader(FILE *                 const ifP,
-                                 struct bmpInfoHeader * const headerP) {
+                                 struct BmpInfoHeader * const headerP) {
 /*----------------------------------------------------------------------------
    Read from the file stream 'ifP' the basic BMP Info header.  This does
    not include any Info header extension.  The Info header is the data
@@ -441,9 +391,10 @@ readWindowsBasic40ByteInfoHeader(FILE *                 const ifP,
 
    Return the information from the info header as *headerP.
 -----------------------------------------------------------------------------*/
-    int colorsused;        /* ColorsUsed value from header */
+    long colorsused;        /* ColorsUsed value from header */
     unsigned short planesField, bitCountField;
     int32_t colsField;
+    long dontcarelong;
 
     pm_readlittlelong2(ifP, &colsField);
 
@@ -455,7 +406,9 @@ readWindowsBasic40ByteInfoHeader(FILE *                 const ifP,
         headerP->cols = (unsigned int)colsField;
 
     {
-        long const cy = GetLong(ifP);
+        long cy;
+
+        pm_readlittlelong(ifP, &cy);
 
         if (cy == 0)
             pm_error("Invalid BMP file: says height is zero");
@@ -472,7 +425,9 @@ readWindowsBasic40ByteInfoHeader(FILE *                 const ifP,
     pm_readlittleshortu(ifP, &bitCountField);
     headerP->cBitCount = bitCountField;
     {
-        unsigned long int const compression = GetLong(ifP);
+        unsigned long compression;
+
+        pm_readlittlelongu(ifP, &compression);
 
         validateCompression(compression, headerP->rowOrder,
                             headerP->cBitCount);
@@ -482,20 +437,20 @@ readWindowsBasic40ByteInfoHeader(FILE *                 const ifP,
         headerP->compression = compression;
     }
     /* And read the rest of the junk in the 40 byte header */
-    headerP->imageSize = GetLong(ifP);   /* ImageSize */
-    GetLong(ifP);   /* XpixelsPerMeter */
-    GetLong(ifP);   /* YpixelsPerMeter */
-    colorsused = GetLong(ifP);   /* ColorsUsed */
+    pm_readlittlelongu(ifP, &headerP->imageSize);   /* ImageSize */
+    pm_readlittlelong(ifP, &dontcarelong);   /* XpixelsPerMeter */
+    pm_readlittlelong(ifP, &dontcarelong);   /* YpixelsPerMeter */
+    pm_readlittlelong(ifP, &colorsused);  /* ColorsUsed */
     /* See comments in bmp.h for info about the definition of the following
        word and its relationship to the color map size (headerP->cmapSize).
     */
-    /* colorsimportant = */ GetLong(ifP);  /* ColorsImportant */
+    pm_readlittlelong(ifP, &dontcarelong);  /* ColorsImportant */
 
     if (headerP->cBitCount <= 8) {
         if (colorsused != 0) {
             if (colorsused > 1 << headerP->cBitCount)
                 pm_error("Invalid BMP header.  Says %u bits per pixel, "
-                         "but %d colors used",
+                         "but %ld colors used",
                          headerP->cBitCount, colorsused);
             else if (colorsused == 1 && headerP->cBitCount == 1) {
                 pm_message("Abnormal BMP header.  Says 1 bit per pixel. "
@@ -586,15 +541,16 @@ computeConventionalBgr(struct pixelformat * const fP,
 
 static void
 readV4InfoHeaderExtension(FILE *                 const ifP,
-                          struct bmpInfoHeader * const headerP,
+                          struct BmpInfoHeader * const headerP,
                           unsigned int *         const bytesReadP) {
 
     unsigned long redMsk, grnMsk, bluMsk, trnMsk;
+    long dontcarelong;
 
-    redMsk = GetLong(ifP);
-    grnMsk = GetLong(ifP);
-    bluMsk = GetLong(ifP);
-    trnMsk = GetLong(ifP);
+    pm_readlittlelongu(ifP, &redMsk);
+    pm_readlittlelongu(ifP, &grnMsk);
+    pm_readlittlelongu(ifP, &bluMsk);
+    pm_readlittlelongu(ifP, &trnMsk);
 
     if (headerP->bitFields) {
         /* A document from Microsoft says on Windows 95 there is no
@@ -611,13 +567,13 @@ readV4InfoHeaderExtension(FILE *                 const ifP,
     } else
         headerP->pixelformat = defaultPixelformat(headerP->cBitCount);
 
-    GetLong(ifP);  /* Color space */
+    pm_readlittlelong(ifP, &dontcarelong);  /* Color space */
 
-    headerP->endPoints = GetCieXyzTriple(ifP);  /* 36 bytes */
+    readCieXyzTriple(ifP, &headerP->endPoints);  /* 36 bytes */
 
-    GetLong(ifP);  /* GammaRed */
-    GetLong(ifP);  /* GammaGreen */
-    GetLong(ifP);  /* GammaBlue */
+    pm_readlittlelong(ifP, &dontcarelong);  /* GammaRed */
+    pm_readlittlelong(ifP, &dontcarelong);  /* GammaGreen */
+    pm_readlittlelong(ifP, &dontcarelong);  /* GammaBlue */
 
     *bytesReadP = 68;
 }
@@ -626,13 +582,15 @@ readV4InfoHeaderExtension(FILE *                 const ifP,
 
 static void
 readV5InfoHeaderExtension(FILE *                 const ifP,
-                          struct bmpInfoHeader * const headerP,
+                          struct BmpInfoHeader * const headerP,
                           unsigned int *         const bytesReadP) {
 
-    GetLong(ifP);  /* Intent */
-    GetLong(ifP);  /* ProfileData */
-    GetLong(ifP);  /* ProfileSize */
-    GetLong(ifP);  /* Reserved */
+    long dontcarelong;
+
+    pm_readlittlelong(ifP, &dontcarelong);  /* Intent */
+    pm_readlittlelong(ifP, &dontcarelong);  /* ProfileData */
+    pm_readlittlelong(ifP, &dontcarelong);  /* ProfileSize */
+    pm_readlittlelong(ifP, &dontcarelong);  /* Reserved */
 
     *bytesReadP = 16;
 }
@@ -640,7 +598,7 @@ readV5InfoHeaderExtension(FILE *                 const ifP,
 
 
 static void
-defaultV4InfoHeaderExtension(struct bmpInfoHeader * const headerP) {
+defaultV4InfoHeaderExtension(struct BmpInfoHeader * const headerP) {
 
     headerP->pixelformat = defaultPixelformat(headerP->cBitCount);
 
@@ -651,7 +609,7 @@ defaultV4InfoHeaderExtension(struct bmpInfoHeader * const headerP) {
 static void
 readWindowsInfoHeaderRest(FILE *                 const ifP,
                           unsigned int           const cInfoHeaderSize,
-                          struct bmpInfoHeader * const headerP) {
+                          struct BmpInfoHeader * const headerP) {
 /*----------------------------------------------------------------------------
    Read the rest of the info header, after the length field, of a Windows BMP
    from *ifP.
@@ -703,7 +661,8 @@ readWindowsInfoHeaderRest(FILE *                 const ifP,
     }
 
     for (; bytesRead < cInfoHeaderSize;) {
-        GetByte(ifP);
+        char dontcarebyte;
+        pm_readchar(ifP, &dontcarebyte);
         ++bytesRead;
     }
 
@@ -715,18 +674,19 @@ readWindowsInfoHeaderRest(FILE *                 const ifP,
 static void
 bmpReadinfoheader(FILE *                 const ifP,
                   unsigned int *         const bytesReadP,
-                  struct bmpInfoHeader * const headerP,
+                  struct BmpInfoHeader * const headerP,
                   const char **          const errorP) {
 
-    unsigned int const cInfoHeaderSize = GetLong(ifP);
-
+    unsigned long cInfoHeaderSz;
     const char * error;
 
-    BMPdetermineclass(cInfoHeaderSize, &headerP->class, &error);
+    pm_readlittlelongu(ifP, &cInfoHeaderSz);
+
+    BMPdetermineclass(cInfoHeaderSz, &headerP->class, &error);
 
     if (error) {
         pm_asprintf(errorP, "Cannot determine the class of BMP from the "
-                    "info header size %u.  %s", cInfoHeaderSize, error);
+                    "info header size %lu.  %s", cInfoHeaderSz, error);
         pm_strfree(error);
     } else {
         switch (headerP->class) {
@@ -735,7 +695,7 @@ bmpReadinfoheader(FILE *                 const ifP,
         case BMP_C_WIN_V3:
         case BMP_C_WIN_V4:
         case BMP_C_WIN_V5:
-            readWindowsInfoHeaderRest(ifP, cInfoHeaderSize, headerP);
+            readWindowsInfoHeaderRest(ifP, cInfoHeaderSz, headerP);
             break;
         case BMP_C_OS2_1x:
         case BMP_C_OS2_2x:
@@ -743,7 +703,7 @@ bmpReadinfoheader(FILE *                 const ifP,
             break;
         }
         *errorP = NULL;
-        *bytesReadP = cInfoHeaderSize;
+        *bytesReadP = cInfoHeaderSz;
     }
     /* Part of our anti-arithmetic overflow strategy is to make sure height
        and width always fit in 16 bits, so they can be multiplied together.
@@ -783,9 +743,11 @@ bmpReadColormap(FILE *         const ifP,
         /* There is a document that says the bytes are ordered R,G,B,Z,
            but in practice it appears to be the following instead:
         */
-        unsigned int const b = GetByte(ifP);
-        unsigned int const g = GetByte(ifP);
-        unsigned int const r = GetByte(ifP);
+        unsigned char b, g, r;
+
+        pm_readcharu(ifP, &b);
+        pm_readcharu(ifP, &g);
+        pm_readcharu(ifP, &r);
 
         unsigned int j;
 
@@ -794,7 +756,8 @@ bmpReadColormap(FILE *         const ifP,
         bytesRead += 3;
 
         for (j = 3; j < BMPlenrgb(class); ++j) {
-            GetByte(ifP);
+            char dontcarebyte;
+            pm_readchar(ifP, &dontcarebyte);
             bytesRead += 1;
         }
     }
@@ -1092,33 +1055,34 @@ nybbleAlign(unsigned char * const bytes,
 
 
 
-enum rleStatus { ABS_MODE, ENC_MODE, END_OF_ROW, END_OF_BMP, DELTA };
+enum RleStatus { ABS_MODE, ENC_MODE, END_OF_ROW, END_OF_BMP, DELTA };
 
-static enum rleStatus
-readRLEcode(FILE *          const ifP,
-            unsigned int *  const cntP,
-            unsigned char * const codeP) {
-
+static void
+readRLEcode(FILE *           const ifP,
+            enum RleStatus * const statusP,
+            unsigned int *   const cntP,
+            unsigned char *  const codeP) {
+/*----------------------------------------------------------------------------
+   Read the next RLE code from file *ifP.
+-----------------------------------------------------------------------------*/
     unsigned short s;
-    enum rleStatus retval;
 
-    s = GetBigShort(ifP);
+    pm_readbigshortu(ifP, &s);
 
-    if      (s == 0) retval = END_OF_ROW;
-    else if (s == 1) retval = END_OF_BMP;
-    else if (s == 2) retval = DELTA;
+    if      (s == 0) *statusP = END_OF_ROW;
+    else if (s == 1) *statusP = END_OF_BMP;
+    else if (s == 2) *statusP = DELTA;
     else if (s < 256) {
+        *statusP = ABS_MODE;
         if (cntP)
             *cntP = s & 0xff;
-        retval = ABS_MODE;
     } else {
+        *statusP = ENC_MODE;
         if (cntP && codeP) {
             *cntP  = (s >> 8) & 0xff;
             *codeP = s & 0xff;
         }
-        retval = ENC_MODE;
     }
-    return retval;
 }
 
 
@@ -1130,71 +1094,88 @@ readrowRLE(FILE *           const ifP,
            bool             const lastrow,
            BMPCompType      const compression,
            unsigned char ** const bmpRaster,
-           unsigned int  *  const bytesReadP) {
+           unsigned int  *  const bytesReadCtP) {
+/*----------------------------------------------------------------------------
+   Read a row from file *ifP.  Put the uncompressed pixels of the row in
+   bmpRaster[][] as row 'row'.  There is space in bmpRaster[] for 'cols'
+   columns.
 
+   Return as *bytesReadCtP the number of bytes we read from the file.
+-----------------------------------------------------------------------------*/
     bool const rle4 = (compression == BMPCOMP_RLE4);
-    int  const pixelsPerRowMargin = rle4 ? cols % 2 : 0;
+    unsigned int const pixelsPerRowMargin = rle4 ? cols % 2 : 0;
+        /* There are RLE4 images with rows coded up to the byte boundary,
+           resulting in each row one pixel larger than the column count
+           stated in the BMP info header (header.cols) when the column length
+           is odd.
 
+           'pixelsPerRowMargin' provides for this case.  It is how many
+           additional pixels of space, beyond the width of the image, a
+           decompression buffer needs to have.
+    */
     char const err_decode[] =
         "Error while decoding compressed BMP image.  "
         "%s.  Row: %u  Pixel: %u" ;
 
-    unsigned int totalBytesRead;
-    unsigned int pixelsRead;
+    unsigned int totalBytesReadCt;
+    unsigned int pixelsReadCt;
 
-    /* There are RLE4 images with rows coded up to the byte boundary,
-       resulting in each row one pixel larger than the column length
-       stated in the BMP info header (header.cols) when the column length
-       is odd.
-
-       pixelsPerRowMargin is a "wart" to provide for this case.
-    */
-
-    totalBytesRead = 0;  /* Initial value */
-    pixelsRead = 0;      /* Initial value */
+    totalBytesReadCt = 0;  /* Initial value */
+    pixelsReadCt = 0;      /* Initial value */
 
     while (true) {
-        unsigned int n;
-            /* decompressed bytes already read; current write point */
+        unsigned int const n = rle4 ? (pixelsReadCt + 1) / 2 : pixelsReadCt;
+            /* number of decompressed bytes already read; current write point
+             */
+        enum RleStatus status;
         unsigned int cnt;
         unsigned char code;
 
-        n = rle4 ? (pixelsRead + 1) / 2 : pixelsRead;
+        readRLEcode(ifP, &status, &cnt, &code);
 
-        switch (readRLEcode(ifP, &cnt, &code)) {
+        switch (status) {
         case ENC_MODE: {
-            unsigned int const byteCnt = rle4 ? (cnt + 1) /2 : cnt;
+            /* The symbol says to repeat byte 'code' a certain numeber of
+               times
+            */
+            unsigned int const byteCt = rle4 ? (cnt + 1) / 2 : cnt;
+
             unsigned int i;
 
-            if (pixelsRead + cnt > cols + pixelsPerRowMargin)
+            if (pixelsReadCt + cnt > cols + pixelsPerRowMargin)
                 pm_error(err_decode,  "Too many pixels in encoded mode",
-                         row, pixelsRead );
+                         row, pixelsReadCt);
 
-            for (i = 0; i < byteCnt; ++i)
+            for (i = 0; i < byteCt; ++i)
                 bmpRaster[row][n+i] = code;
 
-            if (rle4 && pixelsRead % 2 == 1)
+            if (rle4 && pixelsReadCt % 2 == 1) {
                 /* previous read ended odd */
                 nybbleAlign(&bmpRaster[row][n-1], cnt);
+            }
 
-            pixelsRead += cnt;
-            totalBytesRead += 2;
+            pixelsReadCt += cnt;
+            totalBytesReadCt += 2;
         } break;
 
         case ABS_MODE: {
-            unsigned int cmpBytesRead; /* compressed bytes read */
+            /* The symbol says to take the next bytes from the file verbatim.
+            */
             /* align read-end to 16 bit boundary */
-            unsigned int const bytesToRead =
+            unsigned int const bytesToReadCt =
                 rle4 ? (cnt + 3) / 4 * 2 : (cnt + 1) / 2 * 2;
 
-            if (pixelsRead + cnt > cols + pixelsPerRowMargin)
+            unsigned int cmpBytesReadCt; /* number of compressed bytes read */
+
+            if (pixelsReadCt + cnt > cols + pixelsPerRowMargin) {
                 pm_error(err_decode,  "Too many pixels in absolute mode",
-                         row, pixelsRead);
+                         row, pixelsReadCt);
+            }
 
-            cmpBytesRead = fread(&bmpRaster[row][n],
-                                 sizeof(char), bytesToRead, ifP);
+            cmpBytesReadCt = fread(&bmpRaster[row][n],
+                                   sizeof(char), bytesToReadCt, ifP);
 
-            if (cmpBytesRead < bytesToRead) {
+            if (cmpBytesReadCt < bytesToReadCt) {
                 if (feof(ifP))
                     pm_error("End of file reading row %u "
                              "of compressed BMP raster.", row);
@@ -1202,39 +1183,46 @@ readrowRLE(FILE *           const ifP,
                     pm_error("Error reading BMP raster.  Errno=%d (%s)",
                              errno, strerror(errno));
             }
-            if (rle4 && pixelsRead % 2 == 1) /* previous read ended odd */
+            if (rle4 && pixelsReadCt % 2 == 1) {
+                /* previous read ended odd */
                 nybbleAlign(&bmpRaster[row][n-1], cnt);
+            }
 
-            pixelsRead += cnt;
-            totalBytesRead += cmpBytesRead + 2;
+            pixelsReadCt += cnt;
+            totalBytesReadCt += cmpBytesReadCt + 2;
         } break;
 
         case END_OF_ROW: {
-            if (cols == pixelsRead ||
-                cols + pixelsPerRowMargin == pixelsRead) {
+            if (cols == pixelsReadCt ||
+                cols + pixelsPerRowMargin == pixelsReadCt) {
                 if (!lastrow) {
-                    *bytesReadP += totalBytesRead + 2;
+                    *bytesReadCtP += totalBytesReadCt + 2;
                     return;
-                } else if (readRLEcode(ifP, NULL, NULL) == END_OF_BMP) {
-                    *bytesReadP += totalBytesRead +4;
-                    return;
-                } else
-                    /* lastrow and END_OF_BITMAP not detected */
-                    pm_error(err_decode,  "End of bitmap not marked",
-                             row, pixelsRead );
+                } else {
+                    enum RleStatus status;
+                    readRLEcode(ifP, &status, NULL, NULL);
+                    if (status == END_OF_BMP) {
+                        *bytesReadCtP += totalBytesReadCt + 4;
+                        return;
+                    } else {
+                        /* lastrow and END_OF_BITMAP not detected */
+                        pm_error(err_decode,  "End of bitmap not marked",
+                                 row, pixelsReadCt);
+                    }
+                }
             } else
                 pm_error(err_decode,  "Premature end of row",
-                         row, pixelsRead);
+                         row, pixelsReadCt);
         } break;
 
         case END_OF_BMP: {
-            if (lastrow && (cols == pixelsRead ||
-                            cols + pixelsPerRowMargin == pixelsRead)){
-                *bytesReadP += totalBytesRead + 2;
+            if (lastrow && (cols == pixelsReadCt ||
+                            cols + pixelsPerRowMargin == pixelsReadCt)){
+                *bytesReadCtP += totalBytesReadCt + 2;
                 return;
             } else
-                pm_error(err_decode,  "Premature end of bitmap",
-                         row, pixelsRead );
+                pm_error(err_decode, "Premature end of bitmap",
+                         row, pixelsReadCt);
             /* Windows programs do not reject premature end of bitmap.
                Rather, they set the remaining pixels of the raster to
                an arbitrary value.  In practice, images with incomplete
@@ -1252,7 +1240,7 @@ readrowRLE(FILE *           const ifP,
             pm_error(err_decode,
                      "Delta code in compressed BMP image.  "
                      "This program does not process deltas",
-                     row, pixelsRead);
+                     row, pixelsReadCt);
 
         } break;
 
@@ -1343,7 +1331,7 @@ bmpReadraster(FILE *            const ifP,
 
 
 static void
-reportHeader(struct bmpInfoHeader const header,
+reportHeader(struct BmpInfoHeader const header,
              unsigned int         const offBits,
              bool                 const verbose) {
 
@@ -1411,7 +1399,7 @@ analyzeColors(xel          const colormap[],
 
 
 static void
-warnIfOffBitsWrong(struct bmpInfoHeader const bmpHeader,
+warnIfOffBitsWrong(struct BmpInfoHeader const bmpHeader,
                    unsigned int         const offBits) {
 
     if (offBits != BMPoffbits(bmpHeader.class, bmpHeader.cBitCount,
@@ -1432,7 +1420,7 @@ warnIfOffBitsWrong(struct bmpInfoHeader const bmpHeader,
 
 static void
 readColorMap(FILE *               const ifP,
-             struct bmpInfoHeader const bmpHeader,
+             struct BmpInfoHeader const bmpHeader,
              xel **               const colorMapP,
              unsigned int *       const posP) {
 
@@ -1448,7 +1436,7 @@ readColorMap(FILE *               const ifP,
 
 static void
 readRaster(FILE *               const ifP,
-           struct bmpInfoHeader const bmpHeader,
+           struct BmpInfoHeader const bmpHeader,
            unsigned char ***    const bmpRasterP,
            unsigned int *       const posP) {
 
@@ -1503,7 +1491,7 @@ readBmp(FILE *               const ifP,
 
     unsigned int offBits;
         /* Byte offset into file of raster */
-    struct bmpInfoHeader bmpHeader;
+    struct BmpInfoHeader bmpHeader;
 
     pos = 0;  /* Starting at the beginning ... */
     {
@@ -1647,7 +1635,7 @@ writeRasterPbm(unsigned char ** const bmpRaster,
 int
 main(int argc, const char ** argv) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     int outputType;
 
