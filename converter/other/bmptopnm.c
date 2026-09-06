@@ -968,8 +968,8 @@ convertRow(unsigned char      const bmprow[],
 
 
 static unsigned char **
-allocBmpRaster(unsigned int const rows,
-               unsigned int const bytesPerRow) {
+newBmpRaster(unsigned int const rows,
+             unsigned int const bytesPerRow) {
 
     unsigned int const storageSize =
         rows * sizeof(unsigned char *) + rows * bytesPerRow;
@@ -1030,13 +1030,13 @@ nybbleAlign(unsigned char * const bytes,
             unsigned int    const nybbleCt){
 /*----------------------------------------------------------------------------
   Shift the 'nybbleCt' nybbles of bytes[], after the first byte, one nybble
-  toward the left, with the first of those nybble shifting into the right half
-  of the first byte.  Leave the left half of the first byte alone.
+  toward the left, with the first of those nybbles shifting into the right
+  half of the first byte.  Leave the left half of the first byte alone.
 
   Example:
 
-  (Numbers in hex, 8 nybbles)
-            5? 13 7E 89 A1
+  (bytes[] values in hexadecimal, nybbleCt = 8)
+   input    5? 13 7E 89 A1
    becomes  51 37 E8 9A 10
 -----------------------------------------------------------------------------*/
     unsigned int const fullByteCt = (nybbleCt + 1) / 2;
@@ -1063,7 +1063,7 @@ readRLEcode(FILE *           const ifP,
             unsigned int *   const cntP,
             unsigned char *  const codeP) {
 /*----------------------------------------------------------------------------
-   Read the next RLE code from file *ifP.
+   Read the next two-byte RLE code from file *ifP.
 -----------------------------------------------------------------------------*/
     unsigned short s;
 
@@ -1106,7 +1106,7 @@ readrowRLE(FILE *           const ifP,
     unsigned int const pixelsPerRowMargin = rle4 ? cols % 2 : 0;
         /* There are RLE4 images with rows coded up to the byte boundary,
            resulting in each row one pixel larger than the column count
-           stated in the BMP info header (header.cols) when the column length
+           stated in the BMP info header (header.cols) when the column count
            is odd.
 
            'pixelsPerRowMargin' provides for this case.  It is how many
@@ -1133,6 +1133,8 @@ readrowRLE(FILE *           const ifP,
 
         readRLEcode(ifP, &status, &cnt, &code);
 
+        totalBytesReadCt += 2;
+
         switch (status) {
         case ENC_MODE: {
             /* The symbol says to repeat byte 'code' a certain numeber of
@@ -1155,7 +1157,6 @@ readrowRLE(FILE *           const ifP,
             }
 
             pixelsReadCt += cnt;
-            totalBytesReadCt += 2;
         } break;
 
         case ABS_MODE: {
@@ -1189,20 +1190,21 @@ readrowRLE(FILE *           const ifP,
             }
 
             pixelsReadCt += cnt;
-            totalBytesReadCt += cmpBytesReadCt + 2;
+            totalBytesReadCt += cmpBytesReadCt;
         } break;
 
         case END_OF_ROW: {
             if (cols == pixelsReadCt ||
                 cols + pixelsPerRowMargin == pixelsReadCt) {
                 if (!lastrow) {
-                    *bytesReadCtP += totalBytesReadCt + 2;
+                    *bytesReadCtP += totalBytesReadCt;
                     return;
                 } else {
                     enum RleStatus status;
                     readRLEcode(ifP, &status, NULL, NULL);
+                    totalBytesReadCt += 2;
                     if (status == END_OF_BMP) {
-                        *bytesReadCtP += totalBytesReadCt + 4;
+                        *bytesReadCtP += totalBytesReadCt;
                         return;
                     } else {
                         /* lastrow and END_OF_BITMAP not detected */
@@ -1218,7 +1220,7 @@ readrowRLE(FILE *           const ifP,
         case END_OF_BMP: {
             if (lastrow && (cols == pixelsReadCt ||
                             cols + pixelsPerRowMargin == pixelsReadCt)){
-                *bytesReadCtP += totalBytesReadCt + 2;
+                *bytesReadCtP += totalBytesReadCt;
                 return;
             } else
                 pm_error(err_decode, "Premature end of bitmap",
@@ -1285,7 +1287,7 @@ bmpReadraster(FILE *            const ifP,
     assert(cols < (1<<16));
     assert(bytesPerRow < (1<<16));
 
-    bmpRaster = allocBmpRaster(rows, bytesPerRow);
+    bmpRaster = newBmpRaster(rows, bytesPerRow);
 
     *bytesReadP = 0;
 
