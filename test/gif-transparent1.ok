@@ -97,3 +97,5 @@ color=rgb:00/ff/00
 0
 0
 0
+Test Invalid.
+Expected failure 1 (no output)

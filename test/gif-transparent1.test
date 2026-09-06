@@ -20,6 +20,7 @@ opaque_pam=${tmpdir}/opaque.pam
 
 image0_alpha_pam=${tmpdir}/image0.alpha.pam
 image1_alpha_pam=${tmpdir}/image1.alpha.pam
+typeless_pam=${tmpdir}/typeless.pam
 
 out_pnm=${tmpdir}/out.pnm
 out0_ppm=${tmpdir}/out0.ppm
@@ -125,6 +126,7 @@ for test_pnm in  ${argyle_ppm} ${gingham_ppm} ${madras_ppm}
 
   done
 
+
 echo "Test 2."  # clear/opaque alpha channel
 echo "Should print 0 unless otherwise stated."
 
@@ -191,7 +193,8 @@ for test_pnm in  ${argyle_ppm} ${gingham_ppm} ${madras_ppm}
   done
 
 rm ${alpha0_pbm} ${alpha1_pbm}
-rm ${alpha0_pam} ${alpha1_pam}
+rm ${alpha1_pam}
+# ${alpha0_pam} is used in invalid test.
 rm ${argyle_ppm} ${gingham_ppm}
 
 
@@ -221,4 +224,13 @@ for color in "0f/0f/0f" "ff/00/00" "00/ff/00"
   rm ${out0_ppm} ${out1_ppm} ${out2_ppm} ${a0_out_pbm} ${a1_out_pbm}
   done
 
-rm ${madras_ppm} 
+echo "Test Invalid."
+
+. ./test-invalid.inc
+
+pamstack -tupletype="" ${madras_ppm} ${alpha0_pam} > ${typeless_pam}
+rm ${madras_ppm} ${alpha0_pam}
+
+invCmd "pamtogif ${typeless_pam}"
+
+rm ${typeless_pam}

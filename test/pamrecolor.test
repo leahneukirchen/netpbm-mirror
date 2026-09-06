@@ -1,31 +1,52 @@
 #! /bin/sh
 # This script tests: pamrecolor
-# Also requires: ppmtopgm pgmmake
+# Also requires: ppmtopgm pgmmake pnmpsnr
 
 tmpdir=${tmpdir:-/tmp}
 base_pgm=${tmpdir}/base.pgm
+testimg_pgm=${tmpdir}/testimg.pgm
+
 
 pgmmake 0.5 230 150 > ${base_pgm}
 
 echo "Test 1. Should produce 3500040755 101532"
 
-pamrecolor --colorfile=${base_pgm} testimg.ppm | cksum
+pamrecolor -colorfile=${base_pgm} testimg.ppm | cksum
+
 
 echo "Test 2. Should produce 3500040755 101532 twice"
 
-pamrecolor --targetcolor=rgb:80/80/80 testimg.ppm | cksum
-pamrecolor --colorspace=ntsc --targetcolor=rgb:80/80/80 testimg.ppm | cksum
+pamrecolor -targetcolor=rgb:80/80/80 testimg.ppm | cksum
+pamrecolor -colorspace=ntsc -targetcolor=rgb:80/80/80 testimg.ppm | cksum
+
+echo "Test 3. Should produce match five timese"
+
+# With randomly chosen seed values this succeeds 95%
+# We supply seed values known to pass with default build
+# (May lead to failures if random number generator is altered)
+
+ppmtopgm testimg.ppm > ${testimg_pgm}
+
+for seed in 1057 17291 235048 72818754 1968870362 
+  do
+  pamrecolor -randomseed=${seed} testimg.ppm | ppmtopgm |\
+    pnmpsnr  -target=56.725 - ${testimg_pgm}
+  done
+
+rm ${testimg_pgm}
+
+echo "Test Invalid."
 
 . ./test-invalid.inc
 
 truncated_file=${tmpdir}/truncated.txt
 echo P6 > ${truncated_file}
 
-invCmd "pamrecolor --targetcolor=rgb:00/11/22 --colorfile=${base_pgm} testimg.ppm"
-invCmd "pamrecolor --rmult=0.3  --gmult=0.3  --bmult=0.3 --colorfile=${base_pgm} testimg.ppm"
-invCmd "pamrecolor --colorspace=void --targetcolor=rgb:80/80/80 testimg.ppm"
-invCmd "pamrecolor --targetcolor=vague testimg.ppm"
-invCmd "pamrecolor --colorfile=${truncated_file} testimg.ppm"
-invCmd "pamrecolor --rmult=0.2989 --gmult=0.5866 testimg.ppm"
+invCmd "pamrecolor -targetcolor=rgb:00/11/22 -colorfile=${base_pgm} testimg.ppm"
+invCmd "pamrecolor -rmult=0.3  -gmult=0.3  -bmult=0.3 -colorfile=${base_pgm} testimg.ppm"
+invCmd "pamrecolor -colorspace=void -targetcolor=rgb:80/80/80 testimg.ppm"
+invCmd "pamrecolor -targetcolor=vague testimg.ppm"
+invCmd "pamrecolor -colorfile=${truncated_file} testimg.ppm"
+invCmd "pamrecolor -rmult=0.2989 -gmult=0.5866 testimg.ppm"
 
 rm ${base_pgm} ${truncated_file}
