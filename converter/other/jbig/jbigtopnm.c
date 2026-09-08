@@ -283,6 +283,7 @@ writeDecompressedImage(FILE *                 const ofP,
     unsigned int rows, cols;
     xelval maxval;
     unsigned int bpp;
+        /* Number of bytes (not bits) per pixel; i.e. gray depth */
     bool justOnePlane;
     unsigned int planeToWrite;
 
@@ -312,6 +313,9 @@ writeDecompressedImage(FILE *                 const ofP,
         writeRawPbm(ofP, binaryImage, cols, rows);
     } else {
         unsigned char * image;
+            /* A malloc'ed array of cols * rows * bits-per-pixel bits, in
+               row-major bitplane-minor order
+            */
 
         pm_message("WRITING PGM FILE");
 
@@ -321,6 +325,12 @@ writeDecompressedImage(FILE *                 const ofP,
            the data-out callback function.  And a row can span two
            chunks.
         */
+        if (UINT_MAX / rows / cols < bpp) {
+            pm_error("Image size %u rows by %u cols, %u bytes per pixel "
+                     "too large for computations",
+                     rows, cols, bpp);
+        }
+
         image = malloc(cols * rows * bpp);
 
         jbg_dec_merge_planes(sP, !binary, collectImage, image);

@@ -14,6 +14,10 @@ not yet  BJH  Release 11.16.00
 
               pnmhisteq: improve precision by reducing rounding error.
 
+              jbigtopnm: fix buffer overrun with ridiculously large input
+              image.  Always broken (jbigotpnm was new in Netpbm 9.2
+              (May 2000)).
+
               sgitopnm: fix buffer overrun with corrupted RLE input.  Always
               broken (sgitopnm was in primordial Netpbm in 1994).
 
