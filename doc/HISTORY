@@ -16,10 +16,11 @@ not yet  BJH  Release 11.16.00
 
               jbigtopnm: fix buffer overrun with ridiculously large input
               image.  Always broken (jbigotpnm was new in Netpbm 9.2
-              (May 2000)).
+              (May 2000)).  Discovered and diagnosed by Tristan Madani.
 
               sgitopnm: fix buffer overrun with corrupted RLE input.  Always
-              broken (sgitopnm was in primordial Netpbm in 1994).
+              broken (sgitopnm was in primordial Netpbm in 1994).  Discovered
+              and diagnosed by Tristan Madani
 
               pamtogif: fix spurious memory reference and incorrect output
               when input image has an alpha channel.  Always broken (pamtogif
