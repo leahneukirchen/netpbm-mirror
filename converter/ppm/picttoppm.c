@@ -3497,8 +3497,8 @@ polySort(int const sort_index, struct Point points[]) {
 
 static void
 scanPoly(struct Canvas * const canvasP,
-         int             const np,
-         struct Point          pts[]) {
+         unsigned int    const np,
+         struct Point    const pts[]) {
 
   int dx,dy,dxabs,dyabs,i,scan_index,j,k,px,py;
   int sdx,sdy,x,y,toggle,old_sdy,sy0;
@@ -3509,9 +3509,8 @@ scanPoly(struct Canvas * const canvasP,
 
   scan_index = 0;
 
-  /* close polygon */
-  px = pts[np].x = pts[0].x;
-  py = pts[np].y = pts[0].y;
+  px = pts[0].x;
+  py = pts[0].y;
 
   /*  This section draws the polygon and stores all the line points
    *  in an array. This doesn't work for concave or non-simple polys.
@@ -3606,21 +3605,34 @@ paintPoly(FILE *          const ifP,
           BlitList *      const blitListP,
           int             const version) {
 
-  struct Rect bb;
-  struct Point pts[100];
-  int i;
-  int np;
+    unsigned int const metadataSize = 10;
+    unsigned int const pointSize    = 4;
 
-  np = (readWord(ifP) - 10) >> 2;
+    unsigned int size;
+    struct Rect bb;
+    struct Point pts[100];
+        /* The points of the polygon */
+    unsigned int np;
+        /* Number of points in the polygon */
+    unsigned int i;
 
-  readRect(ifP, &bb);
+    size = readWord(ifP);  /* size of some PICT entity */
 
-  for (i = 0; i < np; ++i)
-      readPoint(ifP, &pts[i]);
+    np = (size - metadataSize) / pointSize;
 
-  /* scan convert poly ... */
-  if (!blitListP)
-      scanPoly(canvasP, np, pts);
+    readRect(ifP, &bb);
+
+    for (i = 0; i < np; ++i)
+        readPoint(ifP, &pts[i]);
+
+    /* scan convert poly ... */
+    if (!blitListP) {
+        /* close polygon */
+        pts[np].x = pts[0].x;
+        pts[np].y = pts[0].y;
+
+        scanPoly(canvasP, np, pts);
+    }
 }
 
 
