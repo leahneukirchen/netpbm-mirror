@@ -2,7 +2,7 @@
 <html><head><title>Pnmpad User Manual</title></head>
 <body>
 <h1>pnmpad</h1>
-Updated: 26 December 2025
+Updated: 08 September 2026
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -48,10 +48,10 @@ pnmpad - add borders to a PNM image
 <p><b>pnmpad</b> reads a Netpbm image as input and outputs a PNM image that is
 the input image plus borders of the color and sizes specified.
 
-<p>You can use <b>pamcomp</b> to add borders of any content - solid color,
-  pattern, or whatever.  For example, if you wanted to add 10 pixels of
-  rainbow borders to the top and bottom of a 100x100 image, you could create a
-  100x120 rainbow image (e.g. with <b>ppmrainbow</b>) and then
+<p>You can use <b>pamcomp</b> to add borders of any content - pattern, cloudy
+  sky, or whatever, including solid color.  For example, if you wanted to add
+  10 pixels of rainbow borders to the top and bottom of a 100x100 image, you
+  could create a 100x120 rainbow image (e.g. with <b>ppmrainbow</b>) and then
   use <b>pamcomp</b> to insert your 100x100 image into the center of it.
   
 
@@ -243,8 +243,8 @@ This causes verbose messages.
     </span>
   </pre>
 
-<p>One use for this is to make padding which is fancier than the black and
-  white that <b>pnmpad</b> can do.
+<p>One use for this is to make padding which is fancier than the solid color
+that <b>pnmpad</b> can do.
 
 <p>In the following example, we pad an image with 10 pixels of gray all
   around, without knowing the original image dimensions beforehand.  We do
