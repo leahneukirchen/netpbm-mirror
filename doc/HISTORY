@@ -14,6 +14,9 @@ not yet  BJH  Release 11.16.00
 
               pnmhisteq: improve precision by reducing rounding error.
 
+              picttoppm: fix buffer overrun with very large polygons in
+              input.  Discovered and diagnosed by Tristan Madani.
+
               jbigtopnm: fix buffer overrun with ridiculously large input
               image.  Always broken (jbigotpnm was new in Netpbm 9.2
               (May 2000)).  Discovered and diagnosed by Tristan Madani.

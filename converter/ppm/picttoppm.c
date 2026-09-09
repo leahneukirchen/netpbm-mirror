@@ -3605,33 +3605,49 @@ paintPoly(FILE *          const ifP,
           BlitList *      const blitListP,
           int             const version) {
 
-    unsigned int const metadataSize = 10;
-    unsigned int const pointSize    = 4;
+    unsigned int const bbSize    = 10;
+    unsigned int const pointSize = 4;
 
     unsigned int size;
-    struct Rect bb;
-    struct Point pts[100];
-        /* The points of the polygon */
-    unsigned int np;
-        /* Number of points in the polygon */
-    unsigned int i;
 
     size = readWord(ifP);  /* size of some PICT entity */
 
-    np = (size - metadataSize) / pointSize;
+    if (size < bbSize) {
+        pm_error("Invalid PICT input: piece is too small to contain the "
+                 "bounding box (%u bytes; need at least %u)",
+                 size, bbSize);
+    } else {
+        struct Rect bb;
+            /* The bounding box from the PICT */
+        struct Point * pts;  /* malloc'ed array */
+            /* The points of the polygon from the PICT */
+        unsigned int np;
+            /* Number of points in the polygon */
 
-    readRect(ifP, &bb);
+        readRect(ifP, &bb);
 
-    for (i = 0; i < np; ++i)
-        readPoint(ifP, &pts[i]);
+        np = (size - bbSize) / pointSize;
 
-    /* scan convert poly ... */
-    if (!blitListP) {
-        /* close polygon */
-        pts[np].x = pts[0].x;
-        pts[np].y = pts[0].y;
+        MALLOCARRAY(pts, np);
 
-        scanPoly(canvasP, np, pts);
+        if (!pts)
+            pm_error("Failed to get memory for a polygon of %u points", np);
+        else {
+            unsigned int i;
+
+            for (i = 0; i < np; ++i)
+                readPoint(ifP, &pts[i]);
+
+            /* scan convert poly ... */
+            if (!blitListP) {
+                /* close polygon */
+                pts[np].x = pts[0].x;
+                pts[np].y = pts[0].y;
+
+                scanPoly(canvasP, np, pts);
+            }
+            free(pts);
+        }
     }
 }
 
