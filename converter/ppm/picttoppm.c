@@ -3520,7 +3520,6 @@ fillPolygon(const struct Point * const coord,
 }
 
 
-/* Watch out for the lack of error checking in the next two functions ... */
 
 static void
 scanPoly(struct Canvas * const canvasP,
@@ -3535,7 +3534,8 @@ scanPoly(struct Canvas * const canvasP,
     unsigned int j;
 
     /* This array needs to be at least as large as the largest dimension of
-       the bounding box of the poly (but I don't check for overflows ...) */
+       the bounding box of the polygon)
+    */
     struct Point coord[5000];
 
     scanIndex = 0;  /* initial value */
@@ -3557,14 +3557,13 @@ scanPoly(struct Canvas * const canvasP,
         /* x,y difference between consecutive points and their signs  */
         int const dx = pts[j+1].x - pts[j].x;
         int const dy = pts[j+1].y - pts[j].y;
+        int const dxabs = abs(dx);
+        int const dyabs = abs(dy);
 
-        int dxabs, dyabs;
         int x, y;
 
         sdx = SGN(dx);
         sdy = SGN(dy);
-        dxabs = abs(dx);
-        dyabs = abs(dy);
         x = y = 0;
 
         if (dxabs >= dyabs) {
@@ -3577,6 +3576,11 @@ scanPoly(struct Canvas * const canvasP,
                     if (oldSdy != sdy) {
                         oldSdy = sdy;
                         --scanIndex;
+                    }
+                    if (scanIndex >= ARRAY_SIZE(coord)) {
+                        pm_error("Too many points in polygon.  "
+                                 "We can process at most %lu",
+                                 ARRAY_SIZE(coord));
                     }
                     coord[scanIndex].x = px+sdx;
                     coord[scanIndex].y = py;
@@ -3600,10 +3604,15 @@ scanPoly(struct Canvas * const canvasP,
                     if (sdy != 0)
                         --scanIndex;
                 }
-                drawPen(canvasP, px,py);
+                if (scanIndex >= ARRAY_SIZE(coord)) {
+                    pm_error("Too many points in polygon.  "
+                             "We can process at most %lu",
+                             ARRAY_SIZE(coord));
+                }
                 coord[scanIndex].x = px;
                 coord[scanIndex].y = py;
                 ++scanIndex;
+                drawPen(canvasP, px,py);
             }
         }
     }
