@@ -98,8 +98,8 @@ getbyte(FILE * const ifP) {
 
     unsigned char c;
 
-    if ( fread( (char*) &c, 1, 1, ifP ) != 1 )
-        pm_error( "EOF / read error" );
+    if (fread((char*) &c, 1, 1, ifP) != 1)
+        pm_error("EOF / read error");
 
     return c;
 }
@@ -108,13 +108,13 @@ getbyte(FILE * const ifP) {
 
 static void
 interpretTgaHeader(struct ImageHeader const tgaHead,
-                   unsigned int * const rowsP,
-                   unsigned int * const colsP,
-                   bool *         const mappedP,
-                   pixval *       const maxvalP,
-                   bool *         const rlencodedP,
-                   unsigned int * const firstColormapIndexP,
-                   unsigned int * const colormapLengthP) {
+                   unsigned int *     const rowsP,
+                   unsigned int *     const colsP,
+                   bool *             const mappedP,
+                   pixval *           const maxvalP,
+                   bool *             const rlencodedP,
+                   unsigned int *     const firstColormapIndexP,
+                   unsigned int *     const colormapLengthP) {
 
     *rowsP = ((unsigned int) tgaHead.Height_lo) +
         ((unsigned int) tgaHead.Height_hi) * 256;
@@ -240,7 +240,7 @@ handleRun(FILE * const ifP,
 
 static void
 getPixel(FILE *       const ifP,
-         pixel *      const dest,
+         pixel *      const colorP,
          unsigned int const size,
          bool         const rlencoded,
          bool         const mapped,
@@ -249,7 +249,6 @@ getPixel(FILE *       const ifP,
     static pixval red, grn, blu;
     static pixval alpha;
     static unsigned int l;
-    unsigned char j, k;
     bool repeat;
         /* Next pixel is just a repeat (from an encoded run) */
 
@@ -266,7 +265,8 @@ getPixel(FILE *       const ifP,
             break;
 
         case 16:            /* 5 bits each of red green and blue. */
-        case 15:            /* Watch byte order. */
+        case 15: {           /* Watch byte order. */
+            unsigned char j, k;
             j = getbyte(ifP);
             k = getbyte(ifP);
             l = ((unsigned int)k << 8) + j;
@@ -274,7 +274,7 @@ getPixel(FILE *       const ifP,
             grn = ((k & 0x03) << 3) + ((j & 0xE0) >> 5);
             blu = j & 0x1F;
             alpha = 0;
-            break;
+        } break;
 
         case 32:            /* 8 bits each of blue, green, red, and alpha */
         case 24:            /* 8 bits each of blue, green, and red. */
@@ -293,10 +293,10 @@ getPixel(FILE *       const ifP,
         }
     }
     if (mapped) {
-        *dest = ColorMap[l];
+        *colorP = ColorMap[l];
         *alphaP = AlphaMap[l];
     } else {
-        PPM_ASSIGN(*dest, red, grn, blu);
+        PPM_ASSIGN(*colorP, red, grn, blu);
         *alphaP = alpha;
     }
 }
@@ -308,33 +308,35 @@ readTgaHeader(FILE *               const ifP,
               struct ImageHeader * const tgaP) {
 
     unsigned char flags;
-    ImageIDField junk;
 
-    tgaP->IdLength = getbyte( ifP );
-    tgaP->CoMapType = getbyte( ifP );
-    tgaP->ImgType = getbyte( ifP );
-    tgaP->Index_lo = getbyte( ifP );
-    tgaP->Index_hi = getbyte( ifP );
-    tgaP->Length_lo = getbyte( ifP );
-    tgaP->Length_hi = getbyte( ifP );
-    tgaP->CoSize = getbyte( ifP );
-    tgaP->X_org_lo = getbyte( ifP );
-    tgaP->X_org_hi = getbyte( ifP );
-    tgaP->Y_org_lo = getbyte( ifP );
-    tgaP->Y_org_hi = getbyte( ifP );
-    tgaP->Width_lo = getbyte( ifP );
-    tgaP->Width_hi = getbyte( ifP );
-    tgaP->Height_lo = getbyte( ifP );
-    tgaP->Height_hi = getbyte( ifP );
-    tgaP->PixelSize = getbyte( ifP );
-    flags = getbyte( ifP );
+    tgaP->IdLength  = getbyte(ifP);
+    tgaP->CoMapType = getbyte(ifP);
+    tgaP->ImgType   = getbyte(ifP);
+    tgaP->Index_lo  = getbyte(ifP);
+    tgaP->Index_hi  = getbyte(ifP);
+    tgaP->Length_lo = getbyte(ifP);
+    tgaP->Length_hi = getbyte(ifP);
+    tgaP->CoSize    = getbyte(ifP);
+    tgaP->X_org_lo  = getbyte(ifP);
+    tgaP->X_org_hi  = getbyte(ifP);
+    tgaP->Y_org_lo  = getbyte(ifP);
+    tgaP->Y_org_hi  = getbyte(ifP);
+    tgaP->Width_lo  = getbyte(ifP);
+    tgaP->Width_hi  = getbyte(ifP);
+    tgaP->Height_lo = getbyte(ifP);
+    tgaP->Height_hi = getbyte(ifP);
+    tgaP->PixelSize = getbyte(ifP);
+    flags           = getbyte(ifP);
+
     tgaP->AttBits = flags & 0xf;
-    tgaP->Rsrvd = ( flags & 0x10 ) >> 4;
-    tgaP->OrgBit = ( flags & 0x20 ) >> 5;
-    tgaP->IntrLve = ( flags & 0xc0 ) >> 6;
+    tgaP->Rsrvd   = (flags & 0x10) >> 4;
+    tgaP->OrgBit  = (flags & 0x20) >> 5;
+    tgaP->IntrLve = (flags & 0xc0) >> 6;
 
-    if ( tgaP->IdLength != 0 )
-        fread( junk, 1, (int) tgaP->IdLength, ifP );
+    if (tgaP->IdLength != 0) {
+        ImageIDField junk;
+        fread(junk, 1, (int) tgaP->IdLength, ifP);
+    }
 }
 
 
