@@ -25,7 +25,12 @@ not yet  BJH  Release 11.16.00
 
               sgitopnm: fix buffer overrun with corrupted RLE input.  Always
               broken (sgitopnm was in primordial Netpbm in 1994).  Discovered
-              and diagnosed by Tristan Madani
+              and diagnosed by Tristan Madani.
+
+              tgatoppm: fix buffer overrun with corrupted Targa input.  Fail
+              if Targa image contains invalid color index.  Always broken
+              (tgatoppm was in primordial Netpm in 1989).  Discovered and
+              diagnosed by Tristan Madani.
 
               pamtogif: fix spurious memory reference and incorrect output
               when input image has an alpha channel.  Always broken (pamtogif

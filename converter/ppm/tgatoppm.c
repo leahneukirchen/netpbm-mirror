@@ -244,6 +244,8 @@ getPixel(FILE *       const ifP,
          unsigned int const size,
          bool         const rlencoded,
          bool         const mapped,
+         unsigned int const firstColormapIndex,
+         unsigned int const colormapLength,
          gray *       const alphaP) {
 
     static pixval red, grn, blu;
@@ -293,6 +295,10 @@ getPixel(FILE *       const ifP,
         }
     }
     if (mapped) {
+        if (l < firstColormapIndex || l >= firstColormapIndex + colormapLength)
+            pm_error("Invalid color index %u in raster.  Colormap maps "
+                     "%u colors starting with index %u",
+                     l, colormapLength, firstColormapIndex);
         *colorP = ColorMap[l];
         *alphaP = AlphaMap[l];
     } else {
@@ -454,6 +460,8 @@ readRaster(FILE *        const ifP,
            unsigned char const orgBit,
            bool          const rlencoded,
            bool          const mapped,
+           unsigned int  const firstColormapIndex,
+           unsigned int  const colormapLength,
            pixel ***     const pixelsP,
            gray ***      const alphaP) {
 /*---------a-------------------------------------------------------------------
@@ -477,7 +485,8 @@ readRaster(FILE *        const ifP,
 
         for (col = 0; col < cols; ++col)
             getPixel(ifP, &(pixels[realrow][col]),
-                     pixelSize, rlencoded, mapped,
+                     pixelSize, rlencoded,
+                     mapped, firstColormapIndex, colormapLength,
                      &(alpha[realrow][col]));
         if (intrLve == TGA_IL_Four)
             truerow += 4;
@@ -545,7 +554,8 @@ main(int argc, const char ** argv) {
 
     readRaster(ifP, cols, rows,
                tgaHead.PixelSize, tgaHead.IntrLve, tgaHead.OrgBit,
-               rlencoded, mapped,
+               rlencoded,
+               mapped, firstColormapIndex, colormapLength,
                &pixels, &alpha);
 
     pm_close(ifP);
