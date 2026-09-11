@@ -487,7 +487,7 @@ readXorPalette(struct BitmapInfoHeader * const hdrP,
 
     uint32_t paletteSize;
 
-    int16_t     row;
+    uint32_t row;
     const PaletteEntry * palette;
     uint32_t    truncatedXorSize;
     uint32_t    bytesConsumed;
@@ -574,7 +574,7 @@ readXorPalette(struct BitmapInfoHeader * const hdrP,
             rowOffset = (hdrP->bm_height / 2 - row - 1) * bytesPerRow;
 
         if (rowOffset + bytesPerRow <= truncatedXorSize) {
-            int16_t col;
+            uint32_t col;
             for (col = 0; hdrP->bm_width > col; ++col) {
                 uint8_t const idx = getIdx(bitmapCursor, rowOffset, col);
 
@@ -621,7 +621,7 @@ readXorBitfields(struct BitmapInfoHeader * const hdrP,
     uint8_t    shift    [4];
     sample     maxval   [4];
 
-    int16_t      row;
+    uint32_t     row;
     uint32_t     bytesConsumed;
     uint32_t     bytesPerSample;
     uint32_t     bytesPerRow;
@@ -745,7 +745,7 @@ readXorBitfields(struct BitmapInfoHeader * const hdrP,
             offset = (hdrP->bm_height / 2 - row - 1) * bytesPerRow;
 
         if (offset + bytesPerRow <= truncatedXorSize) {
-            unsigned int col;
+            uint32_t col;
             for (col = 0; col < hdrP->bm_width; ++col) {
                 uint32_t const pixel = u32_le(bitmapCursor, offset);
 
@@ -834,7 +834,7 @@ readAnd(struct BitmapInfoHeader * const hdrP,
   'index' is the position of the icon in question in the Windows icon file --
   the first image in the file is 0, second is 1, etc.
 -----------------------------------------------------------------------------*/
-    int16_t  row;
+    uint32_t row;
     uint32_t bytesConsumed;
     uint32_t bytesPerRow;
     uint32_t sizeRemaining;
@@ -868,7 +868,7 @@ readAnd(struct BitmapInfoHeader * const hdrP,
             offset = (hdrP->bm_height / 2 - row - 1) * bytesPerRow;
 
         if (offset + bytesPerRow <= sizeRemaining) {
-            unsigned int col;
+            uint32_t col;
 
             for (col = 0; col < hdrP->bm_width; ++col) {
                 tuples[row][col][plane] =
@@ -974,10 +974,10 @@ readXorMask(struct BitmapInfoHeader * const hdrP,
         is truncated and not all pixels are filled in below).
     */
     {
-        unsigned int row;
+        uint32_t row;
 
         for (row = 0; row < hdrP->bm_height / 2; ++row) {
-            unsigned int col;
+            uint32_t col;
             for (col = 0; col < hdrP->bm_width; ++col) {
                 tuples[row][col][PAM_RED_PLANE] = 0;
                 tuples[row][col][PAM_GRN_PLANE] = 0;
