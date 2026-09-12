@@ -37,7 +37,7 @@ not yet  BJH  Release 11.16.00
               (winicontopam was new in Netpbm 10.63 (June 2013).  Discovered
               and diagnosed by Tristan Madani.
 
-              ppmtoxpm: fix buffer overruns with input image that has an
+              xpmtoppm: fix buffer overruns with input image that has an
               invalid characters-per-pixel value.  Always broken (xpmtoppm was
               in primordial Netpbm in 1994).  Discovered and diagnosed by
               Tristan Madani.
