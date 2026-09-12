@@ -144,9 +144,13 @@ typedef struct {
 
 
 static ColorNameHash *
-hash_create(unsigned int const nColors,
-            unsigned int const nameSize) {
+hash_new(unsigned int const nColors,
+         unsigned int const nameSize) {
+/*----------------------------------------------------------------------------
+   A newly created ColorNameHash, in malloc'ed storage.
 
+   'nameSize' is the size of color names in the hash, and must be in [0,3].
+-----------------------------------------------------------------------------*/
     ColorNameHash * hashP;
 
     MALLOCVAR_NOFAIL(hashP);
@@ -160,6 +164,8 @@ hash_create(unsigned int const nColors,
     if (!hashP->table)
         pm_error("Failed to allocate memory for a %u-entry "
                  "color name hash table.", hashP->size);
+
+    assert(nameSize <= ARRAY_SIZE(hashP->table[0].colorName));
 
     {
         unsigned int i;
@@ -294,6 +300,9 @@ hash_add(ColorNameHash * const hashP,
     entryP->empty = false;
     {
         unsigned int i;
+
+        assert(hashP->nameSize <= ARRAY_SIZE(entryP->colorName));
+
         for (i = 0; i < hashP->nameSize; ++i)
             entryP->colorName[i] = name[i];
     }
@@ -477,7 +486,7 @@ interpretXpm3ColorTableLine(char               const line[],
     const char * colorName;
         /* The 0-3 character name this color map line gives the color
            (i.e. the name that the raster uses).  This is NOT NUL-terminated.
-           It's length is bytesPerPixel.
+           It's length is charsPerPixel.
         */
 
     /* read the chars */
@@ -577,10 +586,12 @@ readV3ColorTable(FILE *             const ifP,
 
    Assume *ifP is positioned to the color table; leave it positioned after.
 -----------------------------------------------------------------------------*/
-    ColorNameHash * const colorNameHashP = hash_create(nColors, charsPerPixel);
+    ColorNameHash * const colorNameHashP = hash_new(nColors, charsPerPixel);
 
     unsigned int seqNum;
         /* Sequence number of entry within color table in XPM header */
+
+    assert(charsPerPixel <= 3);
 
     for (seqNum = 0; seqNum < nColors; ++seqNum) {
         char line[MAX_LINE+1];
@@ -652,6 +663,10 @@ readXpm3Header(FILE *             const ifP,
                &nColors, &charsPerPixel) != 4)
         pm_error("error scanning hints line");
 
+    if (charsPerPixel > 3) {
+        pm_error("Invalid number of characters per pixel in hints line: "
+                 "%u.  Valid values are 0-3", charsPerPixel);
+    }
     if (verbose) {
         pm_message("Width x Height:  %u x %u", width, height);
         pm_message("no. of colors:  %u", nColors);
@@ -677,9 +692,11 @@ readV1ColorTable(FILE *           const ifP,
 
    Assume *ifP is positioned to the color table; leave it positioned after.
 -----------------------------------------------------------------------------*/
-    ColorNameHash * const colorNameHashP = hash_create(nColors, charsPerPixel);
+    ColorNameHash * const colorNameHashP = hash_new(nColors, charsPerPixel);
 
     unsigned int i;
+
+    assert(charsPerPixel <= 3);
 
     for (i = 0; i < nColors; ++i) {
         char line[MAX_LINE+1];
@@ -767,6 +784,10 @@ readXpm1Header(FILE *           const ifP,
                 nColors = v;
             } else if (streq(t1, "pixel")) {
                 gotPixel = TRUE;
+                if (v < 0 || v > 3) {
+                    pm_error("Invalid 'pixel' value %d.  "
+                             "Valid values are 0-3", v);
+                }
                 *charsPerPixelP = v;
             }
         } else if (strneq(line, "static char", 11)) {
