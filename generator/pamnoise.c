@@ -182,11 +182,12 @@ randPool(unsigned int       const nDigits,
   The underlying logic is flexible and endian-free.  The above conditions can
   be relaxed.
 -----------------------------------------------------------------------------*/
-    static unsigned long int hold=0;  /* entropy pool */
-    static unsigned int len=0;        /* number of valid bits in pool */
+    static unsigned long int hold = 0;  /* entropy pool */
+    static unsigned int      len = 0;   /* number of valid bits in pool */
 
     unsigned int const mask = (1 << nDigits) - 1;
     unsigned int const randbits = (randStP->max == ceil31bits) ? 31 : 32;
+
     unsigned int retval;
 
     assert(randStP->max == ceil31bits || randStP->max == ceil32bits);
@@ -268,34 +269,36 @@ pamnoise(FILE *             const ofP,
     if (verbose)
         reportVerbose(randStP, maxval, usingPool);
 
-    pam.size = sizeof(pam);
-    pam.len = PAM_STRUCT_SIZE(tuple_type);
-    pam.file = stdout;
-    pam.format = PAM_FORMAT;
+    pam.size        = sizeof(pam);
+    pam.len         = PAM_STRUCT_SIZE(tuple_type);
+    pam.file        = stdout;
+    pam.format      = PAM_FORMAT;
     pam.plainformat = 0;
-    pam.width  = width;
-    pam.height = height;
-    pam.depth  = depth;
-    pam.maxval = maxval;
+    pam.width       = width;
+    pam.height      = height;
+    pam.depth       = depth;
+    pam.maxval      = maxval;
     strcpy(pam.tuple_type, tupletype);
 
     pnm_writepaminit(&pam);
+
     tuplerow = pnm_allocpamrow(&pam);
 
     for (row = 0; row < height; ++row) {
-        unsigned int col, plane;
         if (usingPool) {
-            for (col = 0; col < width; ++col)
-                for (plane = 0; plane < depth; ++plane)
-                    tuplerow[col][plane] = randPool(bitLen, randStP);
-        } else {
-            for (col = 0; col < width; ++col)
-                for (plane = 0; plane < depth; ++plane)
-                    tuplerow[col][plane] = pm_rand(randStP) % (maxval + 1);
+            unsigned int col;
+            for (col = 0; col < width; ++col) {
+                unsigned int plane;
+                for (plane = 0; plane < depth; ++plane) {
+                    tuplerow[col][plane] =
+                        usingPool ?
+                            randPool(bitLen, randStP) :
+                            pm_rand(randStP) % (maxval + 1);
+                }
+            }
         }
         pnm_writepamrow(&pam, tuplerow);
     }
-
     pnm_freepamrow(tuplerow);
 }
 
@@ -306,7 +309,7 @@ main(int         argc,
     const char * argv[]) {
 
     struct CmdlineInfo cmdline;
-    struct pm_randSt randSt;
+    struct pm_randSt   randSt;
 
     pm_proginit(&argc, argv);
 
@@ -315,7 +318,8 @@ main(int         argc,
     pm_randinit(&randSt);
     pm_srand2(&randSt, cmdline.randomseedSpec, cmdline.randomseed);
 
-    pamnoise(stdout, cmdline.width, cmdline.height, cmdline.depth, cmdline.maxval,
+    pamnoise(stdout,
+             cmdline.width, cmdline.height, cmdline.depth, cmdline.maxval,
              cmdline.tupletype, cmdline.verbose, &randSt);
 
     pm_randterm(&randSt);
