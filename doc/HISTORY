@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.16.00
 
+              add pamnoise.
+
               pnmtojbig: add long options.
 
               ppmtoarbtxt: add #(hash) substitution specifier class.
