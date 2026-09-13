@@ -1,0 +1,115 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamnoise User Manual</title></head>
+<body>
+<h1>pamnoise</h1>
+Updated: 13 September 2026
+<br>
+<a href="#index">Table Of Contents</a>
+
+<h2>NAME</h2>
+pgmnoise - create a PAM image made up of white noise (random numbers)
+
+<h2 id="synopsis">SYNOPSIS</h2>
+
+<b>pamnoise</b>
+
+[<b>-width=</b><i>n</i>]
+[<b>-height=</b><i>n</i>]
+[<b>-depth=</b><i>n</i>]
+[<b>-maxval=</b><i>n</i>]
+[<b>-tupletype=</b><i>text</i>]
+[<b>-randomseed=</b><i>integer</i>]
+[<b>-verbose=</b>]
+
+<p>Minimum unique abbreviations of option are acceptable.  You may use
+double hyphens instead of single hyphen to denote options.  You may use
+white space in place of the equals sign to separate an option name
+  from its value.
+
+<p>For backward compatibility, you can alternatively specify the width and
+height as arguments.
+  
+
+<h2 id="description">DESCRIPTION</h2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pamnoise</b> creates a PAM image that is made up of random samples.
+
+
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pgmnoise</b> recognizes the following command line
+options:
+
+<dl>
+<dt><b>-height=</b><i>n</i>
+<dd>The height of the generated image in rows.
+<p>Default is 1.
+    
+<dt><b>-width=</b><i>n</i>
+<dd>The width of the generated image in columns.
+<p>Default is 1.
+
+<dt><b>-depth=</b><i>n</i>
+<dd>The depth of the generated image in planes.
+<p>Default is 1.
+
+<dt><b>-maxval=</b><i>n</i>
+<dd>The maxval of the generated image.
+<p>Default is 255.
+
+<dt><b>-tupletype=</b><i>n</i>
+<dd>The PAM tuple type of the generated image.
+<p>Default is a null string.
+  
+<dt><b>-randomseed=</b><i>integer</i>
+<dd>This is the seed for the random number generator that generates the
+pixels.
+
+<p>Use this to ensure you get the same image on separate invocations.
+
+<p>By default, <b>pgmnoise</b> uses a seed derived from the time of day and
+process ID, which gives you fairly uncorrelated results in multiple
+invocations.
+
+<dt><b>-verbose</b>
+<dd>This causes the program to issue messages informational messages about
+what it is doing.
+  
+</dl>
+
+<h2 id="seealso">SEE ALSO</h2>
+
+<ul>
+  <li><a href="pbmnoise.html">pbmnoise</a>
+  <li><a href="pgmnoise.html">pgmnoise</a>
+  <li><a href="pam.html">pam</a>
+</ul>
+
+<h2 id="author">AUTHOR</h2>
+
+<p><b>pamnoise</b> was written by Akira F Urushibata in 2026 and contributed
+to the public domain by its author.
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>pamnoise</b> was new in Netpbm 11.16 (September 2026).
+
+<p>Before that, you can use <b>pgmnoise</b> to make a single plane of random
+numbers and <b>pamstack</b> to combine single planes into deeeper PAM images.
+  
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#author">AUTHOR</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>
