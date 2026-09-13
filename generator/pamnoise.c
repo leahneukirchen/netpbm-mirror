@@ -285,16 +285,14 @@ pamnoise(FILE *             const ofP,
     tuplerow = pnm_allocpamrow(&pam);
 
     for (row = 0; row < height; ++row) {
-        if (usingPool) {
-            unsigned int col;
-            for (col = 0; col < width; ++col) {
-                unsigned int plane;
-                for (plane = 0; plane < depth; ++plane) {
-                    tuplerow[col][plane] =
-                        usingPool ?
-                            randPool(bitLen, randStP) :
-                            pm_rand(randStP) % (maxval + 1);
-                }
+        unsigned int col;
+        for (col = 0; col < width; ++col) {
+            unsigned int plane;
+            for (plane = 0; plane < depth; ++plane) {
+                tuplerow[col][plane] =
+                    usingPool ?
+                    randPool(bitLen, randStP) :
+                    (pm_rand(randStP) % (maxval + 1));
             }
         }
         pnm_writepamrow(&pam, tuplerow);
