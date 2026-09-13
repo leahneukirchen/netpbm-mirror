@@ -1,0 +1,21 @@
+#! /bin/sh
+
+# 'pamnoise' is designed to be backward compatible with 'pgmnoise' except that
+# it produces PAM output instead of PGM.  That means we can pass any valid
+# 'pgmnoise' arguments to 'pamnoise', and just pipe the output through
+# 'pgmtopgm' to make it PGM.
+#
+# The only thing for which that does not work is the -plain option, which
+# has to go on the 'pgmtopgm', not the 'pamnoise', invocation.  So we have
+# a big hack to separate -plain from the rest of the arguments.
+
+set -x
+plainOpt='' # initial value
+for arg in "$@"; do
+    if test "$arg" = "-plain"; then
+        plainOpt='-plain'
+        fi
+
+    done
+
+pamnoise "$@" | pgmtopgm $plainOpt

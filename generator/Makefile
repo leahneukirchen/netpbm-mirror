@@ -19,7 +19,7 @@ SUBDIRS = pamtris
 PORTBINARIES = pamcrater pamgauss pamgradient pamnoise \
 	       pamseq pamshadedrelief pamstereogram \
 	       pbmpage pbmmake pbmnoise pbmtext pbmupc \
-	       pgmkernel pgmmake pgmnoise pgmramp \
+	       pgmkernel pgmmake pgmramp \
 	       ppmcie ppmcolors ppmforge ppmmake ppmpat ppmrough ppmwheel \
 
 ifneq ($(DONT_HAVE_PROCESS_MGMT),Y)
@@ -34,7 +34,7 @@ MERGEBINARIES = $(PORTBINARIES)
 
 
 BINARIES = $(MERGEBINARIES) $(NOMERGEBINARIES)
-SCRIPTS = pgmcrater ppmrainbow
+SCRIPTS = pgmcrater pgmnoise ppmrainbow
 
 OBJECTS = $(BINARIES:%=%.o)
 
