@@ -2,7 +2,7 @@
 <html><head><title>Pnmpad User Manual</title></head>
 <body>
 <h1>pnmpad</h1>
-Updated: 08 September 2026
+Updated: 12 September 2026
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -81,14 +81,14 @@ the <b>pnm_parsecolor()</b> library routine</a>.
 top left pixel of the input as the pad color.  Note that this could cause
 odd results if you aren&apos;t padding the top or left of the image.
   
-<p>You may specify only one of <b>-white</b>, <b>-black</b>, <b>-color</b>,
-and <b>-detect-background</b>.
-  
 <p><b>-extend-edge</b> says to pad by duplicating the adjacent edge of the
 image pixel by pixel.  E.g. if the top row of the image is 20 white pixels
 followed by 10 black pixels, every row of padding added to the top of the
-image is 20 white pixels followed by 20 black pixels.
+image is 20 white pixels followed by 10 black pixels.
 
+<p>You may specify only one of <b>-color</b>, <b>-detect-background</b>,
+<b>--extend-edge</b>, <b>-white</b>, and <b>-black</b>.
+  
 <p>By default, the padding is black.
 
 <p><b>-white</b> and <b>-black</b> are for backward compatibility; they do the
