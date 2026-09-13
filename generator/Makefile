@@ -16,7 +16,7 @@ SUBDIRS = pamtris
 # This package is so big, it's useful even when some parts won't 
 # build.
 
-PORTBINARIES = pamcrater pamgauss pamgradient \
+PORTBINARIES = pamcrater pamgauss pamgradient pamnoise \
 	       pamseq pamshadedrelief pamstereogram \
 	       pbmpage pbmmake pbmnoise pbmtext pbmupc \
 	       pgmkernel pgmmake pgmnoise pgmramp \
