@@ -12,7 +12,9 @@
    code by Frank Neumann.
 *********************************************************************/
 
+#include <stdbool.h>
 #include <assert.h>
+
 #include "pm_c_util.h"
 #include "mallocvar.h"
 #include "nstring.h"
@@ -32,8 +34,8 @@ struct CmdlineInfo {
     */
     unsigned int width;
     unsigned int height;
-    unsigned int maxval;
     unsigned int depth;
+    unsigned int maxval;
     const char * tupletype;
     unsigned int randomseed;
     unsigned int randomseedSpec;
@@ -55,34 +57,88 @@ parseCommandLine(int argc,
          */
     optStruct3 opt;
     unsigned int option_def_index;
-    unsigned int maxvalSpec, tupletypeSpec;
+    unsigned int widthSpec, heightSpec, depthSpec, maxvalSpec, tupletypeSpec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0,   "maxval",       OPT_UINT,    &cmdlineP->maxval,
+    OPTENT3(0,   "width",        OPT_UINT,     &cmdlineP->width,
+            &widthSpec,                     0);
+    OPTENT3(0,   "height",       OPT_UINT,     &cmdlineP->height,
+            &heightSpec,                    0);
+    OPTENT3(0,   "depth",        OPT_UINT,     &cmdlineP->depth,
+            &depthSpec,                     0);
+    OPTENT3(0,   "maxval",       OPT_UINT,     &cmdlineP->maxval,
             &maxvalSpec,                    0);
-    OPTENT3(0,   "tupletype",    OPT_STRING,  &cmdlineP->tupletype,
-            &tupletypeSpec,      0);
-    OPTENT3(0,   "randomseed",   OPT_UINT,    &cmdlineP->randomseed,
+    OPTENT3(0,   "tupletype",    OPT_STRING,   &cmdlineP->tupletype,
+            &tupletypeSpec,                 0);
+    OPTENT3(0,   "randomseed",   OPT_UINT,     &cmdlineP->randomseed,
             &cmdlineP->randomseedSpec,      0);
-    OPTENT3(0,   "verbose",      OPT_FLAG,    NULL,
+    OPTENT3(0,   "verbose",      OPT_FLAG,     NULL,
             &cmdlineP->verbose,             0);
 
     opt.opt_table = option_def;
-    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
-    opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
+    opt.short_allowed = false;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = false;  /* We may have parms that are negative numbers */
 
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
     free(option_def);
 
+    if (widthSpec) {
+        if (argc-1 == 2) {
+            pm_error("You cannot specify both -width and "
+                     "non-option arguments");
+        }
+        if (cmdlineP->width < 1)
+            pm_error("-width is zero; must be positive");
+    } else {
+        if (argc-1 == 2) {
+            const char * error; /* error message of pm_string_to_uint */
+
+            pm_string_to_uint(argv[1], &cmdlineP->width, &error);
+            if (error)
+                pm_error("Width argument is not an unsigned integer.  %s",
+                         error);
+            else if (cmdlineP->width == 0)
+                pm_error("Width argument is zero; must be positive");
+        } else
+            cmdlineP->width = 1;
+    }
+
+    if (heightSpec) {
+        if (argc-1 == 2) {
+            pm_error("You cannot specify both -height and "
+                     "non-option arguments");
+        }
+        if (cmdlineP->height < 1)
+            pm_error("-height is zero; must be positive");
+    } else {
+        if (argc-1 == 2) {
+            const char * error; /* error message of pm_string_to_uint */
+
+            pm_string_to_uint(argv[2], &cmdlineP->height, &error);
+            if (error)
+                pm_error("Height argument is not an unsigned integer.  %s",
+                         error);
+            else if (cmdlineP->height == 0)
+                pm_error("Height argument is zero; must be positive");
+        } else
+            cmdlineP->height = 1;
+    }
+
+    if (depthSpec) {
+        if (cmdlineP->depth < 1)
+            pm_error("-depth is zero; must be positive");
+    } else
+        cmdlineP->depth = 1;
+
     if (maxvalSpec) {
         if (cmdlineP->maxval > PGM_OVERALLMAXVAL)
-            pm_error("Maxval too large: %u.  Maximum is %u",
+            pm_error("-maxval too large: %u.  Maximum is %u",
                      cmdlineP->maxval, PGM_OVERALLMAXVAL);
         else if (cmdlineP->maxval == 0)
-            pm_error("Maxval must not be zero");
+            pm_error("-maxval must not be zero");
     } else
         cmdlineP->maxval = PGM_MAXMAXVAL;
 
@@ -96,40 +152,13 @@ parseCommandLine(int argc,
                      (unsigned)sizeof(pam.tuple_type)-1);
     }
 
-    if (argc-1 != 3)
-        pm_error("Wrong number of arguments: %u.  "
-                 "Arguments are width, height and depth of image, in pixels",
+    if (argc-1 != 0 && argc-1 != 2) {
+        pm_error("Invalid number of non-option arguments: %u.  "
+                 "The only possible arguments are width and height, as "
+                 "backward compatibility alternataives to "
+                 "-width and -height.  "
+                 "So specify either zero or two arguments.",
                  argc-1);
-    else {
-        const char * error; /* error message of pm_string_to_uint */
-        unsigned int width, height, depth;
-
-        pm_string_to_uint(argv[1], &width, &error);
-        if (error)
-            pm_error("Width argument is not an unsigned integer.  %s",
-                     error);
-        else if (width == 0)
-            pm_error("Width argument is zero; must be positive");
-        else
-            cmdlineP->width = width;
-
-        pm_string_to_uint(argv[2], &height, &error);
-        if (error)
-            pm_error("Height argument is not an unsigned integer.  %s ",
-                     error);
-        else if (height == 0)
-            pm_error("Height argument is zero; must be positive");
-        else
-            cmdlineP->height = height;
-
-        pm_string_to_uint(argv[3], &depth, &error);
-        if (error)
-            pm_error("Depth argument is not an unsigned integer.  %s ",
-                     error);
-        else if (depth == 0)
-            pm_error("Depth argument is zero; must be positive");
-        else
-            cmdlineP->depth = depth;
     }
 }
 
