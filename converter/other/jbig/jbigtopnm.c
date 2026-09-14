@@ -133,9 +133,13 @@ writePnm(FILE *                const ofP,
         unsigned int col;
         for (col = 0; col < cols; ++col) {
             unsigned int j;
-            for (j = 0; j < bpp; ++j)
-                PNM_ASSIGN1(xelrow[col],
-                            image[(((row*cols)+col) * bpp) + j]);
+            xelval value;
+
+            for (j = 0, value = 0; j < bpp; ++j) {
+                value <<= 8;
+                value |= image[(((row * cols) + col) * bpp) + j];
+            }
+            PNM_ASSIGN1(xelrow[col], value);
         }
         pnm_writepnmrow(ofP, xelrow, cols, maxval, format, 0);
     }
@@ -282,8 +286,7 @@ writeDecompressedImage(FILE *                 const ofP,
 
     unsigned int rows, cols;
     xelval maxval;
-    unsigned int bpp;
-        /* Number of bytes (not bits) per pixel; i.e. gray depth */
+    unsigned int bpp; /* Number of bytes (not bits) per pixel */
     bool justOnePlane;
     unsigned int planeToWrite;
 
