@@ -16,6 +16,14 @@ not yet  BJH  Release 11.16.00
 
               pnmhisteq: improve precision by reducing rounding error.
 
+              pnmtojbig: fix incorrect output with PGM input with maxval >
+              255.  Always broken (pnmtojbig was new in Netpbm 9.2 (May
+              2000)).
+
+              pnmtojbig: fix incorrect output with PGM input with width *
+              length * bytes per pixel > 32 bits.  Always broken (pnmtojbig
+              was new in Netpbm 9.2 (May 2000)).
+
               picttoppm: fix buffer overrun with very large polygons in input.
               Always broken -- in fact done intentionally for coding
               convenience (picttoppm was in primordial Netpbm in 1988).

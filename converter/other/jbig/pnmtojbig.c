@@ -246,10 +246,13 @@ readImage(FILE *           const ifP,
           unsigned int     const bpp,
           unsigned char ** const imageP) {
 /*----------------------------------------------------------------------------
-  Read the input image and put it into *imageP;
+  Read the input image and put it into *imageP in the format the JBIG library
+  encoder needs.
 
-  Although the PBM case is separated, this logic works also for
-  PBM, bpp=1.
+  Although the PBM case is separated, this logic works also for PBM (maxval=1,
+  bpp=1).
+
+  'bpp' is bytes (not bits) per pixel in the JBIG image.
 -----------------------------------------------------------------------------*/
     unsigned char * image;  /* malloc'ed */
         /* This is a representation of the entire image with 'bpp' bytes per
@@ -264,17 +267,31 @@ readImage(FILE *           const ifP,
     unsigned int row;
 
     pnm_row = pnm_allocrow(cols);  /* row buffer */
-    MALLOCARRAY_NOFAIL(image, cols * rows * bpp);
+
+    if (UINT_MAX/cols/rows < bpp)
+        pm_error("Image is too large (%u rows x %u columns x %u bytes "
+                 "per pixel) for computation", rows, cols, bpp);
+    MALLOCARRAY(image, cols * rows * bpp);
+
+    if (!image) {
+        pm_error("Failed to allocate memory for "
+                 "%u rows x %u columns x %u bytes per pixel",
+                 rows, cols, bpp);
+    }
 
     for (row = 0; row < rows; ++row) {
         unsigned int col;
+
         pnm_readpnmrow(ifP, pnm_row, cols, maxval, format);
-        for (col = 0; col < cols; col++) {
+
+        for (col = 0; col < cols; ++col) {
             unsigned int j;
+
             /* Move each byte of the sample into image[], MSB first */
-            for (j = 0; j < bpp; ++j)
+            for (j = 0; j < bpp; ++j) {
                 image[(((row*cols)+col) * bpp) + j] = (unsigned char)
-                    PNM_GET1(pnm_row[col]) >> ((bpp-1-j) * 8);
+                    (PNM_GET1(pnm_row[col]) >> ((bpp - 1 - j) * 8));
+            }
         }
     }
     pnm_freerow(pnm_row);
