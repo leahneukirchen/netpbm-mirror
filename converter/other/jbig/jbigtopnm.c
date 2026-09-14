@@ -334,7 +334,13 @@ writeDecompressedImage(FILE *                 const ofP,
                      rows, cols, bpp);
         }
 
-        image = malloc(cols * rows * bpp);
+        MALLOCARRAY(image, cols * rows * bpp);
+
+        if (!image) {
+            pm_error("Failed to allocate memory for "
+                     "%u rows x %u columns x %u bytes per pixel",
+                     rows, cols, bpp);
+        }
 
         jbg_dec_merge_planes(sP, !binary, collectImage, image);
 

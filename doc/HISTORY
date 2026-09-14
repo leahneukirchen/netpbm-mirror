@@ -34,7 +34,11 @@ not yet  BJH  Release 11.16.00
               (May 2000)).  Discovered and diagnosed by Tristan Madani.
 
               jbigtopnm: fix incorrect output with maxval > 255.  Always
-              broken (jbigotpnm was new in Netpbm 9.2 (May 2000)).
+              broken (jbigtopnm was new in Netpbm 9.2 (May 2000)).
+              
+              jbigtopnm: fix invalid memory write when memory allocation
+              fails.  Always broken (jbigtopnm was new in Netpbm 9.2 (May
+              2000)).
               
               sgitopnm: fix buffer overrun with corrupted RLE input.  Always
               broken (sgitopnm was in primordial Netpbm in 1994).  Discovered
