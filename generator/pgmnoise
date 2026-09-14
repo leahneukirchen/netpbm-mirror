@@ -9,7 +9,6 @@
 # has to go on the 'pgmtopgm', not the 'pamnoise', invocation.  So we have
 # a big hack to separate -plain from the rest of the arguments.
 
-set -x
 plainOpt='' # initial value
 for arg in "$@"; do
     if test "$arg" = "-plain"; then
