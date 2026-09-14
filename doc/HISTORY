@@ -30,7 +30,7 @@ not yet  BJH  Release 11.16.00
               Discovered and diagnosed by Tristan Madani.
 
               jbigtopnm: fix buffer overrun with ridiculously large input
-              image.  Always broken (jbigotpnm was new in Netpbm 9.2
+              image.  Always broken (jbigtopnm was new in Netpbm 9.2
               (May 2000)).  Discovered and diagnosed by Tristan Madani.
 
               jbigtopnm: fix incorrect output with maxval > 255.  Always
