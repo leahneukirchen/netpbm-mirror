@@ -7,7 +7,7 @@ Updated: 28 July 2020
 <a href="#index">Table Of Contents</a>
 
 <h2>NAME</h2>
-jbigtopnm - JBIG to PNM image file converter
+jbigtopnm - JBIG to PNM image converter
 
 <h2 id="synopsis">SYNOPSIS</h2>
 
@@ -30,7 +30,7 @@ space in place of the equals sign to separate an option name from its value.
 
 <p><b>jbigtopnm</b> reads a JBIG bi-level image entity (BIE) from a
 file or standard input, decompresses it, and outputs a PBM or PGM
-file.  If the input has one plane, or you choose just one plane of it,
+image.  If the input has one plane, or you choose just one plane of it,
 the output is PBM.  Otherwise, the output is PGM.
 
 <p>JBIG is a highly effective lossless compression algorithm for
@@ -41,7 +41,7 @@ for scanned document pages.
 several BIEs. All resolution layers except the lowest one are stored
 efficiently as differences to the next lower resolution layer.  You
 can use options <b>-x</b> and <b>-y</b> to stop the decompression at a
-specified maximal output image size.  The input file can consist of
+specified maximal output image size.  The input image can consist of
 several concatenated BIEs which contain different increasing
 resolution layers of the same image.
 
@@ -82,14 +82,13 @@ binary code words were used by the encoder.
 
 <dt><b>-diagnose</b>
 
-<dd>Diagnose a BIE.  With this option, <b>jbigtopnm</b> only prints a
-summary of the header information found in the input file and then
-exits.
+<dd>Diagnose a BIE.  With this option, <b>jbigtopnm</b> only prints a summary
+of the header information found in the input image and then exits.
 
 <dt><b>-plane</b><i> number</i>
 
-<dd>If the input contains multiple bitplanes, then extract only the
-specified single plane as a PBM file.  The first plane has number 0.
+<dd>If the input contains multiple bitplanes, then extract only the specified
+single plane as a PBM image.  The first plane has number 0.
 
 </dl>
 

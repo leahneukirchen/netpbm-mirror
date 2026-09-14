@@ -36,10 +36,13 @@ resolution layers except the lowest one are stored merely as
 differences to the next lower resolution layer, because this requires
 less space than encoding the full image completely every time. Each
 resolution layer has twice the number of horizontal and vertical
-pixels than the next lower layer.  JBIG files can also store several
-bits per pixel as separate bitmap planes, and <b>pnmtojbig</b>
-can read a PGM file and transform it into a multi-bitplane BIE.
+pixels than the next lower layer.
 
+<p>A JBIG image can also store several bits per pixel as separate bitmap
+planes, and <b>pnmtojbig</b> can read a PGM file and transform it into a
+multi-bitplane BIE.
+
+  
 <h2 id="options">OPTIONS</h2>
 
 <p>Minimum unique abbreviation of option is acceptable.  You may use white
