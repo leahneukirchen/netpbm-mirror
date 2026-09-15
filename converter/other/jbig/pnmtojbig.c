@@ -453,10 +453,11 @@ main(int argc, const char ** argv) {
        so must be a power of 2 minus 1
     */
 
-    if ((1UL << planes)-1 != maxval)
+    if ((1UL << planes)-1 != maxval) {
         pm_error("Input image has unacceptable maxval: %d.  JBIG files must "
                  "have a maxval which is a power of 2 minus 1.  Use "
-                 "Ppmdepth to adjust the image's maxval", maxval);
+                 "'pamdepth' to adjust the image's maxval", maxval);
+    }
 
     bpp = (planes + 7) / 8;
 

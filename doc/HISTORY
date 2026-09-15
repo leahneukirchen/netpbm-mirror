@@ -10,6 +10,8 @@ not yet  BJH  Release 11.16.00
 
               pnmtojbig: add long options.
 
+              pnmtojbig: improve error message.
+              
               ppmtoarbtxt: add #(hash) substitution specifier class.
 
               winicontopam: Improve some informational messages.
