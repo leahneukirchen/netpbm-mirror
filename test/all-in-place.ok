@@ -187,7 +187,6 @@ pgmmake: ok
 pgmmedian: ok
 pgmminkowski: ok
 pgmmorphconv: ok
-pgmnoise: ok
 pgmramp: ok
 pgmtexture: ok
 pgmtofs: ok

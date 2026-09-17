@@ -69,6 +69,7 @@ ordinary_testprogs="\
   pbmtox10bm \
   pgmcrater \
   pgmedge \
+  pgmnoise \
   pgmnorm \
   pgmoil \
   pgmslice \

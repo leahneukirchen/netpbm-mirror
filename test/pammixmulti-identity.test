@@ -1,6 +1,6 @@
 #! /bin/sh
 # This script tests: pammixmulti
-# Also requires: pgmnoise pnminvert pamsumm
+# Also requires: pamnoise pnminvert pamsumm
 
 tmpdir=${tmpdir:-/tmp}
 
@@ -12,36 +12,36 @@ pammixmulti testimg.ppm testimg.ppm | cksum
 pammixmulti testimg.ppm testimg.ppm testimg.ppm | cksum
 pammixmulti -blend=average testimg.ppm testimg.ppm | cksum
 pammixmulti -blend=average testimg.ppm testimg.ppm testimg.ppm | cksum
-pammixmulti -blend=random -randomseed=1 \
+pammixmulti -blend=random -randomseed=222 \
     testimg.ppm testimg.ppm testimg.ppm | cksum
 
 
 # Test 2.  Should print 1926073387 101484 three times
 echo Test 2.
 
-mask_pgm=${tmpdir}/mask.pgm
-pgmnoise -maxval=2 -randomseed=1 227 149 > ${mask_pgm}
+mask_pam=${tmpdir}/mask.pam
+pamnoise -maxval=2 -randomseed=260 -w 227 -h 149 -d 1 > ${mask_pam}
 
 for sd in 0.5 1.2 3.0 
   do
-  pammixmulti -blend=mask -maskfile=${mask_pgm} -stdev=${sd} \
+  pammixmulti -blend=mask -maskfile=${mask_pam} -stdev=${sd} \
       testimg.ppm testimg.ppm testimg.ppm | cksum
   done
-rm ${mask_pgm}
+rm ${mask_pam}
 
 # Test 3.  Should print
 echo Test 3.
 
-noise_pgm=${tmpdir}/noise.pgm
-pgmnoise --randomseed=1 227 149 > ${noise_pgm}
+noise_pam=${tmpdir}/noise.pam
+pamnoise --randomseed=298 -width=227 -height=149 -depth=1 > ${noise_pam}
 
-pammixmulti -blend=mask -maskfile=${noise_pgm} \
+pammixmulti -blend=mask -maskfile=${noise_pam} \
     testimg.ppm testimg.ppm | cksum
-pammixmulti -blend=mask -maskfile=${noise_pgm} \
+pammixmulti -blend=mask -maskfile=${noise_pam} \
     testimg.ppm testimg.ppm testimg.ppm | cksum
-pammixmulti -blend=mask -maskfile=${noise_pgm} \
+pammixmulti -blend=mask -maskfile=${noise_pam} \
     testimg.ppm testimg.ppm testimg.ppm testimg.ppm | cksum
-rm ${noise_pgm}
+rm ${noise_pam}
 
 
 # Test 4.

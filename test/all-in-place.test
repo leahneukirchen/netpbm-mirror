@@ -233,7 +233,6 @@ ordinary_testprogs="\
   pgmmedian \
   pgmminkowski \
   pgmmorphconv \
-  pgmnoise \
   pgmramp \
   pgmtexture \
   pgmtofs \

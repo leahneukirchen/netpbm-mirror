@@ -1,10 +1,10 @@
 #! /bin/sh
-# This script tests: pgmnoise
-# Also requires:
+# This script tests: pamnoise
+# Also requires: pamtable
 
 # These tests are for examining the integrity of the random number
 # generator.  There is some overlap between the tests here and tests
-# in pgmnoise.test, but the tests here are better focused for
+# in pamnoise.test, but the tests here are better focused for
 # diagnosing problems with the random number generator.
 #
 # Test 1 is for determining the kind of random number generator in
@@ -20,13 +20,11 @@
 
 echo "Test 1: Should produce:"
 
-echo "P2"
-echo "12 1"
-echo "1023"
 echo "720 296 192 858 101 57 298 629 804 1019 64 617"
 echo "Above output is for Mersenne Twister"
 
-pgmnoise -maxval=1023 -randomseed=3791 -plain 12 1
+pamnoise -maxval=1023 -randomseed=3791 -width=12 -height=1 -depth=1 | \
+  pamtable | sed -e 's/^ *//' -e 's/  */ /g'
 
 echo
 echo "Test 2: Mersenne Twister random number generator"
@@ -52,7 +50,7 @@ perlPgmProcessorProgram='
   }
 '
 
-pgmnoise -randomseed=5489 -plain -maxval=65535 10 200 | \
+pamnoise -randomseed=5489 -maxval=65535 -width 10 -height 200 -depth 1 | pamtable | \
   perl -walne "$perlPgmProcessorProgram"
 
 # The above outputs (10 * 200 / 2) = 1000 samples.

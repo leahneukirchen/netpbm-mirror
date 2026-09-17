@@ -93,8 +93,8 @@ P2
 0 1 1 2
 1 1 2 2
 1 2 2 3
-Test 8.  Should print 1102493995 27, then match twelve times
-1102493995 27
+Test 8.  Should print 1209734172 81, then match twelve times
+1209734172 81
 match
 match
 match
@@ -107,8 +107,8 @@ match
 match
 match
 match
-Test 9.  Should print 3418874152 108, then match eight times
-3418874152 108
+Test 9.  Should print 4236463510 162, then match eight times
+4236463510 162
 match
 match
 match
@@ -117,8 +117,8 @@ match
 match
 match
 match
-Test 10.  Should print 481335892 92, then match eight times
-481335892 92
+Test 10.  Should print 1893522118 146, then match eight times
+1893522118 146
 match
 match
 match
@@ -159,7 +159,7 @@ Test 16.  Should print 1401081637 1019
 1401081637 1019
 Test 17.  Should print 2756501917 1019
 2756501917 1019
-Test 18. Should print 587933655 107742 twice
+Test 18.  Should print 587933655 107742 twice
 587933655 107742
 587933655 107742
 Test 19.  Should print 3948141157 107742

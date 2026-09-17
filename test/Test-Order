@@ -40,6 +40,8 @@ pamstereogram.test
 pbmnoise1.test
 pbmnoise2.test
 pbmnoise-parameters.test
+pamnoise.test
+pamnoise-parameters.test
 pgmnoise.test
 pgmnoise-parameters.test
 ppmpat-random.test

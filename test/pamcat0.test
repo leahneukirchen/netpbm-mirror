@@ -1,6 +1,6 @@
 #! /bin/sh
 # This script tests: pamcat
-# Also requires: pbmmake pgmramp pgmnoise pamundice ppmtoppm
+# Also requires: pbmmake pgmramp pamnoise pamundice ppmtoppm
 
 tmpdir=${tmpdir:-/tmp}
 
@@ -130,62 +130,60 @@ cat ${diag4_pgm} | pamcat -tb -plain | sed 's/ *$//'
 
 rm ${diag4_pgm}
 
-noise_pgm=${tmpdir}/noise.pgm
-noise6h_pgm=${tmpdir}/noiseh6.pgm
-noise5v_pgm=${tmpdir}/noisev5.pgm
+noise_pam=${tmpdir}/noise.pam
+noise6h_pam=${tmpdir}/noiseh6.pam
+noise5v_pgm=${tmpdir}/noisev5.pam
 
-pgmnoise -randomseed=100 4 4 > ${noise_pgm}
-
-echo "Test 8.  Should print 1102493995 27, then match twelve times"
-pgmnoise -randomseed=100 4 4 | tee ${noise_pgm} | cksum
+echo "Test 8.  Should print 1209734172 81, then match twelve times"
+pamnoise -randomseed=7718 -h 4 -w 4 -tupletype "GRAYSCALE" | tee ${noise_pam} | cksum
 
 cat ${options_h} ${options_v} | \
 while read opt
   do
-  pamcat ${opt} ${noise_pgm} | cmp -s ${noise_pgm} - && echo "match" || echo "no match"
+  pamcat ${opt} ${noise_pam} | cmp -s ${noise_pam} - && echo "match" || echo "no match"
   done
 
 
-echo "Test 9.  Should print 3418874152 108, then match eight times"
-pamundice -quiet -across 6 ${noise_pgm} | tee ${noise6h_pgm} | cksum
+echo "Test 9.  Should print 4236463510 162, then match eight times"
+pamundice -quiet -across 6 ${noise_pam} | tee ${noise6h_pam} | cksum
 
 cat ${options_h} | \
 while read opt
   do
-  pamcat ${opt} ${noise_pgm} ${noise_pgm} ${noise_pgm} \
-         ${noise_pgm} ${noise_pgm} ${noise_pgm} | \
-  cmp -s ${noise6h_pgm} - && echo "match" || echo "no match"
+  pamcat ${opt} ${noise_pam} ${noise_pam} ${noise_pam} \
+         ${noise_pam} ${noise_pam} ${noise_pam} | \
+  cmp -s ${noise6h_pam} - && echo "match" || echo "no match"
 
   done
-pamcat -lr ${noise_pgm} ${noise_pgm} | \
-    pamcat -lr - ${noise_pgm} ${noise_pgm} ${noise_pgm} ${noise_pgm} | \
-    cmp -s ${noise6h_pgm} - && echo "match" || echo "no match"
+pamcat -lr ${noise_pam} ${noise_pam} | \
+    pamcat -lr - ${noise_pam} ${noise_pam} ${noise_pam} ${noise_pam} | \
+    cmp -s ${noise6h_pam} - && echo "match" || echo "no match"
 
-pamcat -lr ${noise_pgm} ${noise_pgm} ${noise_pgm} | \
-    pamcat -lr ${noise_pgm} - ${noise_pgm} ${noise_pgm} | \
-    cmp -s ${noise6h_pgm} - && echo "match" || echo "no match"
+pamcat -lr ${noise_pam} ${noise_pam} ${noise_pam} | \
+    pamcat -lr ${noise_pam} - ${noise_pam} ${noise_pam} | \
+    cmp -s ${noise6h_pam} - && echo "match" || echo "no match"
 
-rm ${noise6h_pgm}
+rm ${noise6h_pam}
 
 
-echo "Test 10.  Should print 481335892 92, then match eight times"
-pamundice -quiet -down 5 ${noise_pgm} | tee ${noise5v_pgm} | cksum
+echo "Test 10.  Should print 1893522118 146, then match eight times"
+pamundice -quiet -down 5 ${noise_pam} | tee ${noise5v_pam} | cksum
 
 cat ${options_v} | \
 while read opt
   do
-  pamcat ${opt} ${noise_pgm} ${noise_pgm} ${noise_pgm} ${noise_pgm} ${noise_pgm} | \
-    cmp -s ${noise5v_pgm} - && echo "match" || echo "no match"
+  pamcat ${opt} ${noise_pam} ${noise_pam} ${noise_pam} ${noise_pam} ${noise_pam} | \
+    cmp -s ${noise5v_pam} - && echo "match" || echo "no match"
   done
-pamcat -tb ${noise_pgm} ${noise_pgm} ${noise_pgm} | \
-    pamcat -tb ${noise_pgm} ${noise_pgm} - | \
-    cmp -s ${noise5v_pgm} - && echo "match" || echo "no match"    
-pamcat -tb ${noise_pgm} ${noise_pgm} ${noise_pgm} ${noise_pgm} | \
-    pamcat -tb - ${noise_pgm} | \
-    cmp -s ${noise5v_pgm} - && echo "match" || echo "no match"     
+pamcat -tb ${noise_pam} ${noise_pam} ${noise_pam} | \
+    pamcat -tb ${noise_pam} ${noise_pam} - | \
+    cmp -s ${noise5v_pam} - && echo "match" || echo "no match"    
+pamcat -tb ${noise_pam} ${noise_pam} ${noise_pam} ${noise_pam} | \
+    pamcat -tb - ${noise_pam} | \
+    cmp -s ${noise5v_pam} - && echo "match" || echo "no match"     
 
-rm ${noise5v_pgm}
-rm ${noise_pgm}
+rm ${noise5v_pam}
+rm ${noise_pam}
 
 diag8_ppm=${tmpdir}/diag8.ppm
 diag2h_ppm=${tmpdir}/diag2h.ppm
@@ -255,7 +253,7 @@ pamcat -tb -jright -white testgrid.pbm ${diag8_ppm} | cksum
 rm ${diag8_ppm}
 
 
-echo "Test 18. Should print 587933655 107742 twice"
+echo "Test 18.  Should print 587933655 107742 twice"
 pamcat -lr -black testgrid.pbm testimg.ppm | cksum
 pamcat -lr -jcenter -black testgrid.pbm testimg.ppm | cksum
 
