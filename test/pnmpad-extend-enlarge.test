@@ -1,6 +1,6 @@
 #! /bin/sh
 # This script tests: pnmpad pamenlarge
-# Also requires: pamcat pamcut pamenlarge pbmmake pbmnoise pgmmake pgmnoise
+# Also requires: pamcat pamcut pbmmake pbmnoise pgmmake pgmramp
 # Also requires: ppmmake ppmpat
 
 # If the padding function for -extend-edge is altered, make sure to run this
@@ -19,10 +19,10 @@ bottom_pnm=${tmpdir}/bottom.pnm
 
 echo "Test 1.  Should print match forty-eight (24x2) times"
 
-for generator in "pbmnoise -randomseed=100 17 17" \
-                 "ppmpat -tartan -randomseed=100 11 11"          
+for generator in "pbmnoise -randomseed=8327 17 17" \
+                 "ppmpat -tartan -randomseed=8338 11 11"          
     do
-    ${generator} > ${test_pnm}
+    ${generator} > ${test_pnm} || echo "Test 1: input file generation failed"
     for leftpad in 0 1 7 9 16
     do
         for rightpad in  0 1 8
@@ -62,10 +62,10 @@ done
 
 echo "Test 2.  Should print match thirty-six (18x2) times"
 
-for generator in "pbmnoise -randomseed=100 17 17" \
-                 "ppmpat -tartan -randomseed=100 11 11"
+for generator in "pbmnoise -randomseed=8349 17 17" \
+                 "ppmpat -tartan -randomseed=8360 11 11"
     do
-    ${generator} > ${test_pnm}
+    ${generator} > ${test_pnm} || echo "Test 2: input file generation failed"
     for leftpad in 0 1 2
     do
         for rightpad in  0 1 3
@@ -111,11 +111,11 @@ for generator in "pbmmake -b 1 1" \
                  "pbmmake -b 1 11" \
                  "pbmmake -w 1 1" \
                  "pbmmake -w 1 8" \
-                 "pbmnoise -randomseed=100 1 17" \
-                 "pgmnoise -randomseed=100 1 12"                 
+                 "pbmnoise -randomseed=8371 1 17" \
+                 "pgmramp -tb 1 12"                 
     do
-        ${generator} > ${test_pnm}
-     pamenlarge -xscale=17 ${test_pnm} > ${stretch_pnm} 
+    ${generator} > ${test_pnm} || echo "Test 3: input file generation failed"
+    pamenlarge -xscale=17 ${test_pnm} > ${stretch_pnm} 
         
     for leftpad in 0 1 7 16
     do
@@ -135,11 +135,11 @@ for generator in "pbmmake -b 1 1" \
                  "pbmmake -b 8 1" \
                  "pbmmake -w 1 1" \
                  "pbmmake -w 3 1" \
-                 "pbmnoise -randomseed=100 17 1" \
-                 "pgmnoise -randomseed=100 8 1"          
+                 "pgmramp -lr 17 1" \
+                 "pgmramp -lr -maxval=65535 29 1"          
     do
-        ${generator} > ${test_pnm}
-     pamenlarge -yscale=15 ${test_pnm} > ${stretch_pnm} 
+    ${generator} > ${test_pnm} || echo "Test 4: input file generation failed"
+    pamenlarge -yscale=15 ${test_pnm} > ${stretch_pnm} 
         
     for toppad in  0 1 14
     do
@@ -160,8 +160,8 @@ for generator in "pbmmake -b 1 1" \
                  "pgmmake 0.3 1 1" \
                  "ppmmake rgbi:0.5/0.3/0.8 1 1"
     do
-        ${generator} > ${test_pnm}
-        pamenlarge -xscale=66 -yscale=10 ${test_pnm} > ${stretch_pnm}
+    ${generator} > ${test_pnm} || echo "Test 5: input file generation failed"
+    pamenlarge -xscale=66 -yscale=10 ${test_pnm} > ${stretch_pnm}
         
     for toppad in  0 8
     do

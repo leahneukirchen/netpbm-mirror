@@ -1,6 +1,6 @@
 #! /bin/sh
 # This script tests: pamstereogram
-# Also requires: pamdepth
+# Also requires: pamdepth pamfunc pamgauss pamgradient pamseq pnmtile
 
 tmpdir=${tmpdir:-/tmp}
 testgrid_pgm=${tmpdir}/testgrid.pgm

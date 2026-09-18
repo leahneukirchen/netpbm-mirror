@@ -1,6 +1,6 @@
 #! /bin/sh
 # This script tests: ppmtoilbm ilbmtoppm
-# Also requires: pamseq pamdepth pamtopnm pnmremap pnmcolormap
+# Also requires: pamseq pamdepth pamtopnm pnmremap
 
 echo "Test 1.  Should produce 669206373 10102 four times"
 #Output is PPM raw, 57 by 59  maxval 255
@@ -34,8 +34,8 @@ rm ${test_ppm}
 echo "Test 5.  Should print 482756572 101484 twice"
 mapfile=${tmpdir}/mapfile
 
-# The following was produced by running "pnmcolormap -plain 32 testimg.ppm"
-# We use a prefabricated mapfile because pnmcolormap is known to
+# The following was produced by running "Pnmcolormap -plain 32 testimg.ppm"
+# We use a prefabricated mapfile because Pnmcolormap is known to
 # produce slightly different output on different systems.
 
 cat > ${mapfile} << EOF

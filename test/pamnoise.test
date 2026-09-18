@@ -1,6 +1,6 @@
 #! /bin/sh
 # This script tests: pamnoise
-# Also requires: pamtable pgmtopgm pgmhist pamvalidate pamfile
+# Also requires: pamtable pgmhist pamvalidate pamfile
 
 echo "Test 1."
 echo "Should print: 937445537 10050" # (Mersenne Twister)
