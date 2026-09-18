@@ -767,6 +767,10 @@ readXpm1Header(FILE *           const ifP,
                 nColors = v;
             } else if (streq(t1, "pixel")) {
                 gotPixel = TRUE;
+                if (v < 0 || v > 3) {
+                    pm_error("Invalid 'pixel' value %d.  "
+                             "Valid values are 0-3", v);
+                }
                 *charsPerPixelP = v;
             }
         } else if (strneq(line, "static char", 11)) {

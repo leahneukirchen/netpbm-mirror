@@ -129,6 +129,9 @@ readImage(FILE * const fin,
     unsigned int row;
 
     pnm_row = pnm_allocrow(cols);  /* row buffer */
+    if (UINT_MAX/cols/rows < bpp)
+        pm_error("Image is too large (%u rows x %u columns x %u bytes "
+                 "per pixel) for computation", rows, cols, bpp);
     MALLOCARRAY_NOFAIL(image, cols * rows * bpp);
     
     for (row = 0; row < rows; ++row) {
@@ -139,7 +142,7 @@ readImage(FILE * const fin,
             /* Move each byte of the sample into image[], MSB first */
             for (j = 0; j < bpp; ++j)
                 image[(((row*cols)+col) * bpp) + j] = (unsigned char)
-                    PNM_GET1(pnm_row[col]) >> ((bpp-1-j) * 8);
+                    (PNM_GET1(pnm_row[col]) >> ((bpp-1-j) * 8));
         }
     }
     pnm_freerow(pnm_row);

@@ -3541,6 +3541,11 @@ scanPoly(struct Canvas * const canvasP,
           old_sdy = sdy;
           scan_index--;
         }
+        if (scan_index >= ARRAY_SIZE(coord)) {
+            pm_error("Too many points in polygon.  "
+                     "We can process at most %lu",
+                     ARRAY_SIZE(coord));
+        }
         coord[scan_index].x = px+sdx;
         coord[scan_index].y = py;
         scan_index++;
@@ -3563,6 +3568,11 @@ scanPoly(struct Canvas * const canvasP,
         if (sdy != 0) scan_index--;
       }
       drawPen(canvasP, px,py);
+      if (scan_index >= ARRAY_SIZE(coord)) {
+          pm_error("Too many points in polygon.  "
+                   "We can process at most %lu",
+                   ARRAY_SIZE(coord));
+      }
       coord[scan_index].x = px;
       coord[scan_index].y = py;
       scan_index++;
@@ -3601,11 +3611,16 @@ paintPoly(FILE *          const ifP,
           int             const version) {
 
   struct Rect bb;
-  struct Point pts[100];
+  struct Point * pts;  /* malloc'ed */
   int i;
-  int np;
+  unsigned int np;
 
   np = (readWord(ifP) - 10) >> 2;
+
+  MALLOCARRAY(pts, np);
+
+  if (!pts)
+      pm_error("Failed to get memory for a polygon of %u points", np);
 
   readRect(ifP, &bb);
 
@@ -3615,6 +3630,8 @@ paintPoly(FILE *          const ifP,
   /* scan convert poly ... */
   if (!blitListP)
       scanPoly(canvasP, np, pts);
+
+  free(pts);
 }
 
 
