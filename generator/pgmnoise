@@ -5,16 +5,22 @@
 # 'pgmnoise' arguments to 'pamnoise', and just pipe the output through
 # 'pgmtopgm' to make it PGM.
 #
-# The only thing for which that does not work is the -plain option, which
+# The only things for which that does not work is the -plain option, which
 # has to go on the 'pgmtopgm', not the 'pamnoise', invocation.  So we have
 # a big hack to separate -plain from the rest of the arguments.
+#
+# -version is also a problem, because while it works on 'pamnoise', having
+# it on 'pamnoise' causes 'pgmtopgm' to fail in an ugly way.
 
 plainOpt='' # initial value
 for arg in "$@"; do
     if test "$arg" = "-plain"; then
-        plainOpt='-plain'
-        fi
+        plainOpt='-plain' ;
+    elif test "$arg" = "-version"; then
+        pamnoise "$@"; exit $?;
+    fi
 
     done
 
 pamnoise "$@" | pgmtopgm $plainOpt
+
