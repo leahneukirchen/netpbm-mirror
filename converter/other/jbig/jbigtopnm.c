@@ -293,7 +293,19 @@ int main (int argc, const char **argv)
                    the data-out callback function.  And a row can span two
                    chunks.
                 */
-                image = malloc(cols*rows*bpp);
+                if (UINT_MAX / rows / cols < bpp) {
+                    pm_error("Image size %u rows by %u cols, %u bytes per pixel "
+                             "too large for computations",
+                             rows, cols, bpp);
+                }
+                MALLOCARRAY(image, cols * rows * bpp);
+
+                if (!image) {
+                    pm_error("Failed to allocate memory for "
+                             "%u rows x %u columns x %u bytes per pixel",
+                             rows, cols, bpp);
+                }
+
                 jbg_dec_merge_planes(&s, !cmdline.binary, collect_image,
                                      image);
                 write_pnm(ofP, image, bpp, rows, cols, maxval, PGM_TYPE);

@@ -150,6 +150,8 @@ static void
 getPixel(FILE *  const ifP,
          pixel * const dest,
          int     const size,
+         unsigned int const firstColormapIndex,
+         unsigned int const colormapLength,
          gray *  const alphaP) {
 
     static pixval red, grn, blu;
@@ -199,6 +201,10 @@ getPixel(FILE *  const ifP,
         }
     }
     if (mapped) {
+        if (l < firstColormapIndex || l >= firstColormapIndex + colormapLength)
+            pm_error("Invalid color index %u in raster.  Colormap maps "
+                     "%u colors starting with index %u",
+                     l, colormapLength, firstColormapIndex);
         *dest = ColorMap[l];
         *alphaP = AlphaMap[l];
     } else {
@@ -335,6 +341,8 @@ main(int argc, char * argv[]) {
     FILE *imageout_file, *alpha_file;
     int rows, cols, row, realrow, truerow, baserow;
     int maxval;
+    unsigned int firstColormapIndex;
+    unsigned int colormapLength;
     pixel** pixels;   /* The image array in ppm format */
     gray** alpha;     /* The alpha channel array in pgm format */
 
@@ -429,16 +437,19 @@ main(int argc, char * argv[]) {
         }
     }
 
+    firstColormapIndex = tga_head.Index_hi  * 256 + tga_head.Index_lo;
+    colormapLength     = tga_head.Length_hi * 256 + tga_head.Length_lo;
+
     /* If required, read the color map information. */
     if ( tga_head.CoMapType != 0 ) {
         unsigned int i;
-        unsigned int temp1, temp2;
 
-        temp1 = tga_head.Index_lo + tga_head.Index_hi * 256;
-        temp2 = tga_head.Length_lo + tga_head.Length_hi * 256;
-        if ((temp1 + temp2 + 1) >= MAXCOLORS)
-            pm_error("too many colors - %d", (temp1 + temp2 + 1));
-        for (i = temp1; i < (temp1 + temp2); ++i)
+        if ((firstColormapIndex + colormapLength) > MAXCOLORS)
+            pm_error("too many colors - %u",
+                     firstColormapIndex + colormapLength);
+        for (i = firstColormapIndex;
+             i < firstColormapIndex + colormapLength;
+             ++i)
             get_map_entry(ifP, &ColorMap[i], (int) tga_head.CoSize,
                           &AlphaMap[i]);
     }
@@ -465,6 +476,7 @@ main(int argc, char * argv[]) {
 
         for (col = 0; col < cols; ++col)
             getPixel(ifP, &(pixels[realrow][col]), (int) tga_head.PixelSize,
+                     firstColormapIndex, colormapLength,
                      &(alpha[realrow][col]));
         if (tga_head.IntrLve == TGA_IL_Four)
             truerow += 4;

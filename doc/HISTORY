@@ -4,6 +4,47 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+26.09.18 BJH  Release 11.15.08
+
+              jbigtopnm: fix buffer overrun with ridiculously large input
+              image.  Always broken (jbigtopnm was new in Netpbm 9.2
+              (May 2000)).  Discovered and diagnosed by Tristan Madani.
+
+              jbigtopnm: fix incorrect output with maxval > 255.  Always
+              broken (jbigtopnm was new in Netpbm 9.2 (May 2000)).
+              
+              jbigtopnm: fix invalid memory write when memory allocation
+              fails.  Always broken (jbigtopnm was new in Netpbm 9.2 (May
+              2000)).
+              
+              pnmtojbig: fix incorrect output with PGM input with maxval >
+              255.  Always broken (pnmtojbig was new in Netpbm 9.2 (May
+              2000)).
+
+              pnmtojbig: fix incorrect output with PGM input with width *
+              length * bytes per pixel > 32 bits.  Always broken (pnmtojbig
+              was new in Netpbm 9.2 (May 2000)).
+
+              picttoppm: fix buffer overrun with very large polygons in input.
+              Always broken -- in fact done intentionally for coding
+              convenience (picttoppm was in primordial Netpbm in 1988).
+              Discovered and diagnosed by Tristan Madani.
+
+              tgatoppm: fix buffer overrun with corrupted Targa input.  Fail
+              if Targa image contains invalid color index.  Always broken
+              (tgatoppm was in primordial Netpm in 1989).  Discovered and
+              diagnosed by Tristan Madani.
+
+              winicontopam: fix arithmetic overflow causing arbitrary memory
+              access and infinite loops with large images.  Always broken
+              (winicontopam was new in Netpbm 10.63 (June 2013).  Discovered
+              and diagnosed by Tristan Madani.
+
+              xpmtoppm: fix buffer overruns with input image that has an
+              invalid characters-per-pixel value.  Always broken (xpmtoppm was
+              in primordial Netpbm in 1994).  Discovered and diagnosed by
+              Tristan Madani.
+
 26.09.04 BJH  Release 11.15.07
 
               sgitopnm: fix buffer overrun with corrupted RLE input.  Always
