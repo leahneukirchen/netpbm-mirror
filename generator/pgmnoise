@@ -13,14 +13,25 @@
 # it on 'pamnoise' causes 'pgmtopgm' to fail in an ugly way.
 
 plainOpt='' # initial value
-for arg in "$@"; do
-    if test "$arg" = "-plain"; then
-        plainOpt='-plain' ;
-    elif test "$arg" = "-version"; then
-        pamnoise "$@"; exit $?;
-    fi
+quietOpt='' # initial value
 
+for arg in "$@"; do
+    case "$arg" in
+        -version|--version )
+	pamnoise "$@"; exit $?;
+	;;
+	-plain|--plain )
+	plainOpt='-plain' ;
+	;;
+	-quiet|--quiet )
+	quietOpt='-quiet' ;
+	;;
+    esac	
     done
 
-pamnoise "$@" | pgmtopgm $plainOpt
+if [ $# -lt 2 ];
+  then
+  echo "pgmnoise: Wrong number of arguments: $#.  Arguments are width and height of image, in pixels" 1>&2 ; exit 1;
+fi
 
+pamnoise "$@" | pgmtopgm $plainOpt $quietOpt
