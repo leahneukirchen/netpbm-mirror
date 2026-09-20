@@ -1,14 +1,19 @@
 #! /bin/sh
 # This script tests: pgmnoise
-# Also requires:
+# Also requires: pamnoise pgmtopgm
 
 echo "Test Invalid"
 
 . ./test-invalid.inc
 
 invCmd "pgmnoise"
-invCmd "pgmnoise -maxval=255  -randomseed=1"
-invCmd "pgmnoise 100 -randomseed=1"
-invCmd "pgmnoise 100 0 -randomseed=1"
-invCmd "pgmnoise 0 100 -randomseed=1"
-invCmd "pgmnoise 100 100 100 -randomseed=1"
+invCmd "pgmnoise 10"
+invCmd "pgmnoise 100 0"
+invCmd "pgmnoise 0 100"
+invCmd "pgmnoise 100 -100"
+invCmd "pgmnoise -100 100"
+invCmd "pgmnoise 100 100 100"
+invCmd "pgmnoise -maxval=0 100 100"
+invCmd "pgmnoise -maxval=-255 100 100"
+invCmd "pgmnoise -randomseed=-12 100 100"
+invCmd "pgmnoise -randomseed=4294967296 100 100"
