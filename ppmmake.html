@@ -2,7 +2,7 @@
 <html><head><title>Ppmmake User Manual</title></head>
 <body>
 <h1>ppmmake</h1>
-Updated: 02 September 2002
+Updated: 22 September 2026
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -34,7 +34,7 @@ height, and maxval.
 href="libnetpbm_image.html#colorname">argument of the <b>pnm_parsecolor()</b>
 library routine</a>.
 
-
+  
 <h2 id="example">EXAMPLES</h2>
 
 <pre>
@@ -42,6 +42,20 @@ library routine</a>.
 </pre>
 <pre>
     ppmmake rgb:ff/80/80 50 100 -maxval=5
+</pre>
+
+
+<h2>APPLICATION NOTES</h2>
+
+<p>Sometimes when you are processing images, it is easier to represent a color
+as a single pixel image of that color than as a color specification like
+&quot;rgb:ff/8080&quot;.
+  
+<p>If you have such an image, <b>pamenlarge</b> is a better program to make
+the image:
+  
+<pre>
+    pamenlarge -xscale=50 -yscale=100 singlepixel.ppm
 </pre>
 
 
