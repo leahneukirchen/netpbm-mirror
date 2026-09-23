@@ -225,6 +225,15 @@ decompress(FILE *                 const ifP,
 
     unsigned char * buffer;
     bool eof;
+        /* We encountered end of file reading the input file */
+    bool atEndOfImage;
+        /* The libjbig decompressor has processed input data through the end
+           of an image but not beyond.  But note that the input could have
+           multiple sequential complete images, each successive one adding
+           resolution, and we always keep reading to the end of the input file
+           and feeding that data to libjbig as long as libjbig says the data
+           is valid.
+        */
     bool decompressFailed;
         /* The input is bad -- libjbig was unable to decompress it */
     int decompressFailCode;
@@ -238,7 +247,7 @@ decompress(FILE *                 const ifP,
 
     /* send input file to decoder */
 
-    for (eof = false, decompressFailed = false;
+    for (eof = false, decompressFailed = false, atEndOfImage = false;
          !eof && !decompressFailed;
         ) {
         size_t bytesRemainingCt;
@@ -256,22 +265,37 @@ decompress(FILE *                 const ifP,
 
                 result = jbg_dec_in(sP, &buffer[cursor], bytesRemainingCt,
                                     &bytesProcessedCt);
-                if (result != JBG_EOK && result != JBG_EAGAIN) {
+
+                switch (result) {
+                case JBG_EOK:
+                    cursor           += bytesProcessedCt;
+                    bytesRemainingCt -= bytesProcessedCt;
+                    atEndOfImage = true;
+                    break;
+                case JBG_EAGAIN:
+                case JBG_EOK_INTR:
+                    cursor           += bytesProcessedCt;
+                    bytesRemainingCt -= bytesProcessedCt;
+                    atEndOfImage = false;
+                    break;
+                default:
                     decompressFailed = true;
                     decompressFailCode = result;
-                } else {
-                    cursor += bytesProcessedCt;
-                    bytesRemainingCt -= bytesProcessedCt;
                 }
             }
         }
     }
     if (ferror(ifP))
         pm_error("Error reading input file");
-    if (decompressFailed)
+    else if (decompressFailed) {
         pm_error("Invalid contents of input file.  %s",
                  jbg_strerror(decompressFailCode));
-
+    } else if (!atEndOfImage) {
+        /* Note two significant cases of this: 1) input ends in the middle
+           of a BIE; 2) input ends before any BIE at all -- it is empty
+        */
+        pm_error("Input file ends before the end of a BIE");
+    }
     free(buffer);
 }
 
