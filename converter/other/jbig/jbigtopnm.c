@@ -284,16 +284,14 @@ writeDecompressedImage(FILE *                 const ofP,
                        unsigned int           const plane,
                        bool                   const binary) {
 
-    unsigned int rows, cols;
-    xelval maxval;
-    unsigned int bpp; /* Number of bytes (not bits) per pixel */
+    unsigned int const cols   = jbg_dec_getwidth(sP);
+    unsigned int const rows   = jbg_dec_getheight(sP);
+    xelval       const maxval = pm_bitstomaxval(jbg_dec_getplanes(sP));
+    unsigned int const bpp    = (jbg_dec_getplanes(sP)+7)/8;
+        /* Number of bytes (not bits) per pixel */
+
     bool justOnePlane;
     unsigned int planeToWrite;
-
-    cols = jbg_dec_getwidth(sP);
-    rows = jbg_dec_getheight(sP);
-    maxval = pm_bitstomaxval(jbg_dec_getplanes(sP));
-    bpp = (jbg_dec_getplanes(sP)+7)/8;
 
     if (jbg_dec_getplanes(sP) == 1) {
         justOnePlane = true;
