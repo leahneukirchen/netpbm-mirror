@@ -226,11 +226,11 @@ decompress(FILE *                 const ifP,
     unsigned char * buffer;
     bool eof;
     bool decompressFailed;
-    /* The input is bad -- libjbig was unable to decompress it */
+        /* The input is bad -- libjbig was unable to decompress it */
     int decompressFailCode;
-    /* Meaningful only when 'decompressFailed' is true.  Result code
-       from libjbig detailing why input could not be decompressed.
-    */
+        /* Meaningful only when 'decompressFailed' is true.  Result code
+           from libjbig detailing why input could not be decompressed.
+        */
 
     MALLOCARRAY(buffer, BUFSIZE);
     if (!buffer)
