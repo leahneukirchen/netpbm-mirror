@@ -47,13 +47,13 @@ convertRaster(FILE *       const ifP,
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char **argv) {
 
-    FILE* ifP;
+    FILE * ifP;
     const char * inputFilespec;
     int eof;
 
-    ppm_init( &argc, argv );
+    pm_proginit(&argc, argv);
 
     if (argc-1 > 1)
         pm_error("The only argument is the (optional) input filename");
@@ -70,10 +70,11 @@ main(int argc, char *argv[]) {
     while (!eof) {
         ppm_nextimage(ifP, &eof);
         if (!eof) {
-            int rows, cols, format;
-            pixval maxval;
-            pixel* inputRow;
-            gray* outputRow;
+            int     rows, cols;
+            int     format;
+            pixval  maxval;
+            pixel * inputRow;
+            gray *  outputRow;
 
             ppm_readppminit(ifP, &cols, &rows, &maxval, &format);
             pgm_writepgminit(stdout, cols, rows, maxval, 0);
