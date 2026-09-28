@@ -47,13 +47,13 @@ convertRaster(FILE *       const ifP,
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char **argv) {
 
-    FILE* ifP;
+    FILE * ifP;
     const char * inputFilespec;
     int eof;
 
-    ppm_init( &argc, argv );
+    pm_proginit(&argc, argv);
 
     if (argc-1 > 1)
         pm_error("The only argument is the (optional) input filename");
@@ -65,28 +65,26 @@ main(int argc, char *argv[]) {
 
     ifP = pm_openr(inputFilespec);
 
-    eof = FALSE;  /* initial assumption */
+    for (eof = 0; !eof; ) {
+        int     rows, cols;
+        int     format;
+        pixval  maxval;
+        pixel * inputRow;
+        gray *  outputRow;
 
-    while (!eof) {
+        ppm_readppminit(ifP, &cols, &rows, &maxval, &format);
+        pgm_writepgminit(stdout, cols, rows, maxval, 0);
+
+        inputRow = ppm_allocrow(cols);
+        outputRow = pgm_allocrow(cols);
+
+        convertRaster(ifP, cols, rows, maxval, format,
+                      inputRow, outputRow, stdout);
+
+        ppm_freerow(inputRow);
+        pgm_freerow(outputRow);
+
         ppm_nextimage(ifP, &eof);
-        if (!eof) {
-            int rows, cols, format;
-            pixval maxval;
-            pixel* inputRow;
-            gray* outputRow;
-
-            ppm_readppminit(ifP, &cols, &rows, &maxval, &format);
-            pgm_writepgminit(stdout, cols, rows, maxval, 0);
-
-            inputRow = ppm_allocrow(cols);
-            outputRow = pgm_allocrow(cols);
-
-            convertRaster(ifP, cols, rows, maxval, format,
-                          inputRow, outputRow, stdout);
-
-            ppm_freerow(inputRow);
-            pgm_freerow(outputRow);
-        }
     }
     pm_close(ifP);
     pm_close(stdout);

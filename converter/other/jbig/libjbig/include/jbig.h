@@ -200,8 +200,23 @@ int jbg_enc_lrlmax(struct jbg_enc_state *s, unsigned long mwidth,
                    unsigned long mheight);
 void jbg_enc_layers(struct jbg_enc_state *s, int d);
 int  jbg_enc_lrange(struct jbg_enc_state *s, int dl, int dh);
-void jbg_enc_options(struct jbg_enc_state *s, int order, int options,
-                     int l0, int mx, int my);
+
+void
+jbg_enc_set_order(struct jbg_enc_state * const s,
+                  int                    const order);
+
+void
+jbg_enc_set_algorithm(struct jbg_enc_state * const s,
+                      int                    const algorithm);
+
+void
+jbg_enc_set_stripes(struct jbg_enc_state * const s,
+                    int                    const l0);
+
+void
+jbg_enc_set_maxoffset(struct jbg_enc_state * const s,
+                      int                    const mx);
+
 void jbg_enc_out(struct jbg_enc_state *s);
 void jbg_enc_free(struct jbg_enc_state *s);
 

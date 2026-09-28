@@ -38,65 +38,199 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
+
 #include <jbig.h>
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
+#include "shhopt.h"
 #include "pnm.h"
 
 static unsigned long total_length = 0;
   /* used for determining output file length */
 
-/*
- * malloc() with exception handler
- */
+struct CmdlineInfo {
+    /* All the information the user supplied in the command line,
+       in a form easy for the program to use.
+    */
+    const char * inputFilename;  /* Filename of input file, or "-" */
+    const char * outputFilename;  /* filename of output file, or "-" */
+    unsigned int singlelayer;
+    unsigned int width;
+    unsigned int height;
+    unsigned int lowestlayerSpec;
+    unsigned int lowestlayer;
+    unsigned int highestlayerSpec;
+    unsigned int highestlayer;
+    unsigned int binary;
+    unsigned int differentialSpec;
+    unsigned int differential;
+    unsigned int stripesSpec;
+    unsigned int stripes;
+    unsigned int maxoffsetSpec;
+    unsigned int maxoffset;
+    unsigned int planesSpec;
+    unsigned int planes;
+    unsigned int orderSpec;
+    unsigned int order;
+    unsigned int algorithmSpec;
+    unsigned int algorithm;
+    unsigned int annexc;
+    unsigned int verbose;
+};
+
+
+
+
 static void
-*checkedmalloc(size_t n)
-{
-  void *p;
+parseCommandLine(int argc,
+                 const char ** argv,
+                 struct CmdlineInfo  * const cmdlineP) {
+/* --------------------------------------------------------------------------
+   Parse program command line described in Unix standard form by argc
+   and argv.  Return the information in the options as *cmdlineP.
 
-  if ((p = malloc(n)) == NULL) {
-    fprintf(stderr, "Sorry, not enough memory available!\n");
-    exit(1);
-  }
+   If command line is internally inconsistent (invalid options, etc.),
+   issue error message to stderr and abort program.
 
-  return p;
+   Note that the strings we return are stored in the storage that
+   was passed to us as the argv array.  We also trash *argv.
+--------------------------------------------------------------------------*/
+    optEntry *option_def;
+    /* Instructions to pm_optParseOptions3 on how to parse our options. */
+    optStruct3 opt;
+
+    unsigned int option_def_index;
+    unsigned int widthSpec, heightSpec;
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
+
+    option_def_index = 0;   /* incremented by OPTENT3 */
+    OPTENT3('q', "singlelayer",  OPT_FLAG,  NULL,
+            &cmdlineP->singlelayer,              0);
+    OPTENT3('x', "width",        OPT_UINT,  &cmdlineP->width,
+            &widthSpec,                          0);
+    OPTENT3('y', "height",       OPT_UINT,  &cmdlineP->height,
+            &heightSpec,                         0);
+    OPTENT3('l', "lowestlayer",  OPT_UINT,  &cmdlineP->lowestlayer,
+            &cmdlineP->lowestlayerSpec,          0);
+    OPTENT3('h', "highestlayer", OPT_UINT, &cmdlineP->highestlayer,
+            &cmdlineP->highestlayerSpec,         0);
+    OPTENT3('b', "binary",       OPT_FLAG,    NULL,
+            &cmdlineP->binary,                   0);
+    OPTENT3('d', "differential", OPT_UINT, &cmdlineP->differential,
+            &cmdlineP->differentialSpec,         0);
+    OPTENT3('s', "stripes",      OPT_UINT, &cmdlineP->stripes,
+            &cmdlineP->stripesSpec,              0);
+    OPTENT3('m', "maxoffset",    OPT_UINT, &cmdlineP->maxoffset,
+            &cmdlineP->maxoffsetSpec,            0);
+    OPTENT3('t', "planes",       OPT_UINT, &cmdlineP->planes,
+            &cmdlineP->planesSpec,               0);
+    OPTENT3('o', "order",        OPT_UINT, &cmdlineP->order,
+            &cmdlineP->orderSpec,                  0);
+    OPTENT3('p', "algorithm",    OPT_UINT, &cmdlineP->algorithm,
+            &cmdlineP->algorithmSpec,            0);
+    OPTENT3('c', "annexc",       OPT_FLAG, NULL,
+            &cmdlineP->annexc,                   0);
+    OPTENT3('v', "verbose",      OPT_FLAG, NULL,
+            &cmdlineP->verbose,                  0);
+
+    opt.opt_table = option_def;
+    opt.short_allowed = TRUE;  /* We have short (old-fashioned) options */
+    opt.allowNegNum = FALSE;   /* We have no parms that are negative numbers */
+
+    pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    if (!widthSpec)
+        cmdlineP->width = 640;
+
+    if (!heightSpec)
+        cmdlineP->height = 480;
+
+    if (cmdlineP->orderSpec) {
+        if (cmdlineP->order > 0x0f) {
+            pm_error("Invalid --order value %u.  Maximum possible is 15",
+                     cmdlineP->order);
+        }
+    }
+
+    if (cmdlineP->maxoffsetSpec) {
+        if (cmdlineP->maxoffset > 127) {
+            pm_error("Invalid --maxoffst value %u.  Maximum is 127",
+                cmdlineP->maxoffset);
+        }
+    }
+
+    if (cmdlineP->stripesSpec) {
+        if (cmdlineP->stripes < 1)
+            pm_error("--stripes must be at least 1");
+    }
+
+    if (argc-1 < 2) {
+        cmdlineP->outputFilename = "-";
+        if (argc-1 < 1)
+            cmdlineP->inputFilename = "-";
+        else
+            cmdlineP->inputFilename = argv[1];
+    } else {
+        cmdlineP->outputFilename = argv[2];
+        if (argc-1 > 2) {
+            pm_error("Too many arguments (%u).  The only possible non-option "
+                     "arguments are input file name and output file name",
+                     argc-1);
+        }
+    }
 }
 
 
 
-/*
- * Callback procedure which is used by JBIG encoder to deliver the
- * encoded data. It simply sends the bytes to the output file.
- */
-static void data_out(unsigned char *start, size_t len, void *file)
-{
-  fwrite(start, len, 1, (FILE *) file);
-  total_length += len;
-  return;
+static void
+dataOut(unsigned char * const start,
+        size_t          const len,
+        void *          const fileP) {
+/*----------------------------------------------------------------------------
+  Callback procedure which is used by JBIG encoder to deliver the
+  encoded data. It simply sends the bytes to the output file.
+-----------------------------------------------------------------------------*/
+    fwrite(start, len, 1, (FILE *) fileP);
+
+    total_length += len;
 }
 
 
 
 static void
-readPbm(FILE *            const fin,
+readPbm(FILE *            const ifP,
         unsigned int      const cols,
         unsigned int      const rows,
         unsigned char *** const bitmapP) {
 
-    unsigned int const bytes_per_line = pbm_packed_bytes(cols);
+    unsigned int const bytesPerLine = pbm_packed_bytes(cols);
 
     unsigned char ** bitmap;
 
     /* Read the input image into bitmap[] */
     /* Shortcut for PBM */
-    int row;
-    bitmap = (unsigned char **) checkedmalloc(sizeof(unsigned char *));
-    bitmap[0] = (unsigned char *) checkedmalloc(bytes_per_line * rows);
+    unsigned int row;
 
-    for (row = 0; row < rows; row++)
-        pbm_readpbmrow_packed(fin, &bitmap[0][row*bytes_per_line],
+    MALLOCVAR_NOFAIL(bitmap);
+
+    if (UINT_MAX / bytesPerLine < rows)
+        pm_error("Image is uncomputably large");
+
+    MALLOCARRAY(bitmap[0], bytesPerLine * rows);
+
+    if (!bitmap[0]) {
+        pm_error("Failed to allocate a buffer for %u rows of %u bytes",
+                 rows, bytesPerLine);
+    }
+
+    for (row = 0; row < rows; ++row) {
+        pbm_readpbmrow_packed(ifP, &bitmap[0][row*bytesPerLine],
                               cols, RPBM_FORMAT);
+    }
 
     *bitmapP = bitmap;
 }
@@ -104,7 +238,7 @@ readPbm(FILE *            const fin,
 
 
 static void
-readImage(FILE * const fin,
+readImage(FILE *           const ifP,
           unsigned int     const cols,
           unsigned int     const rows,
           xelval           const maxval,
@@ -112,12 +246,15 @@ readImage(FILE * const fin,
           unsigned int     const bpp,
           unsigned char ** const imageP) {
 /*----------------------------------------------------------------------------
-  Read the input image and put it into *imageP;
+  Read the input image and put it into *imageP in the format the JBIG library
+  encoder needs.
 
-  Although the PBM case is separated, this logic works also for
-  PBM, bpp=1.
+  Although the PBM case is separated, this logic works also for PBM (maxval=1,
+  bpp=1).
+
+  'bpp' is bytes (not bits) per pixel in the JBIG image.
 -----------------------------------------------------------------------------*/
-    unsigned char *image;
+    unsigned char * image;  /* malloc'ed */
         /* This is a representation of the entire image with 'bpp' bytes per
            pixel.  The 'bpp' bytes for each pixel are arranged MSB first
            and its numerical value is the value from the PNM input.
@@ -130,20 +267,31 @@ readImage(FILE * const fin,
     unsigned int row;
 
     pnm_row = pnm_allocrow(cols);  /* row buffer */
+
     if (UINT_MAX/cols/rows < bpp)
         pm_error("Image is too large (%u rows x %u columns x %u bytes "
                  "per pixel) for computation", rows, cols, bpp);
-    MALLOCARRAY_NOFAIL(image, cols * rows * bpp);
+    MALLOCARRAY(image, cols * rows * bpp);
+
+    if (!image) {
+        pm_error("Failed to allocate memory for "
+                 "%u rows x %u columns x %u bytes per pixel",
+                 rows, cols, bpp);
+    }
 
     for (row = 0; row < rows; ++row) {
         unsigned int col;
-        pnm_readpnmrow(fin, pnm_row, cols, maxval, format);
-        for (col = 0; col < cols; col++) {
+
+        pnm_readpnmrow(ifP, pnm_row, cols, maxval, format);
+
+        for (col = 0; col < cols; ++col) {
             unsigned int j;
+
             /* Move each byte of the sample into image[], MSB first */
-            for (j = 0; j < bpp; ++j)
+            for (j = 0; j < bpp; ++j) {
                 image[(((row*cols)+col) * bpp) + j] = (unsigned char)
-                    (PNM_GET1(pnm_row[col]) >> ((bpp-1-j) * 8));
+                    (PNM_GET1(pnm_row[col]) >> ((bpp - 1 - j) * 8));
+            }
         }
     }
     pnm_freerow(pnm_row);
@@ -155,8 +303,8 @@ readImage(FILE * const fin,
 static void
 convertImageToBitmap(unsigned char *   const image,
                      unsigned char *** const bitmapP,
-                     unsigned int      const encode_planes,
-                     unsigned int      const bytes_per_line,
+                     unsigned int      const encodePlanes,
+                     unsigned int      const bytesPerLine,
                      unsigned int      const lines) {
 
     /* Convert image[] into bitmap[]  */
@@ -164,9 +312,9 @@ convertImageToBitmap(unsigned char *   const image,
     unsigned char ** bitmap;
     unsigned int i;
 
-    MALLOCARRAY_NOFAIL(bitmap, encode_planes);
-    for (i = 0; i < encode_planes; ++i)
-        MALLOCARRAY_NOFAIL(bitmap[i], bytes_per_line * lines);
+    MALLOCARRAY_NOFAIL(bitmap, encodePlanes);
+    for (i = 0; i < encodePlanes; ++i)
+        MALLOCARRAY_NOFAIL(bitmap[i], bytesPerLine * lines);
 
     *bitmapP = bitmap;
 }
@@ -174,28 +322,28 @@ convertImageToBitmap(unsigned char *   const image,
 
 
 static void
-readPnm(FILE *            const fin,
+readPnm(FILE *            const ifP,
         unsigned int      const cols,
         unsigned int      const rows,
         xelval            const maxval,
         int               const format,
         unsigned int      const bpp,
         unsigned int      const planes,
-        unsigned int      const encode_planes,
-        bool              const use_graycode,
+        unsigned int      const encodePlanes,
+        bool              const useGraycode,
         unsigned char *** const bitmapP) {
 
-    unsigned int const bytes_per_line = pbm_packed_bytes(cols);
+    unsigned int const bytesPerLine = pbm_packed_bytes(cols);
 
     unsigned char * image;
     unsigned char ** bitmap;
 
-    readImage(fin, cols, rows, maxval, format, bpp, &image);
+    readImage(ifP, cols, rows, maxval, format, bpp, &image);
 
-    convertImageToBitmap(image, &bitmap, encode_planes, bytes_per_line, rows);
+    convertImageToBitmap(image, &bitmap, encodePlanes, bytesPerLine, rows);
 
-    jbg_split_planes(cols, rows, planes, encode_planes, image, bitmap,
-                     use_graycode);
+    jbg_split_planes(cols, rows, planes, encodePlanes, image, bitmap,
+                     useGraycode);
     free(image);
 
     /* Invert the image if it is just one plane.  See top of this file
@@ -203,16 +351,17 @@ readPnm(FILE *            const fin,
        this is for exceptional PGM files.
     */
 
-    if (encode_planes == 1) {
+    if (encodePlanes == 1) {
         unsigned int row;
         for (row = 0; row < rows; ++row) {
             unsigned int i;
-            for (i = 0; i < bytes_per_line; i++)
-                bitmap[0][(row*bytes_per_line) + i] ^= 0xff;
+
+            for (i = 0; i < bytesPerLine; ++i)
+                bitmap[0][(row*bytesPerLine) + i] ^= 0xff;
 
             if (cols % 8 > 0) {
-                bitmap[0][ (row+1)*bytes_per_line  -1] >>= 8-cols%8;
-                bitmap[0][ (row+1)*bytes_per_line  -1] <<= 8-cols%8;
+                bitmap[0][ (row+1)*bytesPerLine  -1] >>= 8-cols%8;
+                bitmap[0][ (row+1)*bytesPerLine  -1] <<= 8-cols%8;
             }
         }
     }
@@ -221,13 +370,55 @@ readPnm(FILE *            const fin,
 
 
 
+static void
+reportVerbose(struct jbg_enc_state const s,
+              int                  const useGraycode) {
+
+    fprintf(stderr, "Information about the created JBIG bi-level image entity "
+            "(BIE):\n\n");
+    fprintf(stderr, "              input image size: %ld x %ld pixel\n",
+            s.xd, s.yd);
+    fprintf(stderr, "                    bit planes: %d\n", s.planes);
+    if (s.planes > 1)
+        fprintf(stderr, "                      encoding: %s code, MSB first\n",
+                useGraycode ? "Gray" : "binary");
+    fprintf(stderr, "                       stripes: %ld\n", s.stripes);
+    fprintf(stderr, "   lines per stripe in layer 0: %ld\n", s.l0);
+    fprintf(stderr, "  total number of diff. layers: %d\n", s.d);
+    fprintf(stderr, "           lowest layer in BIE: %d\n", s.dl);
+    fprintf(stderr, "          highest layer in BIE: %d\n", s.dh);
+    fprintf(stderr, "             lowest layer size: %lu x %lu pixel\n",
+            jbg_ceil_half(s.xd, s.d - s.dl), jbg_ceil_half(s.yd, s.d - s.dl));
+    fprintf(stderr, "            highest layer size: %lu x %lu pixel\n",
+            jbg_ceil_half(s.xd, s.d - s.dh), jbg_ceil_half(s.yd, s.d - s.dh));
+    fprintf(stderr, "                   option bits:%s%s%s%s%s%s%s\n",
+            s.options & JBG_LRLTWO  ? " LRLTWO" : "",
+            s.options & JBG_VLENGTH ? " VLENGTH" : "",
+            s.options & JBG_TPDON   ? " TPDON" : "",
+            s.options & JBG_TPBON   ? " TPBON" : "",
+            s.options & JBG_DPON    ? " DPON" : "",
+            s.options & JBG_DPPRIV  ? " DPPRIV" : "",
+            s.options & JBG_DPLAST  ? " DPLAST" : "");
+    fprintf(stderr, "                    order bits:%s%s%s%s\n",
+            s.order & JBG_HITOLO ? " HITOLO" : "",
+            s.order & JBG_SEQ    ? " SEQ" : "",
+            s.order & JBG_ILEAVE ? " ILEAVE" : "",
+            s.order & JBG_SMID   ? " SMID" : "");
+    fprintf(stderr, "           AT maximum x-offset: %d\n"
+            "           AT maximum y-offset: %d\n", s.mx, s.my);
+    fprintf(stderr, "         length of output file: %lu byte\n\n",
+            total_length);
+}
+
+
+
 int
-main(int argc, char **argv) {
-    FILE *fin = stdin, *fout = stdout;
-    const char *fnin = "<stdin>", *fnout = "<stdout>";
-    int i;
-    int all_args = 0, files = 0;
-    int bpp, planes, encode_planes = -1;
+main(int argc, const char ** argv) {
+
+    struct CmdlineInfo cmdline;
+    FILE * ifP;
+    FILE * ofP;
+    int bpp, planes, encodePlanes;
     int cols, rows;
     xelval maxval;
     int format;
@@ -239,137 +430,22 @@ main(int argc, char **argv) {
     */
 
     struct jbg_enc_state s;
-    int verbose = 0, delay_at = 0, use_graycode = 1;
-    long mwidth = 640, mheight = 480;
-    int dl = -1, dh = -1, d = -1, l0 = -1, mx = -1;
-    int options = JBG_TPDON | JBG_TPBON | JBG_DPON;
-    int order = JBG_ILEAVE | JBG_SMID;
+    int options;
 
-    pbm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
-    /* parse command line arguments */
-    for (i = 1; i < argc; ++i) {
-        int j;
-        if (!all_args && argv[i][0] == '-') {
-            if (argv[i][1] == '\0' && files == 0)
-                ++files;
-            else {
-                for (j = 1; j > 0 && argv[i][j]; j++) {
-                    switch(tolower(argv[i][j])) {
-                    case '-' :
-                        all_args = 1;
-                        break;
-                    case 'v':
-                        verbose = 1;
-                        break;
-                    case 'b':
-                        use_graycode = 0;
-                        break;
-                    case 'c':
-                        delay_at = 1;
-                        break;
-                    case 'x':
-                        if (++i >= argc)
-                            pm_error("-x needs a value");
-                        j = -1;
-                        mwidth = atol(argv[i]);
-                        break;
-                    case 'y':
-                        if (++i >= argc)
-                            pm_error("-y needsa  value");
-                        j = -1;
-                        mheight = atol(argv[i]);
-                        break;
-                    case 'o':
-                        if (++i >= argc)
-                            pm_error("-o needs a value");
-                        j = -1;
-                        order = atoi(argv[i]);
-                        break;
-                    case 'p':
-                        if (++i >= argc)
-                            pm_error("-p needs a value");
-                        j = -1;
-                        options = atoi(argv[i]);
-                        break;
-                    case 'l':
-                        if (++i >= argc)
-                            pm_error("-l needs a value");
-                        j = -1;
-                        dl = atoi(argv[i]);
-                        break;
-                    case 'h':
-                        if (++i >= argc)
-                            pm_error("-h needs a value");
-                        j = -1;
-                        dh = atoi(argv[i]);
-                        break;
-                    case 'q':
-                        d = 0;
-                        break;
-                    case 'd':
-                        if (++i >= argc)
-                            pm_error("-d needs a value");
-                        j = -1;
-                        d = atoi(argv[i]);
-                        break;
-                    case 's':
-                        if (++i >= argc)
-                            pm_error("-s needs a value");
-                        j = -1;
-                        l0 = atoi(argv[i]);
-                        break;
-                    case 't':
-                        if (++i >= argc)
-                            pm_error("-t needs a value");
-                        j = -1;
-                        encode_planes = atoi(argv[i]);
-                        break;
-                    case 'm':
-                        if (++i >= argc)
-                            pm_error("-m needs a value");
-                        j = -1;
-                        mx = atoi(argv[i]);
-                        break;
-                    default:
-                        pm_error("Unrecognized option: %c", argv[i][j]);
-                    }
-                }
-            }
-        } else {
-            switch (files++) {
-            case 0:
-                if (argv[i][0] != '-' || argv[i][1] != '\0') {
-                    fnin = argv[i];
-                    fin = fopen(fnin, "rb");
-                    if (!fin) {
-                        fprintf(stderr, "Can't open input file '%s", fnin);
-                        perror("'");
-                        exit(1);
-                    }
-                }
-                break;
-            case 1:
-                fnout = argv[i];
-                fout = fopen(fnout, "wb");
-                if (!fout) {
-                    fprintf(stderr, "Can't open input file '%s", fnout);
-                    perror("'");
-                    exit(1);
-                }
-                break;
-            default:
-                pm_error("too many non-option arguments");
-            }
-        }
-    }
+    parseCommandLine(argc, argv, &cmdline);
 
-    pnm_readpnminit(fin, &cols, &rows, &maxval, &format);
+    ifP = pm_openr(cmdline.inputFilename);
+    ofP = pm_openw(cmdline.outputFilename);
+
+    pnm_readpnminit(ifP, &cols, &rows, &maxval, &format);
 
     if (PNM_FORMAT_TYPE(format) != PGM_TYPE &&
-        PNM_FORMAT_TYPE(format) != PBM_TYPE)
+        PNM_FORMAT_TYPE(format) != PBM_TYPE) {
         pm_error("This program accepts PBM and PGM input only.  "
                  "Try Ppmtopgm.");
+    }
 
     planes = pm_maxvaltobits(maxval);
 
@@ -377,91 +453,74 @@ main(int argc, char **argv) {
        so must be a power of 2 minus 1
     */
 
-    if ((1UL << planes)-1 != maxval)
+    if ((1UL << planes)-1 != maxval) {
         pm_error("Input image has unacceptable maxval: %d.  JBIG files must "
                  "have a maxval which is a power of 2 minus 1.  Use "
-                 "Ppmdepth to adjust the image's maxval", maxval);
+                 "'pamdepth' to adjust the image's maxval", maxval);
+    }
 
     bpp = (planes + 7) / 8;
 
-    if (encode_planes < 0 || encode_planes > planes)
-        encode_planes = planes;
+    encodePlanes = cmdline.planesSpec ? MIN(cmdline.planes, planes) : planes;
 
     if (bpp == 1 && PNM_FORMAT_TYPE(format) == PBM_TYPE)
-        readPbm(fin, cols, rows, &bitmap);
+        readPbm(ifP, cols, rows, &bitmap);
     else
-        readPnm(fin, cols, rows, maxval, format, bpp,
-                planes, encode_planes, use_graycode,
+        readPnm(ifP, cols, rows, maxval, format, bpp,
+                planes, encodePlanes, !cmdline.binary,
                 &bitmap);
 
     /* Apply JBIG algorithm and write BIE to output file */
 
-  /* initialize parameter struct for JBIG encoder*/
-    jbg_enc_init(&s, cols, rows, encode_planes, bitmap, data_out, fout);
+    /* initialize parameter struct for JBIG encoder*/
+    jbg_enc_init(&s, cols, rows, encodePlanes, bitmap, dataOut, ofP);
 
-    /* Select number of resolution layers either directly or based
-   * on a given maximum size for the lowest resolution layer */
-    if (d >= 0)
-        jbg_enc_layers(&s, d);
+    /* Select number of resolution layers either directly or based on a given
+       maximum size for the lowest resolution layer
+    */
+    if (cmdline.singlelayer)
+        jbg_enc_layers(&s, 0);
+    else if (cmdline.differentialSpec)
+        jbg_enc_layers(&s, cmdline.differential);
     else
-        jbg_enc_lrlmax(&s, mwidth, mheight);
+        jbg_enc_lrlmax(&s, cmdline.width, cmdline.height);
 
-  /* Specify a few other options (each is ignored if negative) */
-    if (delay_at)
+    if (cmdline.algorithmSpec)
+        options = cmdline.algorithm;
+    else
+        options = JBG_TPDON | JBG_TPBON | JBG_DPON;
+
+    if (cmdline.annexc)
         options |= JBG_DELAY_AT;
-    jbg_enc_lrange(&s, dl, dh);
-    jbg_enc_options(&s, order, options, l0, mx, -1);
 
-  /* now encode everything and send it to data_out() */
+    jbg_enc_lrange(&s, cmdline.lowestlayerSpec ? cmdline.lowestlayer : -1,
+                   cmdline.highestlayerSpec ? cmdline.highestlayer : -1);
+
+    if (cmdline.orderSpec)
+        jbg_enc_set_order(&s, cmdline.order);
+
+    if (cmdline.algorithmSpec)
+        jbg_enc_set_algorithm(&s, cmdline.algorithm);
+
+    if (cmdline.stripesSpec)
+        jbg_enc_set_stripes(&s, cmdline.stripes);
+
+    if (cmdline.maxoffsetSpec)
+        jbg_enc_set_maxoffset(&s, cmdline.maxoffset);
+
     jbg_enc_out(&s);
+        /* Encode everything and send it to dataOut() */
 
-    /* give encoder a chance to free its temporary data structures */
     jbg_enc_free(&s);
 
-    /* check for file errors and close fout */
-    if (ferror(fout) || fclose(fout)) {
-        fprintf(stderr, "Problem while writing output file '%s", fnout);
-        perror("'");
-        exit(1);
+    if (ferror(ofP)) {
+        pm_error("Problem while writing output file '%s'.  %s",
+                 cmdline.outputFilename, strerror(errno));
     }
+    pm_close(ofP);
 
-    /* In case the user wants to know all the gory details ... */
-    if (verbose) {
-        fprintf(stderr, "Information about the created JBIG bi-level image entity "
-                "(BIE):\n\n");
-        fprintf(stderr, "              input image size: %ld x %ld pixel\n",
-                s.xd, s.yd);
-        fprintf(stderr, "                    bit planes: %d\n", s.planes);
-        if (s.planes > 1)
-            fprintf(stderr, "                      encoding: %s code, MSB first\n",
-                    use_graycode ? "Gray" : "binary");
-        fprintf(stderr, "                       stripes: %ld\n", s.stripes);
-        fprintf(stderr, "   lines per stripe in layer 0: %ld\n", s.l0);
-        fprintf(stderr, "  total number of diff. layers: %d\n", s.d);
-        fprintf(stderr, "           lowest layer in BIE: %d\n", s.dl);
-        fprintf(stderr, "          highest layer in BIE: %d\n", s.dh);
-        fprintf(stderr, "             lowest layer size: %lu x %lu pixel\n",
-                jbg_ceil_half(s.xd, s.d - s.dl), jbg_ceil_half(s.yd, s.d - s.dl));
-        fprintf(stderr, "            highest layer size: %lu x %lu pixel\n",
-                jbg_ceil_half(s.xd, s.d - s.dh), jbg_ceil_half(s.yd, s.d - s.dh));
-        fprintf(stderr, "                   option bits:%s%s%s%s%s%s%s\n",
-                s.options & JBG_LRLTWO  ? " LRLTWO" : "",
-                s.options & JBG_VLENGTH ? " VLENGTH" : "",
-                s.options & JBG_TPDON   ? " TPDON" : "",
-                s.options & JBG_TPBON   ? " TPBON" : "",
-                s.options & JBG_DPON    ? " DPON" : "",
-                s.options & JBG_DPPRIV  ? " DPPRIV" : "",
-                s.options & JBG_DPLAST  ? " DPLAST" : "");
-        fprintf(stderr, "                    order bits:%s%s%s%s\n",
-                s.order & JBG_HITOLO ? " HITOLO" : "",
-                s.order & JBG_SEQ    ? " SEQ" : "",
-                s.order & JBG_ILEAVE ? " ILEAVE" : "",
-                s.order & JBG_SMID   ? " SMID" : "");
-        fprintf(stderr, "           AT maximum x-offset: %d\n"
-                "           AT maximum y-offset: %d\n", s.mx, s.my);
-        fprintf(stderr, "         length of output file: %lu byte\n\n",
-                total_length);
-    }
+    if (cmdline.verbose)
+        reportVerbose(s, !cmdline.binary);
 
     return 0;
 }

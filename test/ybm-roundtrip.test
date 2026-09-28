@@ -1,5 +1,5 @@
 #! /bin/sh
-# This script tests: pbmtoybm xbmtopbm
+# This script tests: pbmtoybm ybmtopbm
 # Also requires:
 
 echo "Test.  Should print 281226646 481"

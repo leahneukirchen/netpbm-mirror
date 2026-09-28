@@ -4,19 +4,20 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-26.09.18 BJH  Release 11.15.08
+26.09.28 BJH  Release 11.16.00
 
-              jbigtopnm: fix buffer overrun with ridiculously large input
-              image.  Always broken (jbigtopnm was new in Netpbm 9.2
-              (May 2000)).  Discovered and diagnosed by Tristan Madani.
+              add pamnoise.
 
-              jbigtopnm: fix incorrect output with maxval > 255.  Always
-              broken (jbigtopnm was new in Netpbm 9.2 (May 2000)).
+              pnmtojbig: add long options.
+
+              pnmtojbig: improve error message.
               
-              jbigtopnm: fix invalid memory write when memory allocation
-              fails.  Always broken (jbigtopnm was new in Netpbm 9.2 (May
-              2000)).
-              
+              ppmtoarbtxt: add #(hash) substitution specifier class.
+
+              winicontopam: Improve some informational messages.
+
+              pnmhisteq: improve precision by reducing rounding error.
+
               pnmtojbig: fix incorrect output with PGM input with maxval >
               255.  Always broken (pnmtojbig was new in Netpbm 9.2 (May
               2000)).
@@ -29,6 +30,21 @@ CHANGE HISTORY
               Always broken -- in fact done intentionally for coding
               convenience (picttoppm was in primordial Netpbm in 1988).
               Discovered and diagnosed by Tristan Madani.
+
+              jbigtopnm: fix buffer overrun with ridiculously large input
+              image.  Always broken (jbigtopnm was new in Netpbm 9.2
+              (May 2000)).  Discovered and diagnosed by Tristan Madani.
+
+              jbigtopnm: fix incorrect output with maxval > 255.  Always
+              broken (jbigtopnm was new in Netpbm 9.2 (May 2000)).
+              
+              jbigtopnm: fix invalid memory write when memory allocation
+              fails.  Always broken (jbigtopnm was new in Netpbm 9.2 (May
+              2000)).
+              
+              sgitopnm: fix buffer overrun with corrupted RLE input.  Always
+              broken (sgitopnm was in primordial Netpbm in 1994).  Discovered
+              and diagnosed by Tristan Madani.
 
               tgatoppm: fix buffer overrun with corrupted Targa input.  Fail
               if Targa image contains invalid color index.  Always broken
@@ -45,27 +61,14 @@ CHANGE HISTORY
               in primordial Netpbm in 1994).  Discovered and diagnosed by
               Tristan Madani.
 
-26.09.04 BJH  Release 11.15.07
-
-              sgitopnm: fix buffer overrun with corrupted RLE input.  Always
-              broken (sgitopnm was in primordial Netpbm in 1994).
+              pamtogif: fix spurious memory reference and incorrect output
+              when input image has an alpha channel.  Always broken (pamtogif
+              was new in Netpbm 10.37 (December 2006)).
 
               pamtogif: fix spurious memory reference and incorrect output
               when input image has a nonstandard visual image tuple type.
               Always broken (pamtogif was new in Netpbm 10.37 (December
               2006)).
-
-              pamrecolor: fix bug: uses the same colors on every row when doing
-              random colors.  Broken in Netpbm 10.94 (March 2021).
-
-              build: fix omission of 'pbm_dumpfont' from libnetpbm.  Broken in
-              Netpbm 10.84 (September 2018).
-
-26.08.17 BJH  Release 11.15.06
-
-              pamtogif: fix spurious memory reference and incorrect output
-              when input image has an alpha channel.  Always broken (pamtogif
-              was new in Netpbm 10.37 (December 2006)).
 
               winicontopam: fix incorrect message saying all pixels in the
               transparency map are fully transparent when there is no
@@ -83,27 +86,28 @@ CHANGE HISTORY
               single shade of gray.  Always broken (pgmtexture was in
               primordial Netpbm in 1991).
 
-26.08.03 BJH  Release 11.15.05
+              various: fix literal "\n" in messages.  Introduced in Netpbm
+              11.15 (June 2026).
 
-              pjtoppm: fix crash due to spurious memory access with compressed
-              (mode 1) input.  Always broken (pjtoppm was in primordial
-              Netpbm, 1991).
+              pamrecolor: fix bug: uses the same colors on every row when doing
+              random colors.  Broken in Netpbm 10.94 (March 2021).  Thanks
+              Scott Pakin.
 
-              pjtoppm: fix invalid PPM output when input skips rows.  Always
-              broken (pjtoppm was in primordial Netpbm, 1991).
+              pnmtojbig: fix empty output with default -s option.
+              Introduced in Netpbm 10.67 (June 2014).
 
-              thinkjettopbm: fix failure when input is from Standard Input.
-              Introduced in Netpbm 10.12 (November 2002).
-
-26.07.22 BJH  Release 11.15.04
+              pbmtobrush: fix write to random memory.  Always broken
+              (pbmtobrush was new in Netpbm 11.15, June 2026).
 
               pbmtomda: fix incorrect output (invalid image) with -dscale.
               Always broken (pbmtomda was new in Netpbm 9.1 (May 2000)).
 
+              pbmtomda: add warning if padding or truncating.
+
               mdatopbm: fix failure when height or width of MDA is 2^15 or
               more.  Always broken (mdatopbm was new in Netpbm 9.1 (May 2000)).
 
-26.07.15 BJH  Release 11.15.03
+              mdatopbm: improve error message when input has zero width.
 
               mrftopbm: fix crash with zero width or height in MRF header.
               Always broken (mrftopbm was new in Netpbm 10.18 (March 2009)).
@@ -111,13 +115,14 @@ CHANGE HISTORY
               pjtoppm: fix write to arbitrary memory after a position command.
               Always broken (pjtoppm was in primordial Netpbm, 1991).
 
-26.07.08 BJH  Release 11.15.02
-    
-              pnmtojbig: fix incorrect output with default -s option.
-              Introduced in Netpbm 10.67 (June 2014).
+              pjtoppm: fix invalid PPM output when input skips rows.  Always
+              broken (pjtoppm was in primordial Netpbm, 1991).
 
-              pbmtobrush: fix write to random memory.  Always broken
-              (pbmtobrush was new in Netpbm 11.15, June 2026).
+              pjtoppm: fix various bugs noticed in reading code.  Always
+              broken (pjtoppm was in primordial Netpbm, 1991).
+
+              thinkjettopbm: fix failure when input is from Standard Input.
+              Introduced in Netpbm 10.12 (November 2002).
 
               lispmtopgm: fix too-dim output (because maxval is too big).
               Always broken (lispmtopgm was in primordial Netpbm).
@@ -125,10 +130,8 @@ CHANGE HISTORY
               lispmtopgm: fix incorrect output when width not a multiple of
               32.  Always broken (lispmtopgm was in primordial Netpbm).
 
-26.06.28 BJH  Release 11.15.01
-
-              various: fix literal "\n" in messages.  Introduced in Netpbm
-              11.15.00 (June 2026).
+              build: fix omission of 'pbm_dumpfont' from libnetpbm.  Broken in
+              Netpbm 10.84 (September 2018).
 
 26.06.27 BJH  Release 11.15.00
 
@@ -142,6 +145,10 @@ CHANGE HISTORY
 
               pbmtopgm: fix incorrect output with absurdly large convolution
               kernel.
+
+              imgtoppm: fix write to arbitrary memory with invalid input
+              (excessively long variable length field).  Always broken
+              (imgtoppm was in primordial Netpbm).
 
               ppmtopict: fix incorrect output with oversize input image.
 
@@ -241,8 +248,8 @@ CHANGE HISTORY
               9.6, July 2000).
 
               pnmtofiasco: fix bug: infinite loop with multiple tiles.
-              Always broken (program was new in Netpbm 9.6, July 2000),
-              but made functional by bug fix in 11.10 (March 2025).
+              Always broken (program was new in Netpbm 9.6, July 2000)
+              but made functional by fix above.
 
               pnmtofiasco: fix bug: does wrong level of optimization
               Introduced in Netpbm 11.05 (December 2023).
@@ -1054,6 +1061,8 @@ CHANGE HISTORY
               (Pamrubber was new in Netpbm 10.54 (March 2011)).
 
 19.09.28 BJH  Release 10.88.00
+
+              pbmtolps: Add -linewdith .
 
               pnmquant: Fail if user specifies more than one of -meanpixel,
               -meancolor, and -center, rather than just pick one.
@@ -2471,6 +2480,8 @@ CHANGE HISTORY
 
               pnmcat: set don't care bits in packed PBM output to zero so
               they are predictable.
+
+              pamrecolor: add -randomseed.
 
               libpam, pamcomp: fix bug: treats tuple type GRAYSCALE_ALPHA like
               GRAYSCALE on 32-bit machine.  Actually, looks only at first 4

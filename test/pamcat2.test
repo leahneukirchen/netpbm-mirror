@@ -1,6 +1,6 @@
 #! /bin/sh
 # This script tests: pamcat
-# Also requires: pbmmake pamflip
+# Also requires: pbmmake pamflip ppmmake
 
 tmpdir=${tmpdir:-/tmp}
 dotw_pbm=${tmpdir}/dotw.pbm

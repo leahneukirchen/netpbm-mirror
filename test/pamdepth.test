@@ -26,5 +26,6 @@ echo "Test Invalid"
 
 . ./test-invalid.inc
 
+invCmd "pamdepth 255 /dev/null"
 invCmd "pamdepth 0 testgrid.pbm"
 invCmd "pamdepth 65536 testimg.ppm"

@@ -24,6 +24,8 @@ echo "Test Invalid"
 
 . ./test-invalid.inc
 
+invCmd "pamfile /dev/null"
+invCmd "pamfile rgbt.txt"
 invCmd "pamfile -size -machine  testimg.ppm"
 invCmd "pamfile -count -machine testimg.ppm"
 

@@ -44,3 +44,5 @@ Test 4. Should print 1475247910 3432 twice
 Test 5. Should print 2347274358 101825 twice
 2347274358 101825
 2347274358 101825
+Test Invalid
+Expected failure 1 (no output)

@@ -3493,117 +3493,137 @@ polySort(int const sort_index, struct Point points[]) {
 
 
 
-/* Watch out for the lack of error checking in the next two functions ... */
+static int
+sign(int const arg) {
+    return arg > 0 ? 1 : arg == 0 ? 0 : -1;
+}
+
+
+
+static void
+fillPolygon(const struct Point * const coord,
+            unsigned int         const coordCt,
+            struct Canvas *      const canvasP) {
+
+    unsigned int toggle;
+    unsigned int i;
+
+    for (i = 0, toggle = 0; i < coordCt; ++i) {
+        if ((coord[i].y == coord[i+1].y) && (toggle == 0)) {
+            unsigned int j;
+            for (j = coord[i].x; j <= coord[i+1].x; ++j)
+                drawPen(canvasP, j, coord[i].y);
+            toggle = 1;
+        } else
+            toggle = 0;
+    }
+}
+
+
 
 static void
 scanPoly(struct Canvas * const canvasP,
-         int             const np,
-         struct Point          pts[]) {
+         unsigned int    const np,
+         struct Point    const pts[]) {
 
-  int dx,dy,dxabs,dyabs,i,scan_index,j,k,px,py;
-  int sdx,sdy,x,y,toggle,old_sdy,sy0;
+    int scanIndex;
+    int px,py;
+    int sdx,sdy;
+    int oldSdy;
+    int sy0;
+    unsigned int j;
 
-  /* This array needs to be at least as large as the largest dimension of
-     the bounding box of the poly (but I don't check for overflows ...) */
-  struct Point coord[5000];
+    /* This array needs to be at least as large as the largest dimension of
+       the bounding box of the polygon)
+    */
+    struct Point coord[5000];
 
-  scan_index = 0;
+    scanIndex = 0;  /* initial value */
 
-  /* close polygon */
-  px = pts[np].x = pts[0].x;
-  py = pts[np].y = pts[0].y;
+    px = pts[0].x;
+    py = pts[0].y;
 
-  /*  This section draws the polygon and stores all the line points
-   *  in an array. This doesn't work for concave or non-simple polys.
-   */
-  /* are y levels same for first and second points? */
-  if (pts[1].y == pts[0].y) {
-    coord[scan_index].x = px;
-    coord[scan_index].y = py;
-    scan_index++;
-  }
-
-#define sign(x) ((x) > 0 ? 1 : ((x)==0 ? 0:(-1)) )
-
-  old_sdy = sy0 = sign(pts[1].y - pts[0].y);
-  for (j=0; j<np; j++) {
-    /* x,y difference between consecutive points and their signs  */
-    dx = pts[j+1].x - pts[j].x;
-    dy = pts[j+1].y - pts[j].y;
-    sdx = SGN(dx);
-    sdy = SGN(dy);
-    dxabs = abs(dx);
-    dyabs = abs(dy);
-    x = y = 0;
-
-    if (dxabs >= dyabs)
-      {
-    for (k=0; k < dxabs; k++) {
-      y += dyabs;
-      if (y >= dxabs) {
-        y -= dxabs;
-        py += sdy;
-        if (old_sdy != sdy) {
-          old_sdy = sdy;
-          scan_index--;
-        }
-        if (scan_index >= ARRAY_SIZE(coord)) {
-            pm_error("Too many points in polygon.  "
-                     "We can process at most %lu",
-                     ARRAY_SIZE(coord));
-        }
-        coord[scan_index].x = px+sdx;
-        coord[scan_index].y = py;
-        scan_index++;
-      }
-      px += sdx;
-      drawPen(canvasP, px, py);
+    /*  This section draws the polygon and stores all the line points
+     *  in an array. This doesn't work for concave or non-simple polys.
+     */
+    /* are y levels same for first and second points? */
+    if (pts[1].y == pts[0].y) {
+        coord[scanIndex].x = px;
+        coord[scanIndex].y = py;
+        ++scanIndex;
     }
-      }
-    else
-      {
-    for (k=0; k < dyabs; k++) {
-      x += dxabs;
-      if (x >= dyabs) {
-        x -= dyabs;
-        px += sdx;
-      }
-      py += sdy;
-      if (old_sdy != sdy) {
-        old_sdy = sdy;
-        if (sdy != 0) scan_index--;
-      }
-      drawPen(canvasP, px,py);
-      if (scan_index >= ARRAY_SIZE(coord)) {
-          pm_error("Too many points in polygon.  "
-                   "We can process at most %lu",
-                   ARRAY_SIZE(coord));
-      }
-      coord[scan_index].x = px;
-      coord[scan_index].y = py;
-      scan_index++;
+
+    for (j = 0, sy0 = sign(pts[1].y - pts[0].y), oldSdy = sy0; j < np; ++j) {
+        /* x,y difference between consecutive points and their signs  */
+        int const dx = pts[j+1].x - pts[j].x;
+        int const dy = pts[j+1].y - pts[j].y;
+        int const dxabs = abs(dx);
+        int const dyabs = abs(dy);
+
+        int x, y;
+
+        sdx = SGN(dx);
+        sdy = SGN(dy);
+        x = y = 0;
+
+        if (dxabs >= dyabs) {
+            unsigned int k;
+            for (k = 0; k < dxabs; ++k) {
+                y += dyabs;
+                if (y >= dxabs) {
+                    y -= dxabs;
+                    py += sdy;
+                    if (oldSdy != sdy) {
+                        oldSdy = sdy;
+                        --scanIndex;
+                    }
+                    if (scanIndex >= ARRAY_SIZE(coord)) {
+                        pm_error("Too many points in polygon.  "
+                                 "We can process at most %lu",
+                                 ARRAY_SIZE(coord));
+                    }
+                    coord[scanIndex].x = px+sdx;
+                    coord[scanIndex].y = py;
+                    ++scanIndex;
+                }
+                px += sdx;
+                drawPen(canvasP, px, py);
+            }
+        } else {
+            unsigned int k;
+
+            for (k = 0; k < dyabs; ++k) {
+                x += dxabs;
+                if (x >= dyabs) {
+                    x -= dyabs;
+                    px += sdx;
+                }
+                py += sdy;
+                if (oldSdy != sdy) {
+                    oldSdy = sdy;
+                    if (sdy != 0)
+                        --scanIndex;
+                }
+                if (scanIndex >= ARRAY_SIZE(coord)) {
+                    pm_error("Too many points in polygon.  "
+                             "We can process at most %lu",
+                             ARRAY_SIZE(coord));
+                }
+                coord[scanIndex].x = px;
+                coord[scanIndex].y = py;
+                ++scanIndex;
+                drawPen(canvasP, px,py);
+            }
+        }
     }
-      }
-  }
 
-  /* after polygon has been drawn now fill it */
+    --scanIndex;
+    if (sy0 + sdy == 0)
+        --scanIndex;
 
-  scan_index--;
-  if (sy0 + sdy == 0) scan_index--;
+    polySort(scanIndex, coord);
 
-  polySort(scan_index, coord);
-
-  toggle = 0;
-  for (i = 0; i < scan_index; i++) {
-    if ((coord[i].y == coord[i+1].y) && (toggle == 0))
-      {
-    for (j = coord[i].x; j <= coord[i+1].x; j++)
-      drawPen(canvasP, j, coord[i].y);
-    toggle = 1;
-      }
-    else
-      toggle = 0;
-  }
+    fillPolygon(coord, scanIndex, canvasP);
 }
 
 
@@ -3616,28 +3636,50 @@ paintPoly(FILE *          const ifP,
           BlitList *      const blitListP,
           int             const version) {
 
-  struct Rect bb;
-  struct Point * pts;  /* malloc'ed */
-  int i;
-  unsigned int np;
+    unsigned int const bbSize    = 10;
+    unsigned int const pointSize = 4;
 
-  np = (readWord(ifP) - 10) >> 2;
+    unsigned int size;
 
-  MALLOCARRAY(pts, np);
+    size = readWord(ifP);  /* size of some PICT entity */
 
-  if (!pts)
-      pm_error("Failed to get memory for a polygon of %u points", np);
+    if (size < bbSize) {
+        pm_error("Invalid PICT input: piece is too small to contain the "
+                 "bounding box (%u bytes; need at least %u)",
+                 size, bbSize);
+    } else {
+        struct Rect bb;
+            /* The bounding box from the PICT */
+        struct Point * pts;  /* malloc'ed array */
+            /* The points of the polygon from the PICT */
+        unsigned int np;
+            /* Number of points in the polygon */
 
-  readRect(ifP, &bb);
+        readRect(ifP, &bb);
 
-  for (i = 0; i < np; ++i)
-      readPoint(ifP, &pts[i]);
+        np = (size - bbSize) / pointSize;
 
-  /* scan convert poly ... */
-  if (!blitListP)
-      scanPoly(canvasP, np, pts);
+        MALLOCARRAY(pts, np);
 
-  free(pts);
+        if (!pts)
+            pm_error("Failed to get memory for a polygon of %u points", np);
+        else {
+            unsigned int i;
+
+            for (i = 0; i < np; ++i)
+                readPoint(ifP, &pts[i]);
+
+            /* scan convert poly ... */
+            if (!blitListP) {
+                /* close polygon */
+                pts[np].x = pts[0].x;
+                pts[np].y = pts[0].y;
+
+                scanPoly(canvasP, np, pts);
+            }
+            free(pts);
+        }
+    }
 }
 
 

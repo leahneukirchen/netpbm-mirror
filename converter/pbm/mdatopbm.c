@@ -19,11 +19,12 @@
 
     See the file mdaspec.txt for a specification of the MDA format.
 ******************************************************************************/
-
+#include <assert.h>
 #include <string.h>
 #include <stdio.h>
-#include "pbm.h"
+
 #include "mallocvar.h"
+#include "pbm.h"
 
 /* Simple MDA -> portable bitmap converter */
 
@@ -64,11 +65,11 @@ renderByte(unsigned int   const nInCols,
   As input
 
     *colP = source column
-    *xP  = destination column
-    *yP  = destination row
-    b    = byte to draw
+    *xP   = destination column
+    *yP   = destination row
+    b     = byte to draw
 
-  As output, update *colP, *xP and *yP to point to the next bit of the row.
+  As output, update *colP, *xP and *yP to point to the next bit of the raster.
 -----------------------------------------------------------------------------*/
     int const y3 =  bScale ? *yP * 2 : *yP;
 
@@ -110,6 +111,8 @@ md2Trans(FILE *       const ifP,
     unsigned int x1, y1, col;    /* multiple lines. */
     mdbyte b;
 
+    assert(nInCols > 0);  /* calling requirement */
+
     x1 = y1 = col = 0;
 
     while (y1 < nInRows) {
@@ -143,6 +146,8 @@ md3Trans(FILE *       const ifP,
    Convert MD3 file. MD3 are encoded as rows, and there are three types.
 -----------------------------------------------------------------------------*/
     unsigned int y1;
+
+    assert(nInCols > 0);  /* calling requirement */
 
     for (y1 = 0; y1 < nInRows; ++y1) {
         mdbyte b;
@@ -291,6 +296,9 @@ main(int argc, const char **argv) {
     data = pbm_allocarray(nOutCols, nOutRows);
 
     MALLOCARRAY_NOFAIL(mdrow, nInCols);
+
+    if (nInCols < 1)
+        pm_error("Input image is zero width; we cannot handle that");
 
     if (header[21] == '0')
         md2Trans(ifP, nInRows, nInCols, nOutRows, nOutCols);

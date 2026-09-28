@@ -16,6 +16,7 @@
 #define _BSD_SOURCE 1      /* Make sure strdup() is in string.h */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
+#include <stdbool.h>
 #include <string.h>
 
 #include "pm_c_util.h"
@@ -26,26 +27,24 @@
 
 #define MAXCOLORS 16384
 
-static int mapped, rlencoded;
-
 static pixel ColorMap[MAXCOLORS];
-static gray AlphaMap[MAXCOLORS];
+static gray  AlphaMap[MAXCOLORS];
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *input_filename;
+    const char * inputFilename;
     unsigned int headerdump;
-    const char *alpha_filename;
-    unsigned int alpha_stdout;
+    const char * alphaFilename;
+    bool         alphaStdout;
 };
 
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                   struct cmdlineInfo *cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                   struct CmdlineInfo *cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that many of the strings that this function returns in the
    *cmdlineP structure are actually in the supplied argv array.  And
@@ -64,32 +63,32 @@ parseCommandLine(int argc, char ** argv,
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0, "headerdump", OPT_FLAG,   NULL, &cmdlineP->headerdump,   0);
     OPTENT3(0, "debug",      OPT_FLAG,   NULL, &cmdlineP->headerdump,   0);
-    OPTENT3(0, "alphaout",   OPT_STRING, &cmdlineP->alpha_filename,
+    OPTENT3(0, "alphaout",   OPT_STRING, &cmdlineP->alphaFilename,
             &alpha_spec, 0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc - 1 == 0)
-        cmdlineP->input_filename = "-";  /* he wants stdin */
+        cmdlineP->inputFilename = "-";  /* he wants stdin */
     else if (argc - 1 == 1)
-        cmdlineP->input_filename = strdup(argv[1]);
+        cmdlineP->inputFilename = strdup(argv[1]);
     else
         pm_error("Too many arguments.  The only argument accepted "
                  "is the input file specification");
 
     if (alpha_spec &&
-        streq(cmdlineP->alpha_filename, "-"))
-        cmdlineP->alpha_stdout = 1;
+        streq(cmdlineP->alphaFilename, "-"))
+        cmdlineP->alphaStdout = true;
     else
-        cmdlineP->alpha_stdout = 0;
+        cmdlineP->alphaStdout = false;
 
     if (!alpha_spec)
-        cmdlineP->alpha_filename = NULL;
+        cmdlineP->alphaFilename = NULL;
 }
 
 
@@ -99,10 +98,102 @@ getbyte(FILE * const ifP) {
 
     unsigned char c;
 
-    if ( fread( (char*) &c, 1, 1, ifP ) != 1 )
-        pm_error( "EOF / read error" );
+    if (fread((char*) &c, 1, 1, ifP) != 1)
+        pm_error("EOF / read error");
 
     return c;
+}
+
+
+
+static void
+interpretTgaHeader(struct ImageHeader const tgaHead,
+                   unsigned int *     const rowsP,
+                   unsigned int *     const colsP,
+                   bool *             const mappedP,
+                   pixval *           const maxvalP,
+                   bool *             const rlencodedP,
+                   unsigned int *     const firstColormapIndexP,
+                   unsigned int *     const colormapLengthP) {
+
+    *rowsP = ((unsigned int) tgaHead.Height_lo) +
+        ((unsigned int) tgaHead.Height_hi) * 256;
+    *colsP = ((unsigned int) tgaHead.Width_lo)  +
+        ((unsigned int) tgaHead.Width_hi)  * 256;
+
+    switch (tgaHead.ImgType) {
+    case TGA_Map:
+    case TGA_RGB:
+    case TGA_Mono:
+    case TGA_RLEMap:
+    case TGA_RLERGB:
+    case TGA_RLEMono:
+        break;
+    case TGA_CompMap:
+    case TGA_CompMap4:
+        pm_error("Targa image type %d (compressed color-mapped data). "
+                 "Cannot handle this format.", tgaHead.ImgType);
+        break;
+    default:
+        pm_error("unknown Targa image type %d", tgaHead.ImgType);
+    }
+
+    if (tgaHead.ImgType == TGA_Map ||
+        tgaHead.ImgType == TGA_RLEMap ||
+        tgaHead.ImgType == TGA_CompMap ||
+        tgaHead.ImgType == TGA_CompMap4) {
+
+        /* Color-mapped image */
+
+        if (tgaHead.CoMapType != 1)
+            pm_error(
+                "mapped image (type %d) with color map type != 1",
+                tgaHead.ImgType );
+        *mappedP = true;
+        /* Figure maxval from CoSize. */
+        switch (tgaHead.CoSize) {
+        case 8:
+        case 24:
+        case 32:
+            *maxvalP = 255;
+            break;
+
+        case 15:
+        case 16:
+            *maxvalP = 31;
+            break;
+
+        default:
+            pm_error(
+                "unknown colormap pixel size - %d", tgaHead.CoSize );
+        }
+    } else {
+        /* Not colormap, so figure maxval from PixelSize. */
+        *mappedP = false;
+        switch (tgaHead.PixelSize) {
+        case 8:
+        case 24:
+        case 32:
+            *maxvalP = 255;
+            break;
+
+        case 15:
+        case 16:
+            *maxvalP = 31;
+            break;
+
+        default:
+            pm_error("unknown pixel size - %d", tgaHead.PixelSize);
+        }
+    }
+    *rlencodedP =
+        tgaHead.ImgType == TGA_RLEMap ||
+        tgaHead.ImgType == TGA_RLERGB ||
+        tgaHead.ImgType == TGA_RLEMono
+        ;
+
+    *firstColormapIndexP = tgaHead.Index_hi  * 256 + tgaHead.Index_lo;
+    *colormapLengthP     = tgaHead.Length_hi * 256 + tgaHead.Length_lo;
 }
 
 
@@ -113,6 +204,7 @@ static int RLE_count = 0, RLE_flag = 0;
 
 static void
 handleRun(FILE * const ifP,
+          bool   const rlencoded,
           bool * const repeatP) {
 
     if (rlencoded) {
@@ -147,21 +239,22 @@ handleRun(FILE * const ifP,
 
 
 static void
-getPixel(FILE *  const ifP,
-         pixel * const dest,
-         int     const size,
+getPixel(FILE *       const ifP,
+         pixel *      const colorP,
+         unsigned int const size,
+         bool         const rlencoded,
+         bool         const mapped,
          unsigned int const firstColormapIndex,
          unsigned int const colormapLength,
-         gray *  const alphaP) {
+         gray *       const alphaP) {
 
     static pixval red, grn, blu;
     static pixval alpha;
     static unsigned int l;
-    unsigned char j, k;
     bool repeat;
         /* Next pixel is just a repeat (from an encoded run) */
 
-    handleRun(ifP, &repeat);
+    handleRun(ifP, rlencoded, &repeat);
 
     if (repeat) {
         /* Use red, grn, blu, alpha, and l from prior call to getPixel */
@@ -174,7 +267,8 @@ getPixel(FILE *  const ifP,
             break;
 
         case 16:            /* 5 bits each of red green and blue. */
-        case 15:            /* Watch byte order. */
+        case 15: {           /* Watch byte order. */
+            unsigned char j, k;
             j = getbyte(ifP);
             k = getbyte(ifP);
             l = ((unsigned int)k << 8) + j;
@@ -182,7 +276,7 @@ getPixel(FILE *  const ifP,
             grn = ((k & 0x03) << 3) + ((j & 0xE0) >> 5);
             blu = j & 0x1F;
             alpha = 0;
-            break;
+        } break;
 
         case 32:            /* 8 bits each of blue, green, red, and alpha */
         case 24:            /* 8 bits each of blue, green, and red. */
@@ -197,7 +291,7 @@ getPixel(FILE *  const ifP,
             break;
 
         default:
-            pm_error("unknown pixel size (#2) - %d", size);
+            pm_error("unknown pixel size (#2) - %u", size);
         }
     }
     if (mapped) {
@@ -205,10 +299,10 @@ getPixel(FILE *  const ifP,
             pm_error("Invalid color index %u in raster.  Colormap maps "
                      "%u colors starting with index %u",
                      l, colormapLength, firstColormapIndex);
-        *dest = ColorMap[l];
+        *colorP = ColorMap[l];
         *alphaP = AlphaMap[l];
     } else {
-        PPM_ASSIGN(*dest, red, grn, blu);
+        PPM_ASSIGN(*colorP, red, grn, blu);
         *alphaP = alpha;
     }
 }
@@ -216,42 +310,45 @@ getPixel(FILE *  const ifP,
 
 
 static void
-readtga(FILE * const ifP, struct ImageHeader * tgaP) {
+readTgaHeader(FILE *               const ifP,
+              struct ImageHeader * const tgaP) {
 
     unsigned char flags;
-    ImageIDField junk;
 
-    tgaP->IdLength = getbyte( ifP );
-    tgaP->CoMapType = getbyte( ifP );
-    tgaP->ImgType = getbyte( ifP );
-    tgaP->Index_lo = getbyte( ifP );
-    tgaP->Index_hi = getbyte( ifP );
-    tgaP->Length_lo = getbyte( ifP );
-    tgaP->Length_hi = getbyte( ifP );
-    tgaP->CoSize = getbyte( ifP );
-    tgaP->X_org_lo = getbyte( ifP );
-    tgaP->X_org_hi = getbyte( ifP );
-    tgaP->Y_org_lo = getbyte( ifP );
-    tgaP->Y_org_hi = getbyte( ifP );
-    tgaP->Width_lo = getbyte( ifP );
-    tgaP->Width_hi = getbyte( ifP );
-    tgaP->Height_lo = getbyte( ifP );
-    tgaP->Height_hi = getbyte( ifP );
-    tgaP->PixelSize = getbyte( ifP );
-    flags = getbyte( ifP );
+    tgaP->IdLength  = getbyte(ifP);
+    tgaP->CoMapType = getbyte(ifP);
+    tgaP->ImgType   = getbyte(ifP);
+    tgaP->Index_lo  = getbyte(ifP);
+    tgaP->Index_hi  = getbyte(ifP);
+    tgaP->Length_lo = getbyte(ifP);
+    tgaP->Length_hi = getbyte(ifP);
+    tgaP->CoSize    = getbyte(ifP);
+    tgaP->X_org_lo  = getbyte(ifP);
+    tgaP->X_org_hi  = getbyte(ifP);
+    tgaP->Y_org_lo  = getbyte(ifP);
+    tgaP->Y_org_hi  = getbyte(ifP);
+    tgaP->Width_lo  = getbyte(ifP);
+    tgaP->Width_hi  = getbyte(ifP);
+    tgaP->Height_lo = getbyte(ifP);
+    tgaP->Height_hi = getbyte(ifP);
+    tgaP->PixelSize = getbyte(ifP);
+    flags           = getbyte(ifP);
+
     tgaP->AttBits = flags & 0xf;
-    tgaP->Rsrvd = ( flags & 0x10 ) >> 4;
-    tgaP->OrgBit = ( flags & 0x20 ) >> 5;
-    tgaP->IntrLve = ( flags & 0xc0 ) >> 6;
+    tgaP->Rsrvd   = (flags & 0x10) >> 4;
+    tgaP->OrgBit  = (flags & 0x20) >> 5;
+    tgaP->IntrLve = (flags & 0xc0) >> 6;
 
-    if ( tgaP->IdLength != 0 )
-        fread( junk, 1, (int) tgaP->IdLength, ifP );
+    if (tgaP->IdLength != 0) {
+        ImageIDField junk;
+        fread(junk, 1, (int) tgaP->IdLength, ifP);
+    }
 }
 
 
 
 static void
-get_map_entry(FILE * const ifP, pixel * Value, int Size, gray * Alpha) {
+getMapEntry(FILE * const ifP, pixel * Value, int Size, gray * Alpha) {
 
     unsigned char j, k, r, g, b, a;
 
@@ -332,174 +429,152 @@ dumpHeader(struct ImageHeader const tga_head) {
 
 
 
-int
-main(int argc, char * argv[]) {
+static void
+readColormap(FILE *       const ifP,
+             unsigned int const firstColormapIndex,
+             unsigned int const colormapLength,
+             unsigned int const coSize,
+             pixel *      const colorMap,
+             gray *       const alphaMap) {
 
-    struct cmdlineInfo cmdline;
-    struct ImageHeader tga_head;
-    FILE* ifP;
-    FILE *imageout_file, *alpha_file;
-    int rows, cols, row, realrow, truerow, baserow;
-    int maxval;
-    unsigned int firstColormapIndex;
-    unsigned int colormapLength;
-    pixel** pixels;   /* The image array in ppm format */
-    gray** alpha;     /* The alpha channel array in pgm format */
+    unsigned int const colormapEnd = firstColormapIndex + colormapLength;
 
-    ppm_init(&argc, argv);
+    unsigned int i;
 
-    parseCommandLine(argc, argv, &cmdline);
+    if (colormapEnd > MAXCOLORS)
+        pm_error("too many colors - %u.  Max we can handle is %u",
+                 colormapEnd, MAXCOLORS);
 
-    ifP = pm_openr(cmdline.input_filename);
+    for (i = firstColormapIndex; i < colormapEnd; ++i)
+        getMapEntry(ifP, &ColorMap[i], coSize, &AlphaMap[i]);
+}
 
-    if (cmdline.alpha_stdout)
-        alpha_file = stdout;
-    else if (cmdline.alpha_filename == NULL)
-        alpha_file = NULL;
-    else
-        alpha_file = pm_openw(cmdline.alpha_filename);
 
-    if (cmdline.alpha_stdout)
-        imageout_file = NULL;
-    else
-        imageout_file = stdout;
 
-    /* Read the Targa file header. */
-    readtga(ifP, &tga_head);
+static void
+readRaster(FILE *        const ifP,
+           unsigned int  const cols,
+           unsigned int  const rows,
+           unsigned int  const pixelSize,
+           unsigned char const intrLve,
+           unsigned char const orgBit,
+           bool          const rlencoded,
+           bool          const mapped,
+           unsigned int  const firstColormapIndex,
+           unsigned int  const colormapLength,
+           pixel ***     const pixelsP,
+           gray ***      const alphaP) {
+/*---------a-------------------------------------------------------------------
+  Read the Targa file body and convert to portable format.
 
-    if (cmdline.headerdump)
-        dumpHeader(tga_head);
+  Return the color raster and alpha raster in newly malloced arrays
+  *pixelsP, and *alphaP, respectively.
+-----------------------------------------------------------------------------*/
+    pixel ** pixels;
+    gray **  alpha;
+    unsigned int row, truerow, baserow;
 
-    rows = ((int) tga_head.Height_lo) + ((int) tga_head.Height_hi) * 256;
-    cols = ((int) tga_head.Width_lo)  + ((int) tga_head.Width_hi)  * 256;
+    pixels = ppm_allocarray(cols, rows);
+    alpha  = pgm_allocarray(cols, rows);
 
-    switch (tga_head.ImgType) {
-    case TGA_Map:
-    case TGA_RGB:
-    case TGA_Mono:
-    case TGA_RLEMap:
-    case TGA_RLERGB:
-    case TGA_RLEMono:
-        break;
-    case TGA_CompMap:
-    case TGA_CompMap4:
-        pm_error("Targa image type %d (compressed color-mapped data). "
-                 "Cannot handle this format.", tga_head.ImgType);
-        break;
-    default:
-        pm_error("unknown Targa image type %d", tga_head.ImgType);
-    }
+    for (row = 0, truerow = 0, baserow = 0; row < rows; ++row) {
+        unsigned int const realrow =
+            orgBit == 0 ? rows - truerow - 1 : truerow;
 
-    if (tga_head.ImgType == TGA_Map ||
-        tga_head.ImgType == TGA_RLEMap ||
-        tga_head.ImgType == TGA_CompMap ||
-        tga_head.ImgType == TGA_CompMap4)
-    { /* Color-mapped image */
-        if (tga_head.CoMapType != 1)
-            pm_error(
-                "mapped image (type %d) with color map type != 1",
-                tga_head.ImgType );
-        mapped = true;
-        /* Figure maxval from CoSize. */
-        switch (tga_head.CoSize) {
-        case 8:
-        case 24:
-        case 32:
-            maxval = 255;
-            break;
-
-        case 15:
-        case 16:
-            maxval = 31;
-            break;
-
-        default:
-        pm_error(
-        "unknown colormap pixel size - %d", tga_head.CoSize );
-        }
-    } else {
-        /* Not colormap, so figure maxval from PixelSize. */
-        mapped = false;
-        switch ( tga_head.PixelSize ) {
-        case 8:
-        case 24:
-        case 32:
-            maxval = 255;
-            break;
-
-        case 15:
-        case 16:
-            maxval = 31;
-            break;
-
-        default:
-            pm_error("unknown pixel size - %d", tga_head.PixelSize);
-        }
-    }
-
-    firstColormapIndex = tga_head.Index_hi  * 256 + tga_head.Index_lo;
-    colormapLength     = tga_head.Length_hi * 256 + tga_head.Length_lo;
-
-    /* If required, read the color map information. */
-    if ( tga_head.CoMapType != 0 ) {
-        unsigned int i;
-
-        if ((firstColormapIndex + colormapLength) > MAXCOLORS)
-            pm_error("too many colors - %u",
-                     firstColormapIndex + colormapLength);
-        for (i = firstColormapIndex;
-             i < firstColormapIndex + colormapLength;
-             ++i)
-            get_map_entry(ifP, &ColorMap[i], (int) tga_head.CoSize,
-                          &AlphaMap[i]);
-    }
-
-    /* Check run-length encoding. */
-    if (tga_head.ImgType == TGA_RLEMap ||
-        tga_head.ImgType == TGA_RLERGB ||
-        tga_head.ImgType == TGA_RLEMono)
-        rlencoded = 1;
-    else
-        rlencoded = 0;
-
-    /* Read the Targa file body and convert to portable format. */
-    pixels = ppm_allocarray( cols, rows );
-    alpha = pgm_allocarray( cols, rows );
-    truerow = 0;
-    baserow = 0;
-    for (row = 0; row < rows; ++row) {
         unsigned int col;
 
-        realrow = truerow;
-        if (tga_head.OrgBit == 0)
-            realrow = rows - realrow - 1;
-
         for (col = 0; col < cols; ++col)
-            getPixel(ifP, &(pixels[realrow][col]), (int) tga_head.PixelSize,
-                     firstColormapIndex, colormapLength,
+            getPixel(ifP, &(pixels[realrow][col]),
+                     pixelSize, rlencoded,
+                     mapped, firstColormapIndex, colormapLength,
                      &(alpha[realrow][col]));
-        if (tga_head.IntrLve == TGA_IL_Four)
+        if (intrLve == TGA_IL_Four)
             truerow += 4;
-        else if (tga_head.IntrLve == TGA_IL_Two)
+        else if (intrLve == TGA_IL_Two)
             truerow += 2;
         else
             ++truerow;
         if (truerow >= rows)
             truerow = ++baserow;
     }
+    *pixelsP = pixels;
+    *alphaP  = alpha;
+}
+
+
+
+int
+main(int argc, const char ** argv) {
+
+    struct CmdlineInfo cmdline;
+    struct ImageHeader tgaHead;
+    FILE * ifP;
+    FILE * ofP;
+    FILE * alphaFP;
+    unsigned int rows, cols;
+    pixval maxval;
+    bool rlencoded;
+    bool mapped;
+    unsigned int firstColormapIndex;
+    unsigned int colormapLength;
+    pixel ** pixels;   /* The image array in ppm format */
+    gray ** alpha;     /* The alpha channel array in pgm format */
+
+    pm_proginit(&argc, argv);
+
+    parseCommandLine(argc, argv, &cmdline);
+
+    ifP = pm_openr(cmdline.inputFilename);
+
+    if (cmdline.alphaStdout)
+        alphaFP = stdout;
+    else if (cmdline.alphaFilename == NULL)
+        alphaFP = NULL;
+    else
+        alphaFP = pm_openw(cmdline.alphaFilename);
+
+    if (cmdline.alphaStdout)
+        ofP = NULL;
+    else
+        ofP = stdout;
+
+    readTgaHeader(ifP, &tgaHead);
+
+    if (cmdline.headerdump)
+        dumpHeader(tgaHead);
+
+    interpretTgaHeader(tgaHead, &rows, &cols, &mapped, &maxval, &rlencoded,
+                       &firstColormapIndex, &colormapLength);
+
+    if (tgaHead.CoMapType != 0) {
+        /* There's a color map.  Read it */
+        readColormap(ifP, firstColormapIndex, colormapLength, tgaHead.CoSize,
+                     ColorMap, AlphaMap);
+    }
+
+    readRaster(ifP, cols, rows,
+               tgaHead.PixelSize, tgaHead.IntrLve, tgaHead.OrgBit,
+               rlencoded,
+               mapped, firstColormapIndex, colormapLength,
+               &pixels, &alpha);
+
     pm_close(ifP);
 
-    if (imageout_file)
-        ppm_writeppm(imageout_file, pixels, cols, rows, (pixval) maxval, 0);
-    if (alpha_file)
-        pgm_writepgm(alpha_file, alpha, cols, rows, (pixval) maxval, 0);
-    if (imageout_file)
-        pm_close(imageout_file);
-    if (alpha_file)
-        pm_close(alpha_file);
+    if (ofP)
+        ppm_writeppm(ofP, pixels, cols, rows, maxval, 0);
+
+    if (alphaFP)
+        pgm_writepgm(alphaFP, alpha, cols, rows, maxval, 0);
+
+    pgm_freearray(alpha,  rows);
+    ppm_freearray(pixels, rows);
+
+    if (ofP)
+        pm_close(ofP);
+    if (alphaFP)
+        pm_close(alphaFP);
 
     return 0;
 }
-
 
 

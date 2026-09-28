@@ -1,23 +1,26 @@
-Test 1. Should print: 3705777303 101484
-3705777303 101484
-Test 2. Should print: 202790723 685
-202790723 685
+Test 1. Should print: 3587889425 101484
+3587889425 101484
+Test 2. Should print: 641565168 685
+641565168 685
 Test 3. Should print: 0 0 : 0
 0 0 : 0
-Test 4.  Should print: 0 0 : 0
+Test 4. Should print: 0 0 : 0
 0 0 : 0
-Test 5. (1) Should print: 1 twice
+Test 5.1 Should print: 1 twice
 1
 1
-Test 5. (15) Should print: 1 twice
+Test 5.15 Should print: 1 twice
 1
 1
-Test 5. (16) Should print: 1 twice
+Test 5.16 Should print: 1 twice
 1
 1
-Test 5. (20) Should print: 1 twice
+Test 5.20 Should print: 1 twice
 1
 1
-Test 5. (1000) Should print: 1 twice
+Test 5.1000 Should print: 1 twice
 1
 1
+Test Invalid.
+Expected failure 1 (no output)
+Expected failure 2 (no output)

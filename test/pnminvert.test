@@ -19,3 +19,11 @@ pbmmake -b 7 7 | pnminvert | pnminvert | cksum
 
 echo "Test 7.  Should print 2896726098 15"
 pbmmake -g 8 8 | pnminvert | cksum
+
+echo "Test Invalid"
+
+. ${srcdir}/test-invalid.inc
+
+# Empty input
+invCmd "pnminvert /dev/null"
+

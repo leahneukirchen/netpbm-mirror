@@ -1,8 +1,4 @@
-/* pgmtexture.c - calculate textural features of a PGM image
-**
-
-
-*/
+/* pgmtexture.c - calculate textural features of a PGM image */
 
 #include <assert.h>
 #include <math.h>
@@ -48,6 +44,8 @@ parseCommandLine(int argc, const char ** const argv,
 
     pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    free(option_def);
 
     if (!dSpec)
         cmdlineP->d = 1;

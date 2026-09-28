@@ -200,13 +200,16 @@ echo "Test Invalid"
 
 . ./test-invalid.inc
 
+# empty input file
+invCmd 'pamcut -left=1 -right=1 /dev/null'
+
 # overspecification
-invCmd 'pamcut -left=1 -right=1 -width=14 testgrid.pbm"
-invCmd 'pamcut -top=1 -bottom=1 -height=16 testgrid.pbm"
-invCmd 'pamcut -right=1 -cropright=1 testgrid.pbm"
-invCmd 'pamcut -top=1 -croptop=1 testgrid.pbm"
-invCmd 'pamcut -bottom=1 -cropbottom=1 testgrid.pbm"
-invCmd 'pamcut -left=1 -cropleft=1 testgrid.pbm"
+invCmd 'pamcut -left=1 -right=1 -width=14 testgrid.pbm'
+invCmd 'pamcut -top=1 -bottom=1 -height=16 testgrid.pbm'
+invCmd 'pamcut -right=1 -cropright=1 testgrid.pbm'
+invCmd 'pamcut -top=1 -croptop=1 testgrid.pbm'
+invCmd 'pamcut -bottom=1 -cropbottom=1 testgrid.pbm'
+invCmd 'pamcut -left=1 -cropleft=1 testgrid.pbm'
 
 # excessive amounts
 invCmd 'pamcut -cropleft=14 testgrid.pbm'

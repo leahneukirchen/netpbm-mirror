@@ -53,3 +53,12 @@ ppmhist -sort=rgb -noheader ${changed_ppm}
 
 
 rm ${rainbow_ppm} ${changed_ppm}
+
+echo "Test Invalid"
+
+. ./test-invalid.inc
+
+invCmd "ppmchange black white /dev/null"
+invCmd "ppmchange black white -closeness=-1  testgrid.pbm"
+invCmd "ppmchange black white -closeness=150 testgrid.pbm"
+invCmd "ppmchange black white -remainder=offcolor testgrid.pbm"

@@ -27,7 +27,7 @@ for type in -sum -min -max -mean
 echo "Test Invalid"
 
 . ./test-invalid.inc
-
+invCmd "pamsumm -mean /dev/null"
 invCmd "pamsumm -sum -min  testimg.ppm"
 invCmd "pamsumm -sum -max  testimg.ppm"
 invCmd "pamsumm -mean -max testimg.ppm"

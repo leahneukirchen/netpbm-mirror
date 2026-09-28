@@ -29,6 +29,10 @@ echo "Test Invalid"
 
 . ./test-invalid.inc
 
+invCmd "pnmpsnr /dev/null /dev/null"
+invCmd "pnmpsnr /dev/null testimg.ppm"
+invCmd "pnmpsnr testgrid.pbm testimg.ppm"
+invCmd "pnmpsnr testgrid.pbm maze.pbm"
 invCmd "pnmpsnr ${b_pbm} ${w_pbm} ${b_pbm}    "
 invCmd "pnmpsnr ${b_pbm}                      "
 invCmd "pnmpsnr ${b_pbm} ${w_pbm} -target1=100"

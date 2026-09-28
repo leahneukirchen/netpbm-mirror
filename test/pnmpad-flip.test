@@ -1,6 +1,6 @@
 #! /bin/sh
 # This script tests: pnmpad
-# Also requires: pamflip pbmmake pbmnoise pgmnoise ppmpat
+# Also requires: pamflip pbmmake pbmnoise pamnoise ppmpat
 
 # If any of the padding functions is altered, make sure to run this
 # test in a more thorough form.  Try more input images and more
@@ -14,8 +14,8 @@ echo "Test 1.  Should print match sixteen (8x2) times"
 
 d0=1; d1=11; d2=10; d3=5;
 
-for generator in "pbmnoise -randomseed=100 11 16" \
-                 "pgmnoise -randomseed=100 31 41"
+for generator in "pbmnoise -randomseed=8327 11 16" \
+                 "pamnoise -randomseed=8338 -w 31 -h 41 -d 1"
     do
     ${generator} > ${test_pnm}
     echo "("${generator}")"
@@ -41,7 +41,7 @@ echo "Test 2.  Should print match forty (10x4) times"
 for generator in "pbmmake -b 1 1" \
                  "pbmmake -w 1 1" \
                  "pbmmake -g 17 11" \
-                 "ppmpat -argyle1 -randomseed=100 7 8"
+                 "ppmpat -argyle1 -randomseed=8349 7 8"
     do
     ${generator} > ${test_pnm}
     echo "("${generator}")"

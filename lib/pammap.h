@@ -48,25 +48,27 @@ typedef struct tupleint_list_item * tupleint_list;
 typedef tupleint_list * tuplehash;
 
 unsigned int
-pnm_hashtuple(struct pam * const pamP, tuple const tuple);
+pnm_hashtuple(const struct pam * const pamP, tuple const tuple);
 
 void
-pnm_addtotuplehash(struct pam *   const pamP,
-                   tuplehash      const tuplehash,
-                   tuple          const tuple,
-                   int            const value,
-                   int *          const fitsP);
+pnm_addtotuplehash(const struct pam *   const pamP,
+                   tuplehash            const tuplehash,
+                   tuple                const tuple,
+                   int                  const value,
+                   int *                const fitsP);
 
 void
-pnm_addtuplefreqoccurrence(struct pam *   const pamP,
-                           tuple          const value,
-                           tuplehash      const tuplefreqhash,
-                           int *          const firstOccurrenceP);
+pnm_addtuplefreqoccurrence(const struct pam * const pamP,
+                           tuple              const value,
+                           tuplehash          const tuplefreqhash,
+                           int *              const firstOccurrenceP);
 
 void
-pnm_lookuptuple(struct pam * const pamP, const tuplehash tuplehash,
-                const tuple searchval,
-                int * const foundP, int * const retvalP);
+pnm_lookuptuple(const struct pam * const pamP,
+                tuplehash          const tuplehash,
+                tuple              const searchval,
+                int *              const foundP,
+                int *              const retvalP);
 
 tupletable
 pnm_alloctupletable(const struct pam * const pamP, unsigned int const size);

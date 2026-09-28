@@ -9,3 +9,5 @@ P2
 0 0 0 0 0 0 0 0 0 0
 Test 2.  Should print 2582999797 3376
 2582999797 3376
+Test Invalid
+Expected failure 1 (no output)

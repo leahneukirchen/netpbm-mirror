@@ -48,6 +48,8 @@ echo "Test Invalid"
 
 . ./test-invalid.inc
 
+invCmd "pamtable /dev/null"
+
 input1_pam=${tmpdir}/input1.pam
 
 pamseq -tupletype="void" 1 1 > ${input1_pam}

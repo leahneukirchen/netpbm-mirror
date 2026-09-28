@@ -748,6 +748,7 @@ readXorBitfields(struct BitmapInfoHeader * const hdrP,
             uint32_t col;
             for (col = 0; col < hdrP->bm_width; ++col) {
                 uint32_t const pixel = u32_le(bitmapCursor, offset);
+
                 offset += bytesPerSample;
 
                 tuples[row][col][PAM_RED_PLANE] =
@@ -756,11 +757,12 @@ readXorBitfields(struct BitmapInfoHeader * const hdrP,
                 tuples[row][col][PAM_GRN_PLANE] =
                     pnm_scalesample((pixel & bitfields[GRN]) >> shift[GRN],
                                     maxval[GRN], 255);
-                tuples [row][col][PAM_BLU_PLANE]
-                    = pnm_scalesample((pixel & bitfields[BLU]) >> shift[BLU],
-                                      maxval[BLU], 255);
+                tuples[row][col][PAM_BLU_PLANE] =
+                    pnm_scalesample((pixel & bitfields[BLU]) >> shift[BLU],
+                                    maxval[BLU], 255);
 
-                if (bitfields [ALPHA] != 0) {
+                if (bitfields[ALPHA] != 0) {
+                    /* The winicon XOR mask has transparency info */
                     tuples[row][col][PAM_TRN_PLANE]
                         = pnm_scalesample(
                             (pixel & bitfields[ALPHA]) >> shift[ALPHA],
@@ -769,7 +771,7 @@ readXorBitfields(struct BitmapInfoHeader * const hdrP,
                     if (tuples[row][col][PAM_TRN_PLANE] != 0)
                         allTransparent = false;
 
-                    if (tuples [row][col][PAM_TRN_PLANE] != 255)
+                    if (tuples[row][col][PAM_TRN_PLANE] != 255)
                         allOpaque = false;
 
                     alphas[tuples[row][col][PAM_TRN_PLANE]] = !0;
@@ -783,10 +785,10 @@ readXorBitfields(struct BitmapInfoHeader * const hdrP,
     sizeRemaining -= truncatedXorSize;
     bytesConsumed += truncatedXorSize;
 
-    /*  A fully transparent alpha channel (all zero) in XOR mask is
-        defined to be void by Microsoft.
-    */
     if (verbose) {
+        /*  A fully transparent alpha channel (all zero) in XOR mask is
+            defined to be void by Microsoft.
+        */
         if (allTransparent)
             pm_message("image %2u: All pixels are nominally coded in the "
                        "transparency map as fully transparent, "
@@ -1008,11 +1010,16 @@ reportImage(unsigned int            const imageIndex,
         "RGB"
         ;
 
+    const char * const compressionMethod =
+        hdr.compression_method == BI_RGB ? "RGB" :
+        hdr.compression_method == BI_BITFIELDS ? "BITFIELDS" :
+        "<invalid>";
+
     pm_message("image %2u: "
-               "BMP %3u x %3u x %2u (%s)",
+               "BMP %3u x %3u x %2u (%s) compression %s",
                imageIndex,
                hdr.bm_width, hdr.bm_height / 2, hdr.bits_per_pixel,
-               style);
+               style, compressionMethod);
 }
 
 
@@ -1040,7 +1047,7 @@ convertBmp(const unsigned char * const image,
     if ((dirEntryP->width != hdr.bm_width)
         || (dirEntryP->height != hdr.bm_height / 2)) {
         pm_message("image %2u: "
-                   "mismatch in header and image dimensions "
+                   "mismatch in icon directory and actual image dimensions "
                    "(%u x %u vs. %u x %u)",
                    dirEntryP->index,
                    dirEntryP->width,
@@ -1052,7 +1059,7 @@ convertBmp(const unsigned char * const image,
     if ((dirEntryP->bits_per_pixel != 0)
         && (dirEntryP->bits_per_pixel != hdr.bits_per_pixel)) {
         pm_message("image %2u "
-                   "mismatch in header and image bpp value"
+                   "mismatch in icon directory and actual image bpp value "
                    "(%u vs. %u)",
                    dirEntryP->index,
                    dirEntryP->bits_per_pixel,
@@ -1086,8 +1093,11 @@ convertBmp(const unsigned char * const image,
            the transparency plane.  Else, there are two transparency
            maps. If requested, return the AND mask as a fifth PAM plane.
         */
-        bool haveAnd;
+        bool haveAnd;  /* Our output PAM shall have an and mask plane */
         unsigned int andPlane;
+            /* PAM plane number of the and mask.  Meaningful only if 'haveAnd'
+               is true.
+            */
 
         if (!haveAlpha) {
             haveAnd = true;
@@ -1101,7 +1111,7 @@ convertBmp(const unsigned char * const image,
             strcpy(outpam.tuple_type, "RGB_ALPHA_ANDMASK");
         } else {
             haveAnd = false;
-            strcpy (outpam.tuple_type, "RGB_ALPHA");
+            strcpy(outpam.tuple_type, "RGB_ALPHA");
             outpam.depth  = 4;
         }
         if (haveAnd) {

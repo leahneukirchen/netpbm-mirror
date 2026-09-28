@@ -32,3 +32,10 @@ pnmmargin -white 2 | pnmtile 144 120 | pambackground | cksum
 
 # pnmremap -mapfile ${ibmttl_pam} testimg.ppm | cksum
 # should produce : 452672747 101517
+
+
+echo "Test Invalid"
+
+. ./test-invalid.inc
+
+invCmd "pambackground /dev/null"

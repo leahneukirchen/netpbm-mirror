@@ -1,5 +1,5 @@
 Test 1.  Should print match sixteen (8x2) times
-(pbmnoise -randomseed=100 11 16)
+(pbmnoise -randomseed=8327 11 16)
 match
 match
 match
@@ -8,7 +8,7 @@ match
 match
 match
 match
-(pgmnoise -randomseed=100 31 41)
+(pamnoise -randomseed=8338 -w 31 -h 41 -d 1)
 match
 match
 match
@@ -51,7 +51,7 @@ match
 match
 match
 match
-(ppmpat -argyle1 -randomseed=100 7 8)
+(ppmpat -argyle1 -randomseed=8349 7 8)
 match
 match
 match

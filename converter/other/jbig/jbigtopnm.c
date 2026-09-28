@@ -89,11 +89,24 @@ parseCommandLine(int                 argc,
 
 
 static void
-collect_image (unsigned char *data, size_t len, void *image) {
-    static int cursor = 0;
-    int i;
+collectImage(unsigned char * const data,
+             size_t          const len,
+             void *          const image) {
+/*----------------------------------------------------------------------------
+   This is a data-out callback function for libjbig's
+   'jbg_dec_merge_planes'.
 
-    for (i = 0; i < len; i++) {
+   We add the 'len' byts at *data to *image.
+-----------------------------------------------------------------------------*/
+    /* Future improvement: Instead of keeping context in static global
+       variables, we should arrange for our third argument to be a pointer to
+       an object that contains both the output buffer address and its cursor.
+    */
+    static int cursor = 0;
+
+    unsigned int i;
+
+    for (i = 0; i < len; ++i) {
         ((unsigned char *)image)[cursor++] = data[i];
     }
 }
@@ -101,48 +114,55 @@ collect_image (unsigned char *data, size_t len, void *image) {
 
 
 static void
-write_pnm (FILE *fout, const unsigned char * const image, const int bpp,
-           const int rows, const int cols, const int maxval,
-           const int format) {
+writePnm(FILE *                const ofP,
+         const unsigned char * const image,
+         unsigned int          const bpp,
+         unsigned int          const rows,
+         unsigned int          const cols,
+         xelval                const maxval,
+         int                   const format) {
 
-    int row;
-    xel *pnm_row;
+    unsigned int row;
+    xel * xelrow;
 
-    pnm_writepnminit(fout, cols, rows, maxval, format, 0);
+    pnm_writepnminit(ofP, cols, rows, maxval, format, 0);
 
-    pnm_row = pnm_allocrow(cols);
+    xelrow = pnm_allocrow(cols);
 
-    for (row = 0; row < rows; row++) {
-        int col;
-        for (col = 0; col < cols; col++) {
-            int j;
-            for (j = 0; j < bpp; j++)
-                PNM_ASSIGN1(pnm_row[col],
-                            image[(((row*cols)+col) * bpp) + j]);
+    for (row = 0; row < rows; ++row) {
+        unsigned int col;
+        for (col = 0; col < cols; ++col) {
+            unsigned int j;
+            xelval value;
+
+            for (j = 0, value = 0; j < bpp; ++j) {
+                value <<= 8;
+                value |= image[(((row * cols) + col) * bpp) + j];
+            }
+            PNM_ASSIGN1(xelrow[col], value);
         }
-        pnm_writepnmrow(fout, pnm_row, cols, maxval, format, 0);
+        pnm_writepnmrow(ofP, xelrow, cols, maxval, format, 0);
     }
 
-    pnm_freerow(pnm_row);
+    pnm_freerow(xelrow);
 }
 
 
 
 static void
-write_raw_pbm(FILE * const fout,
-              const unsigned char * const binary_image,
-              int                   const cols,
-              int                   const rows) {
+writeRawPbm(FILE *                const ofP,
+            const unsigned char * const binaryImage,
+            unsigned int          const cols,
+            unsigned int          const rows) {
 
-    unsigned int const bytes_per_row = pbm_packed_bytes(cols);
+    unsigned int const bytesPerRow = pbm_packed_bytes(cols);
 
-    int row;
+    unsigned int row;
 
-    pbm_writepbminit(fout, cols, rows, 0);
+    pbm_writepbminit(ofP, cols, rows, 0);
 
     for (row = 0; row < rows; ++row)
-        pbm_writepbmrow_packed(fout, &binary_image[row*bytes_per_row], cols,
-                               0);
+        pbm_writepbmrow_packed(ofP, &binaryImage[row * bytesPerRow], cols, 0);
 }
 
 
@@ -199,8 +219,164 @@ diagnose_bie(FILE *f)
 
 
 
-int main (int argc, const char **argv)
-{
+static void
+decompress(FILE *                 const ifP,
+           struct jbg_dec_state * const sP) {
+
+    unsigned char * buffer;
+    bool eof;
+        /* We encountered end of file reading the input file */
+    bool atEndOfImage;
+        /* The libjbig decompressor has processed input data through the end
+           of an image but not beyond.  But note that the input could have
+           multiple sequential complete images, each successive one adding
+           resolution, and we always keep reading to the end of the input file
+           and feeding that data to libjbig as long as libjbig says the data
+           is valid.
+        */
+    bool decompressFailed;
+        /* The input is bad -- libjbig was unable to decompress it */
+    int decompressFailCode;
+        /* Meaningful only when 'decompressFailed' is true.  Result code
+           from libjbig detailing why input could not be decompressed.
+        */
+
+    MALLOCARRAY(buffer, BUFSIZE);
+    if (!buffer)
+        pm_error("Failed to get %u bytes of memory for buffer", BUFSIZE);
+
+    /* send input file to decoder */
+
+    for (eof = false, decompressFailed = false, atEndOfImage = false;
+         !eof && !decompressFailed;
+        ) {
+        size_t bytesRemainingCt;
+
+        bytesRemainingCt = fread(buffer, 1, BUFSIZE, ifP);
+        if (bytesRemainingCt == 0)
+            eof = true;
+        else {
+            unsigned int cursor;
+
+            for (cursor = 0; bytesRemainingCt > 0 && !decompressFailed; ) {
+
+                int result;
+                size_t bytesProcessedCt;
+
+                result = jbg_dec_in(sP, &buffer[cursor], bytesRemainingCt,
+                                    &bytesProcessedCt);
+
+                switch (result) {
+                case JBG_EOK:
+                    cursor           += bytesProcessedCt;
+                    bytesRemainingCt -= bytesProcessedCt;
+                    atEndOfImage = true;
+                    break;
+                case JBG_EAGAIN:
+                case JBG_EOK_INTR:
+                    cursor           += bytesProcessedCt;
+                    bytesRemainingCt -= bytesProcessedCt;
+                    atEndOfImage = false;
+                    break;
+                default:
+                    decompressFailed = true;
+                    decompressFailCode = result;
+                }
+            }
+        }
+    }
+    if (ferror(ifP))
+        pm_error("Error reading input file");
+    else if (decompressFailed) {
+        pm_error("Invalid contents of input file.  %s",
+                 jbg_strerror(decompressFailCode));
+    } else if (!atEndOfImage) {
+        /* Note two significant cases of this: 1) input ends in the middle
+           of a BIE; 2) input ends before any BIE at all -- it is empty
+        */
+        pm_error("Input file ends before the end of a BIE");
+    }
+    free(buffer);
+}
+
+
+
+static void
+writeDecompressedImage(FILE *                 const ofP,
+                       struct jbg_dec_state * const sP,
+                       bool                   const planeSpec,
+                       unsigned int           const plane,
+                       bool                   const binary) {
+
+    unsigned int const cols   = jbg_dec_getwidth(sP);
+    unsigned int const rows   = jbg_dec_getheight(sP);
+    xelval       const maxval = pm_bitstomaxval(jbg_dec_getplanes(sP));
+    unsigned int const bpp    = (jbg_dec_getplanes(sP)+7)/8;
+        /* Number of bytes (not bits) per pixel */
+
+    bool justOnePlane;
+    unsigned int planeToWrite;
+
+    if (jbg_dec_getplanes(sP) == 1) {
+        justOnePlane = true;
+        planeToWrite = 0;
+    } else {
+        if (planeSpec) {
+            justOnePlane = true;
+            planeToWrite = plane;
+        } else
+            justOnePlane = false;
+    }
+
+    if (justOnePlane) {
+        unsigned char * binaryImage;
+
+        pm_message("WRITING PBM FILE");
+
+        binaryImage = jbg_dec_getimage(sP, planeToWrite);
+
+        writeRawPbm(ofP, binaryImage, cols, rows);
+    } else {
+        unsigned char * image;
+            /* A malloc'ed array of cols * rows * bits-per-pixel bits, in
+               row-major bitplane-minor order
+            */
+
+        pm_message("WRITING PGM FILE");
+
+        /* Write out all the planes */
+        /* What jbig.doc doesn't tell you is that jbg_dec_merge_planes
+           delivers the image in chunks, in consecutive calls to
+           the data-out callback function.  And a row can span two
+           chunks.
+        */
+        if (UINT_MAX / rows / cols < bpp) {
+            pm_error("Image size %u rows by %u cols, %u bytes per pixel "
+                     "too large for computations",
+                     rows, cols, bpp);
+        }
+
+        MALLOCARRAY(image, cols * rows * bpp);
+
+        if (!image) {
+            pm_error("Failed to allocate memory for "
+                     "%u rows x %u columns x %u bytes per pixel",
+                     rows, cols, bpp);
+        }
+
+        jbg_dec_merge_planes(sP, !binary, collectImage, image);
+
+        writePnm(ofP, image, bpp, rows, cols, maxval, PGM_TYPE);
+
+        free(image);
+    }
+}
+
+
+
+int
+main (int argc, const char **argv) {
+
     CmdlineInfo cmdline;
     FILE * ifP;
     FILE * ofP;
@@ -216,107 +392,22 @@ int main (int argc, const char **argv)
         diagnose_bie(ifP);
     else {
         struct jbg_dec_state s;
-        unsigned char * buffer;
-        int result;
 
-        MALLOCARRAY(buffer, BUFSIZE);
-        if (!buffer)
-            pm_error("Failed to get %u bytes of memory for buffer", BUFSIZE);
-
-        /* send input file to decoder */
         jbg_dec_init(&s);
         jbg_dec_maxsize(&s, cmdline.xmax, cmdline.ymax);
-        result = JBG_EAGAIN;
-        do {
-            size_t len;
-            size_t cnt;
-            unsigned char * p;
 
-            len = fread(buffer, 1, BUFSIZE, ifP);
-            if (len == 0)
-                break;
-            cnt = 0;
-            p = &buffer[0];
-            while (len > 0 && (result == JBG_EAGAIN || result == JBG_EOK)) {
-                result = jbg_dec_in(&s, p, len, &cnt);
-                p += cnt;
-                len -= cnt;
-            }
-        } while (result == JBG_EAGAIN || result == JBG_EOK);
-        if (ferror(ifP))
-            pm_error("Error reading input file");
-        if (result != JBG_EOK && result != JBG_EOK_INTR)
-            pm_error("Invalid contents of input file.  %s",
-                     jbg_strerror(result));
+        decompress(ifP, &s);
+
         if (cmdline.planeSpec && jbg_dec_getplanes(&s) <= cmdline.plane)
             pm_error("Image has only %u planes", jbg_dec_getplanes(&s));
 
-        {
-            /* Write it out */
+        writeDecompressedImage(ofP, &s, !!cmdline.planeSpec, cmdline.plane,
+                               !!cmdline.binary);
 
-            int rows, cols;
-            int maxval;
-            int bpp;
-            bool justOnePlane;
-            unsigned int plane_to_write;
-
-            cols = jbg_dec_getwidth(&s);
-            rows = jbg_dec_getheight(&s);
-            maxval = pm_bitstomaxval(jbg_dec_getplanes(&s));
-            bpp = (jbg_dec_getplanes(&s)+7)/8;
-
-            if (jbg_dec_getplanes(&s) == 1) {
-                justOnePlane = true;
-                plane_to_write = 0;
-            } else {
-                if (cmdline.planeSpec) {
-                    justOnePlane = true;
-                    plane_to_write = cmdline.plane;
-                } else
-                    justOnePlane = false;
-            }
-
-            if (justOnePlane) {
-                unsigned char * binary_image;
-
-                pm_message("WRITING PBM FILE");
-
-                binary_image=jbg_dec_getimage(&s, plane_to_write);
-                write_raw_pbm(ofP, binary_image, cols, rows);
-            } else {
-                unsigned char *image;
-                pm_message("WRITING PGM FILE");
-
-                /* Write out all the planes */
-                /* What jbig.doc doesn't tell you is that jbg_dec_merge_planes
-                   delivers the image in chunks, in consecutive calls to
-                   the data-out callback function.  And a row can span two
-                   chunks.
-                */
-                if (UINT_MAX / rows / cols < bpp) {
-                    pm_error("Image size %u rows by %u cols, %u bytes per pixel "
-                             "too large for computations",
-                             rows, cols, bpp);
-                }
-                MALLOCARRAY(image, cols * rows * bpp);
-
-                if (!image) {
-                    pm_error("Failed to allocate memory for "
-                             "%u rows x %u columns x %u bytes per pixel",
-                             rows, cols, bpp);
-                }
-
-                jbg_dec_merge_planes(&s, !cmdline.binary, collect_image,
-                                     image);
-                write_pnm(ofP, image, bpp, rows, cols, maxval, PGM_TYPE);
-                free(image);
-            }
-            jbg_dec_free(&s);
-        }
+        jbg_dec_free(&s);
 
         pm_close(ofP);
         pm_close(ifP);
-        free(buffer);
     }
     return 0;
 }

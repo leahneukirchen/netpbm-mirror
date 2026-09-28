@@ -7,6 +7,7 @@ pbmtoicon: ok
 pbmtox10bm: ok
 pgmcrater: ok
 pgmedge: ok
+pgmnoise: ok
 pgmnorm: ok
 pgmoil: ok
 pgmslice: ok

@@ -1,12 +1,6 @@
 Test 1: Should produce:
-P2
-12 1
-1023
 720 296 192 858 101 57 298 629 804 1019 64 617
 Above output is for Mersenne Twister
-P2
-12 1
-1023
 720 296 192 858 101 57 298 629 804 1019 64 617
 
 Test 2: Mersenne Twister random number generator

@@ -1,10 +1,10 @@
 #! /bin/sh
 # This script tests: pamtopdbimg
-# Also requires: pgmmake pgmnoise
+# Also requires: pgmmake pamnoise
 
 tmpdir=${tmpdir:-/tmp}
 mono_pgm=${tmpdir}/graymono.pgm
-noise_pgm=${tmpdir}/graynoise.pgm
+noise_pam=${tmpdir}/graynoise.pam
 out_pdbimg=${tmpdir}/out.pdbimg
 text65533=${tmpdir}/ascii65533.txt
 text65534=${tmpdir}/ascii65534.txt
@@ -28,17 +28,17 @@ rm ${mono_pgm}
 
 
 # Test 2. Poor compression
-#  -maybecompressed should produce a uncompressed file
+#  -maybecompressed should produce an uncompressed file
 # Should print:
 #  1
 #  2
 echo poor compression
-pgmnoise -maxval=15 -randomseed=0 160 160 > ${noise_pgm}
+pamnoise -maxval=15 -randomseed=3910 -w 160 -h 160 -d 1 > ${noise_pam}
 for flag in "-compressed" "-maybecompressed" "-uncompressed"
    do
-   pamtopdbimg $flag ${noise_pgm} | wc -c | tr -d ' '
+   pamtopdbimg $flag ${noise_pam} | wc -c | tr -d ' '
    done  | uniq -c | awk '{print $1}'
-rm ${noise_pgm}
+rm ${noise_pam}
 
 
 # Test 3. long titles

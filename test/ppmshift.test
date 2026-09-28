@@ -2,14 +2,14 @@
 # This script tests: ppmshift
 # Also requires: pgmtoppm
 
-echo "Test 1. Should print: 3705777303 101484"
-ppmshift -seed=1 10 testimg.ppm | cksum
+echo "Test 1. Should print: 3587889425 101484"
+ppmshift -seed=7729 10 testimg.ppm | cksum
 
-echo "Test 2. Should print: 202790723 685"
-ppmshift -seed=1 1 testgrid.pbm | cksum
+echo "Test 2. Should print: 641565168 685"
+ppmshift -seed=7817 1 testgrid.pbm | cksum
 
 echo "Test 3. Should print: 0 0 : 0"
-ppmshift -seed=1 0 testimg.ppm | cmp -s - testimg.ppm
+ppmshift -seed=7905 0 testimg.ppm | cmp -s - testimg.ppm
   echo ${PIPESTATUS[@]} ":" $?
 
 tmpdir=${tmpdir:-/tmp}
@@ -18,18 +18,18 @@ test14_ppm=${tmpdir}/test14.ppm
 
 pgmtoppm < maze.pbm > ${test0_ppm}
 
-echo "Test 4.  Should print: 0 0 : 0"
-  ppmshift -seed=2 0 maze.pbm | cmp -s - ${test0_ppm}
+echo "Test 4. Should print: 0 0 : 0"
+  ppmshift -seed=7817 0 maze.pbm | cmp -s - ${test0_ppm}
     echo ${PIPESTATUS[@]} ":" $?
 
-ppmshift -seed=2 14 maze.pbm > ${test14_ppm}
+ppmshift -seed=7905 14 maze.pbm > ${test14_ppm}
 
 for i in 1 15 16 20 1000
   do
-  echo "Test 5. ("$i") Should print: 1 twice"
-  ppmshift -seed=2 $i maze.pbm | cmp -s - ${test0_ppm}
+  echo "Test 5."$i" Should print: 1 twice"
+  ppmshift -seed=7993 $i maze.pbm | cmp -s - ${test0_ppm}
     echo $?
-  ppmshift -seed=2 $i maze.pbm | cmp -s - ${test14_ppm}
+  ppmshift -seed=8081 $i maze.pbm | cmp -s - ${test14_ppm}
     echo $?
   done
 
@@ -40,3 +40,10 @@ for i in 1 15 16 20 1000
 # for ${PIPESTATUS[0]}.
 
 rm ${test0_ppm} ${test14_ppm}
+
+echo "Test Invalid."
+
+. ./test-invalid.inc
+
+invCmd "ppmshift 1 /dev/null"
+invCmd "ppmshift -1 testgrid.pbm"

@@ -140,6 +140,7 @@ pbmto4425: ok
 pbmtoascii: ok
 pbmtoatk: ok
 pbmtobbnbg: ok
+pbmtobrush: ok
 pbmtocis: ok
 pbmtocmuwm: ok
 pbmtodjvurle: ok
@@ -186,7 +187,6 @@ pgmmake: ok
 pgmmedian: ok
 pgmminkowski: ok
 pgmmorphconv: ok
-pgmnoise: ok
 pgmramp: ok
 pgmtexture: ok
 pgmtofs: ok

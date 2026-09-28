@@ -1,15 +1,26 @@
 /*********************************************************************
-   pgmnoise -  create a PGM with white noise
-   Frank Neumann, October 1993
+   pamnoise -  create PAM with white noise
+
+   by Akira F Urushibata 2026
+   Contributed to the public domain by the author
+
+   In October 1993 Frank Neumann wrote pgmnoise.
+
+   Several improvements were made to pgmnoise.  Most notably an efficient
+   method for generating random numbers with limited binary digits was
+   implemented.  The following code retains none of the original pgmnoise
+   code by Frank Neumann.
 *********************************************************************/
 
+#include <stdbool.h>
 #include <assert.h>
+
 #include "pm_c_util.h"
 #include "mallocvar.h"
 #include "nstring.h"
 #include "rand.h"
 #include "shhopt.h"
-#include "pgm.h"
+#include "pam.h"
 
 /* constants */
 static unsigned long int const ceil31bits = 0x7fffffffUL;
@@ -23,7 +34,9 @@ struct CmdlineInfo {
     */
     unsigned int width;
     unsigned int height;
+    unsigned int depth;
     unsigned int maxval;
+    const char * tupletype;
     unsigned int randomseed;
     unsigned int randomseedSpec;
     unsigned int verbose;
@@ -44,60 +57,108 @@ parseCommandLine(int argc,
          */
     optStruct3 opt;
     unsigned int option_def_index;
-    unsigned int maxvalSpec;
+    unsigned int widthSpec, heightSpec, depthSpec, maxvalSpec, tupletypeSpec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0,   "randomseed",   OPT_UINT,    &cmdlineP->randomseed,
-            &cmdlineP->randomseedSpec,      0);
-    OPTENT3(0,   "maxval",       OPT_UINT,    &cmdlineP->maxval,
+    OPTENT3(0,   "width",        OPT_UINT,     &cmdlineP->width,
+            &widthSpec,                     0);
+    OPTENT3(0,   "height",       OPT_UINT,     &cmdlineP->height,
+            &heightSpec,                    0);
+    OPTENT3(0,   "depth",        OPT_UINT,     &cmdlineP->depth,
+            &depthSpec,                     0);
+    OPTENT3(0,   "maxval",       OPT_UINT,     &cmdlineP->maxval,
             &maxvalSpec,                    0);
-    OPTENT3(0,   "verbose",      OPT_FLAG,    NULL,
+    OPTENT3(0,   "tupletype",    OPT_STRING,   &cmdlineP->tupletype,
+            &tupletypeSpec,                 0);
+    OPTENT3(0,   "randomseed",   OPT_UINT,     &cmdlineP->randomseed,
+            &cmdlineP->randomseedSpec,      0);
+    OPTENT3(0,   "verbose",      OPT_FLAG,     NULL,
             &cmdlineP->verbose,             0);
 
     opt.opt_table = option_def;
-    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
-    opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
+    opt.short_allowed = false;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = false;  /* We may have parms that are negative numbers */
 
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
     free(option_def);
 
+    if (widthSpec) {
+        if (argc-1 == 2) {
+            pm_error("You cannot specify both -width and "
+                     "non-option arguments");
+        }
+        if (cmdlineP->width < 1)
+            pm_error("-width is zero; must be positive");
+    } else {
+        if (argc-1 == 2) {
+            const char * error; /* error message of pm_string_to_uint */
+
+            pm_string_to_uint(argv[1], &cmdlineP->width, &error);
+            if (error)
+                pm_error("Width argument is not an unsigned integer.  %s",
+                         error);
+            else if (cmdlineP->width == 0)
+                pm_error("Width argument is zero; must be positive");
+        } else
+            cmdlineP->width = 1;
+    }
+
+    if (heightSpec) {
+        if (argc-1 == 2) {
+            pm_error("You cannot specify both -height and "
+                     "non-option arguments");
+        }
+        if (cmdlineP->height < 1)
+            pm_error("-height is zero; must be positive");
+    } else {
+        if (argc-1 == 2) {
+            const char * error; /* error message of pm_string_to_uint */
+
+            pm_string_to_uint(argv[2], &cmdlineP->height, &error);
+            if (error)
+                pm_error("Height argument is not an unsigned integer.  %s",
+                         error);
+            else if (cmdlineP->height == 0)
+                pm_error("Height argument is zero; must be positive");
+        } else
+            cmdlineP->height = 1;
+    }
+
+    if (depthSpec) {
+        if (cmdlineP->depth < 1)
+            pm_error("-depth is zero; must be positive");
+    } else
+        cmdlineP->depth = 1;
+
     if (maxvalSpec) {
         if (cmdlineP->maxval > PGM_OVERALLMAXVAL)
-            pm_error("Maxval too large: %u.  Maximum is %u",
+            pm_error("-maxval too large: %u.  Maximum is %u",
                      cmdlineP->maxval, PGM_OVERALLMAXVAL);
         else if (cmdlineP->maxval == 0)
-            pm_error("Maxval must not be zero");
+            pm_error("-maxval must not be zero");
     } else
         cmdlineP->maxval = PGM_MAXMAXVAL;
 
-    if (argc-1 != 2)
-        pm_error("Wrong number of arguments: %u.  "
-                 "Arguments are width and height of image, in pixels",
-                 argc-1);
+    if (!tupletypeSpec)
+        cmdlineP->tupletype = "";
     else {
-        const char * error; /* error message of pm_string_to_uint */
-        unsigned int width, height;
+        struct pam pam;
+        if (strlen(cmdlineP->tupletype)+1 > sizeof(pam.tuple_type))
+            pm_error("The tuple type you specified is too long.  "
+                     "Maximum %u characters.",
+                     (unsigned)sizeof(pam.tuple_type)-1);
+    }
 
-        pm_string_to_uint(argv[1], &width, &error);
-        if (error)
-            pm_error("Width argument is not an unsigned integer.  %s",
-                     error);
-        else if (width == 0)
-            pm_error("Width argument is zero; must be positive");
-        else
-            cmdlineP->width = width;
-
-        pm_string_to_uint(argv[2], &height, &error);
-        if (error)
-            pm_error("Height argument is not an unsigned integer.  %s ",
-                     error);
-        else if (height == 0)
-            pm_error("Height argument is zero; must be positive");
-        else
-            cmdlineP->height = height;
+    if (argc-1 != 0 && argc-1 != 2) {
+        pm_error("Invalid number of non-option arguments: %u.  "
+                 "The only possible arguments are width and height, as "
+                 "backward compatibility alternataives to "
+                 "-width and -height.  "
+                 "So specify either zero or two arguments.",
+                 argc-1);
     }
 }
 
@@ -121,11 +182,12 @@ randPool(unsigned int       const nDigits,
   The underlying logic is flexible and endian-free.  The above conditions can
   be relaxed.
 -----------------------------------------------------------------------------*/
-    static unsigned long int hold=0;  /* entropy pool */
-    static unsigned int len=0;        /* number of valid bits in pool */
+    static unsigned long int hold = 0;  /* entropy pool */
+    static unsigned int      len = 0;   /* number of valid bits in pool */
 
     unsigned int const mask = (1 << nDigits) - 1;
     unsigned int const randbits = (randStP->max == ceil31bits) ? 31 : 32;
+
     unsigned int retval;
 
     assert(randStP->max == ceil31bits || randStP->max == ceil32bits);
@@ -160,12 +222,16 @@ reportVerbose(struct pm_randSt * const randStP,
 
 
 static void
-pgmnoise(FILE *             const ofP,
-         unsigned int       const cols,
-         unsigned int       const rows,
+pamnoise(FILE *             const ofP,
+         unsigned int       const width,
+         unsigned int       const height,
+         unsigned int       const depth,
          gray               const maxval,
+         const char       * const tupletype,
          bool               const verbose,
          struct pm_randSt * const randStP) {
+
+    struct pam pam;
 
     bool const usingPool =
         (randStP->max==ceil31bits || randStP->max==ceil32bits) &&
@@ -173,7 +239,7 @@ pgmnoise(FILE *             const ofP,
     unsigned int const bitLen = pm_maxvaltobits(maxval);
 
     unsigned int row;
-    gray * destrow;
+    tuple * tuplerow;
 
     /* If maxval is 2^n-1, we draw exactly n bits from the pool.
        Otherwise call pm_rand() and determine gray value by modulo.
@@ -203,34 +269,45 @@ pgmnoise(FILE *             const ofP,
     if (verbose)
         reportVerbose(randStP, maxval, usingPool);
 
-    destrow = pgm_allocrow(cols);
+    pam.size        = sizeof(pam);
+    pam.len         = PAM_STRUCT_SIZE(tuple_type);
+    pam.file        = stdout;
+    pam.format      = PAM_FORMAT;
+    pam.plainformat = 0;
+    pam.width       = width;
+    pam.height      = height;
+    pam.depth       = depth;
+    pam.maxval      = maxval;
+    strcpy(pam.tuple_type, tupletype);
 
-    pgm_writepgminit(ofP, cols, rows, maxval, 0);
+    pnm_writepaminit(&pam);
 
-    for (row = 0; row < rows; ++row) {
-        if (usingPool) {
-            unsigned int col;
-            for (col = 0; col < cols; ++col)
-                destrow[col] = randPool(bitLen, randStP);
-        } else {
-            unsigned int col;
-            for (col = 0; col < cols; ++col)
-                destrow[col] = pm_rand(randStP) % (maxval + 1);
+    tuplerow = pnm_allocpamrow(&pam);
+
+    for (row = 0; row < height; ++row) {
+        unsigned int col;
+        for (col = 0; col < width; ++col) {
+            unsigned int plane;
+            for (plane = 0; plane < depth; ++plane) {
+                tuplerow[col][plane] =
+                    usingPool ?
+                    randPool(bitLen, randStP) :
+                    (pm_rand(randStP) % (maxval + 1));
+            }
         }
-        pgm_writepgmrow(ofP, destrow, cols, maxval, 0);
+        pnm_writepamrow(&pam, tuplerow);
     }
-
-    pgm_freerow(destrow);
+    pnm_freepamrow(tuplerow);
 }
 
 
 
 int
-main(int          argc,
-     const char * argv[]) {
+main(int         argc,
+    const char * argv[]) {
 
     struct CmdlineInfo cmdline;
-    struct pm_randSt randSt;
+    struct pm_randSt   randSt;
 
     pm_proginit(&argc, argv);
 
@@ -239,8 +316,9 @@ main(int          argc,
     pm_randinit(&randSt);
     pm_srand2(&randSt, cmdline.randomseedSpec, cmdline.randomseed);
 
-    pgmnoise(stdout, cmdline.width, cmdline.height, cmdline.maxval,
-             cmdline.verbose, &randSt);
+    pamnoise(stdout,
+             cmdline.width, cmdline.height, cmdline.depth, cmdline.maxval,
+             cmdline.tupletype, cmdline.verbose, &randSt);
 
     pm_randterm(&randSt);
 

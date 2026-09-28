@@ -43,10 +43,9 @@ struct CmdlineInfo {
     */
     const char * inputFileName;  /* File name of input file */
     unsigned int inputFileSpec;  /* Input file name specified */
-    float        lineWidth;      /* Line width, if specified */
-    unsigned int lineWidthSpec;  /* Line width specified */
-    float        dpi;            /* Resolution in DPI, if specified */
-    unsigned int dpiSpec;        /* Resolution specified */
+    float        lineWidth;
+    unsigned int lineWidthSpec;
+    float        dpi;
 };
 
 
@@ -72,13 +71,15 @@ parseCommandLine(int                        argc,
     optStruct3 opt;
     unsigned int option_def_index;
 
+    unsigned int dpiSpec;
+
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0, "linewidth", OPT_FLOAT, &cmdlineP->lineWidth,
                             &cmdlineP->lineWidthSpec,    0);
     OPTENT3(0, "dpi",       OPT_FLOAT,  &cmdlineP->dpi,
-                            &cmdlineP->dpiSpec,          0);
+                            &dpiSpec,                    0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -87,7 +88,7 @@ parseCommandLine(int                        argc,
     pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
-    if (cmdlineP->dpiSpec)
+    if (dpiSpec)
         validateDpi(cmdlineP->dpi);
     else
         cmdlineP->dpi = 300;

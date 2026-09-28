@@ -62,6 +62,9 @@ echo "Test Invalid"
 
 . ${srcdir}/test-invalid.inc
 
+# Empty input
+invCmd "pamflip /dev/null"
+
 # No flip operation specified
 invCmd "pamflip testgrid.pbm"
 invCmd "pamflip -xform testgrid.pbm"

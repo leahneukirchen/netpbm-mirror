@@ -1,0 +1,30 @@
+#! /bin/sh
+# This script tests: pamnoise
+# Also requires:
+
+. ./test-invalid.inc
+
+invCmd "pamnoise -width"
+invCmd "pamnoise -height"
+invCmd "pamnoise -depth"
+invCmd "pamnoise -maxval"
+invCmd "pamnoise -randomseed"
+
+invCmd "pamnoise -width 0"
+invCmd "pamnoise -height 0"
+invCmd "pamnoise -depth 0"
+invCmd "pamnoise -maxval 0"
+
+invCmd "pamnoise -width -1"
+invCmd "pamnoise -height -1"
+invCmd "pamnoise -depth -1"
+invCmd "pamnoise -maxval -1"
+invCmd "pamnoise -randomseed -1"
+
+invCmd "pamnoise -width  3.14"
+invCmd "pamnoise -height 10.01"
+invCmd "pamnoise -depth  1.0"
+invCmd "pamnoise -maxval 6.1"
+invCmd "pamnoise -randomseed .5"
+
+invCmd "pamnoise -maxval=$((256 * 256 * 256 * 256))"

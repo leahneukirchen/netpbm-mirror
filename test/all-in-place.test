@@ -186,6 +186,7 @@ ordinary_testprogs="\
   pbmtoascii \
   pbmtoatk \
   pbmtobbnbg \
+  pbmtobrush \
   pbmtocis \
   pbmtocmuwm \
   pbmtodjvurle \
@@ -232,7 +233,6 @@ ordinary_testprogs="\
   pgmmedian \
   pgmminkowski \
   pgmmorphconv \
-  pgmnoise \
   pgmramp \
   pgmtexture \
   pgmtofs \

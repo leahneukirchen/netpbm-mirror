@@ -2,8 +2,20 @@
 
 #define ICONDIR_TYPE_ICO (1)
 
+
 /*  windows icon structures  */
+
 struct IconDirEntry {
+    /* The purpose of the icon directory is to help the user of the icon file
+       select one of the various versions of the icon in the file.  Depending
+       on his environment and application, he may want a larger or smaller
+       icon, for example, or one with more or less color resolution.
+
+       The user of the icon file is not supposed to use information in the
+       directory actually to interpret the images.  Each image is
+       self-describing (therefore contains height and width, etc. redundant
+       with the directory).
+    */
     uint16_t width;               /* image width in pixels 0 == 256 */
     uint16_t height;              /* image height in pixels 0 == 256 */
     uint8_t  color_count;         /* 0 if bits_per_pixel >= 8 */
@@ -15,6 +27,7 @@ struct IconDirEntry {
 
     uint16_t index;               /* extra field (not in file) */
 };
+
 
 /*  (1) This is from
  *  http://blogs.msdn.com/b/oldnewthing/archive/2010/10/19/10077610.aspx.

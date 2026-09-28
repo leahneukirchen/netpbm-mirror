@@ -8,3 +8,9 @@ echo
 pbmmake -g 3 3 | pgmminkowski
 echo
 pgmminkowski testgrid.pbm
+
+echo "Test Invalid"
+
+. ./test-invalid.inc
+
+invCmd "pgmminkowski /dev/null"

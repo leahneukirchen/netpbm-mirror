@@ -10,3 +10,10 @@ pgmmake 0 10 1 | pgmtopgm -plain
 echo "Test 2.  Should print 2582999797 3376"
 
 pgmtopgm < maze.pbm | cksum
+
+
+echo "Test Invalid"
+
+. ./test-invalid.inc
+
+invCmdStdin "pgmtopgm" "/dev/null"

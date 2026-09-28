@@ -1,14 +1,20 @@
 #! /bin/sh
 # This script tests: pnmpad pamenlarge
-# Also requires: pamcat pamcut pamenlarge pbmmake pbmnoise pgmmake pgmnoise
-# Also requires: ppmmake ppmpat
+# Also requires: pamcut pamnoise pamrestack pamseq pamtopnm pamundice
+# Also requires: pbmmake pbmnoise pgmmake pgmtopgm ppmmake
+
+# This test script shows how to eemulate the -extend-edge function of pnmpad
+# with pamenlarge.
 
 # If the padding function for -extend-edge is altered, make sure to run this
-# test in a more thorough form.  Replace "for leftpad in 0 1 7 9 16"
-# with "for leftpad in `seq 0 16`".
+# test.  Try more sizes.  For instnce change "for i in 1 2" to "for i in `seq 32`" .
+
+# Random seed values do not affect output; they can be altered.  Leaving out the
+# -randomseed option is also okay.
 
 tmpdir=${tmpdir:-/tmp}
 test_pnm=${tmpdir}/test.pnm
+seq_pnm=${tmpdir}/seq.pnm
 
 padded_pnm=${tmpdir}/padded.pnm
 #middle_pnm=${tmpdir}/middle.pnm
@@ -16,162 +22,193 @@ left_pnm=${tmpdir}/left.pnm
 right_pnm=${tmpdir}/right.pnm
 top_pnm=${tmpdir}/top.pnm
 bottom_pnm=${tmpdir}/bottom.pnm
+topleft_pnm=${tmpdir}/topleft.pnm
+topright_pnm=${tmpdir}/topright.pnm
+bottomleft_pnm=${tmpdir}/bottomleft.pnm
+bottomright_pnm=${tmpdir}/bottomright.pnm
+listfile=${tmpdir}/listfile
 
-echo "Test 1.  Should print match forty-eight (24x2) times"
+# Set up pamundice listfile
 
-for generator in "pbmnoise -randomseed=100 17 17" \
-                 "ppmpat -tartan -randomseed=100 11 11"          
-    do
-    ${generator} > ${test_pnm}
-    for leftpad in 0 1 7 9 16
-    do
-        for rightpad in  0 1 8
-        do
-            pnmpad -extend-edge -l=${leftpad} -r=${rightpad} ${test_pnm} > ${padded_pnm}
-            pamcut -left=0 -width=1 ${test_pnm} |\
-                pamenlarge -xscale=$(( ${leftpad} + 1 )) > ${left_pnm}
-            pamcut -right=-1 -width=1  ${test_pnm} |\
-                pamenlarge -xscale=$(( ${rightpad} + 1 )) > ${right_pnm}
-            pamcut -cropleft=1 -cropright=1 ${test_pnm} |\
-                pamcat -lr ${left_pnm} - ${right_pnm} |\
-                cmp -s - ${padded_pnm} && echo "match" ||\
-                    echo "no match: lr ${generator} ${leftpad} ${rightpad}";
-            rm ${left_pnm} ${right_pnm} ${padded_pnm}
-        done
-    done
+echo ${topleft_pnm} ${top_pnm} ${topright_pnm} \
+     ${left_pnm} ${test_pnm} ${right_pnm} \
+     ${bottomleft_pnm} ${bottom_pnm} ${bottomright_pnm} | tr ' ' '\n' > ${listfile}
+
+
+echo "Test 1.  Should print match seven times"
+
+pamseq -tupletype="RGB" 6 3 | pamrestack -w 64 | pamtopnm > ${seq_pnm}
+
+for i in 2 3 5 8 13 21 34
+do
+
+    pamcut -w $i -h $i -l $(($i % 17)) -t $(($i %  19)) ${seq_pnm} > ${test_pnm}
+
+    if [ $? -eq 0 ] ; then        
+    pnmpad -extend-edge -l=$i -r=$i -t=$i -b=$i ${test_pnm} > ${padded_pnm}
+
+    pamcut -left=0 -width=1 ${test_pnm} |\
+      pamenlarge -xscale=$i > ${left_pnm}
+    pamcut -right=-1 -width=1  ${test_pnm} |\
+      pamenlarge -xscale=$i > ${right_pnm}
+    pamcut -top=0 -height=1 ${test_pnm} |\
+      pamenlarge -yscale=$i > ${top_pnm}
+    pamcut -bottom=-1 -height=1  ${test_pnm} |\
+      pamenlarge -yscale=$i > ${bottom_pnm}
+    pamcut -left=0 -top=0 -width=1 -height=1 ${test_pnm} |\
+      pamenlarge -xscale=$i -yscale=$i > ${topleft_pnm}	    
+    pamcut -right=-1 -top=0 -width=1 -height=1 ${test_pnm} |\
+      pamenlarge -xscale=$i -yscale=$i > ${topright_pnm}	    
+    pamcut -left=0 -bottom=-1 -width=1 -height=1 ${test_pnm} |\
+      pamenlarge -xscale=$i -yscale=$i > ${bottomleft_pnm}	    
+    pamcut -right=-1 -bottom=-1 -width=1 -height=1 ${test_pnm} |\
+      pamenlarge -xscale=$i -yscale=$i > ${bottomright_pnm}	    
+	    
+    pamundice -across=3 -down=3 -listfile=${listfile} |\
+	cmp -s - ${padded_pnm} && echo "match" || echo "no match: $i"
+
+    rm ${left_pnm} ${right_pnm} ${top_pnm} ${bottom_pnm} \
+       ${topleft_pnm} ${topright_pnm}  ${bottomleft_pnm} ${bottomright_pnm} \
+       ${padded_pnm}  ${test_pnm}
+
+    else
+	# When generation fails print an error message to stdout rather than comparing
+	# two empty files and producing an undesired "match" .
+
+	echo "Test 1.$i test image file generation failed" ;
+    fi
     
-    for toppad in 0 2 5
-    do
-        for bottompad in  0 1 10
-        do
-            pnmpad -extend-edge -t=${toppad} -b=${bottompad} ${test_pnm} > ${padded_pnm}
-            pamcut -top=0 -height=1 ${test_pnm} |\
-                pamenlarge -yscale=$(( ${toppad} + 1 )) > ${top_pnm}
-            pamcut -bottom=-1 -height=1  ${test_pnm} |\
-                pamenlarge -yscale=$(( ${bottompad} + 1 )) > ${bottom_pnm}
-            pamcut -croptop=1 -cropbottom=1 ${test_pnm} |\
-            pamcat -tb ${top_pnm} - ${bottom_pnm} |\
-                cmp -s - ${padded_pnm} && echo "match" ||\
-                    echo "no match: tb ${generator} ${toppad} ${bottompad}";
-            rm ${top_pnm} ${bottom_pnm} ${padded_pnm}
-        done
-    done
-    rm ${test_pnm}
 done
 
+rm ${seq_pnm}
 
-echo "Test 2.  Should print match thirty-six (18x2) times"
+echo "Test 2.  Should print match five times"
 
-for generator in "pbmnoise -randomseed=100 17 17" \
-                 "ppmpat -tartan -randomseed=100 11 11"
-    do
-    ${generator} > ${test_pnm}
-    for leftpad in 0 1 2
-    do
-        for rightpad in  0 1 3
-        do
-            pnmpad -extend-edge -l=${leftpad} -r=${rightpad} ${test_pnm} > ${padded_pnm}
-            pamcut -left=0 -width=1 ${test_pnm} |\
-                pamenlarge -xscale=$(( ${leftpad} + 1 )) > ${left_pnm}
-            pamcut -right=-1 -width=1  ${test_pnm} |\
-                pamenlarge -xscale=$(( ${rightpad} + 1 )) > ${right_pnm}
-            pamcut -cropleft=1 -cropright=1 ${test_pnm} |\
-                pamcat -lr ${left_pnm} - ${right_pnm} |\
-                cmp -s - ${padded_pnm} && echo "match" ||\
-                    echo "no match: lr ${generator} ${leftpad} ${rightpad}";
-            rm ${left_pnm} ${right_pnm} ${padded_pnm}
-        done
-    done
-    
-    for toppad in 0 1 12
-    do
-        for bottompad in 0 1 5
-        do
-            pnmpad -extend-edge -t=${toppad} -b=${bottompad} ${test_pnm} > ${padded_pnm}
-            pamcut -top=0 -height=1 ${test_pnm} |\
-                pamenlarge -yscale=$(( ${toppad} + 1 )) > ${top_pnm}
-            pamcut -bottom=-1 -height=1  ${test_pnm} |\
-                pamenlarge -yscale=$(( ${bottompad} + 1 )) > ${bottom_pnm}
-            pamcut -croptop=1 -cropbottom=1 ${test_pnm} |\
-                pamcat -tb ${top_pnm} - ${bottom_pnm} |\
-                cmp -s - ${padded_pnm} && echo "match" ||\
-                    echo "no match: tb ${generator} ${toppad} ${bottompad}";
-            rm ${top_pnm} ${bottom_pnm} ${padded_pnm}
-        done
-    done
-    rm ${test_pnm}
+for i in 2 7 8 11 12
+
+do
+    pbmnoise -randomseed=$((6056 +$i)) $i $i > ${test_pnm} ;
+    if [ $? -eq 0 ] ; then
+
+    pnmpad -extend-edge -l=$i -r=$i -t=$i -b=$i ${test_pnm} > ${padded_pnm}
+    pamcut -left=0 -width=1 ${test_pnm} |\
+	pamenlarge -xscale=$i > ${left_pnm}
+    pamcut -right=-1 -width=1  ${test_pnm} |\
+      pamenlarge -xscale=$i > ${right_pnm}
+    pamcut -top=0 -height=1 ${test_pnm} |\
+      pamenlarge -yscale=$i > ${top_pnm}
+    pamcut -bottom=-1 -height=1  ${test_pnm} |\
+      pamenlarge -yscale=$i > ${bottom_pnm}
+    pamcut -left=0 -top=0 -width=1 -height=1 ${test_pnm} |\
+      pamenlarge -xscale=$i -yscale=$i > ${topleft_pnm}	    
+    pamcut -right=-1 -top=0 -width=1 -height=1 ${test_pnm} |\
+      pamenlarge -xscale=$i -yscale=$i > ${topright_pnm}	    
+    pamcut -left=0 -bottom=-1 -width=1 -height=1 ${test_pnm} |\
+      pamenlarge -xscale=$i -yscale=$i > ${bottomleft_pnm}	    
+    pamcut -right=-1 -bottom=-1 -width=1 -height=1 ${test_pnm} |\
+      pamenlarge -xscale=$i -yscale=$i > ${bottomright_pnm}	    
+	    
+    pamundice -across=3 -down=3 -listfile=${listfile} |\
+	cmp -s - ${padded_pnm} && echo "match" || echo "no match: $i"
+
+    rm ${left_pnm} ${right_pnm} ${top_pnm} ${bottom_pnm} \
+       ${topleft_pnm} ${topright_pnm}  ${bottomleft_pnm} ${bottomright_pnm} \
+       ${padded_pnm}  ${test_pnm}
+
+    else
+	echo "Test 2.$i test image file generation failed" ;
+    fi
+
 done
 
-
-echo "Test 3.  Should print match twenty-four (4x6) times"
+rm ${listfile}
 
 stretch_pnm=${tmpdir}/stretch.pnm
 
-for generator in "pbmmake -b 1 1" \
-                 "pbmmake -b 1 11" \
-                 "pbmmake -w 1 1" \
-                 "pbmmake -w 1 8" \
-                 "pbmnoise -randomseed=100 1 17" \
-                 "pgmnoise -randomseed=100 1 12"                 
-    do
-        ${generator} > ${test_pnm}
-     pamenlarge -xscale=17 ${test_pnm} > ${stretch_pnm} 
-        
+echo "Test 3.  Should print match eight times"
+
+for i in 1 2
+do
+
+    case $i in
+    1) pbmnoise -randomseed=6145 1 17  > ${test_pnm} ;;
+    2) pamnoise -randomseed=6234 -tupletype="GRAYSCALE" -w 1 -h 12 -d 1 | pgmtopgm > ${test_pnm} ;;
+    esac
+    
+    pamenlarge -xscale=17 ${test_pnm} > ${stretch_pnm}
+    if [ $? -eq 0 ] ; then
+       
     for leftpad in 0 1 7 16
     do
         pnmpad -extend-edge -l=${leftpad} -r=$((16 - ${leftpad})) ${test_pnm} |\
                 cmp -s - ${stretch_pnm} && echo "match" ||\
                     echo "no match: ${generator} ${leftpad}";
     done
+    else
+	echo "Test 3.$i test image file generation failed" ;
+    fi
     rm ${stretch_pnm} ${test_pnm}
 done
 
 
-echo "Test 4.  Should print match eighteen (3x6) times"
+echo "Test 4.  Should print match eight times"
 
-stretch_pnm=${tmpdir}/stretch.pnm
+for i in 1 2
+do
 
-for generator in "pbmmake -b 1 1" \
-                 "pbmmake -b 8 1" \
-                 "pbmmake -w 1 1" \
-                 "pbmmake -w 3 1" \
-                 "pbmnoise -randomseed=100 17 1" \
-                 "pgmnoise -randomseed=100 8 1"          
+    case $i in
+    1) pbmnoise -randomseed=6323 23 1  > ${test_pnm} ;;
+    2) pamnoise -randomseed=6412 -tupletype="GRAYSCALE" -w 12 -h 1 -d 1 | pgmtopgm > ${test_pnm} ;;
+    esac
+    
+    pamenlarge -yscale=17 ${test_pnm} > ${stretch_pnm}
+    if [ $? -eq 0 ] ; then
+       
+    for toppad in 0 1 2 7
     do
-        ${generator} > ${test_pnm}
-     pamenlarge -yscale=15 ${test_pnm} > ${stretch_pnm} 
-        
-    for toppad in  0 1 14
-    do
-        pnmpad -extend-edge -t=${toppad} -b=$((14 - ${toppad})) ${test_pnm} |\
+        pnmpad -extend-edge -t=${toppad} -b=$((16 - ${toppad})) ${test_pnm} |\
                 cmp -s - ${stretch_pnm} && echo "match" ||\
                     echo "no match: ${generator} ${toppad}";
     done
+    else
+	echo "Test 4.$i test image file generation failed" ;
+    fi
     rm ${stretch_pnm} ${test_pnm}
 done
 
 
-echo "Test 5.  Should print match thirty-two (8x4) times"
+echo "Test 5.  Should print match twelve times"
 
-stretch_pnm=${tmpdir}/stretch.pnm
+for i in 1 2 3 4
+do
+    case $i in
+	1) pbmmake -b 1 1 >  ${test_pnm} ;;
+        2) pbmmake -w 1 1 >  ${test_pnm} ;;
+	3) pgmmake 0.3 1 1 > ${test_pnm} ;;
+	4) ppmmake rgbi:0.5/0.3/0.8 1 1 > ${test_pnm} ;;
+    esac
 
-for generator in "pbmmake -b 1 1" \
-                 "pbmmake -w 1 1" \
-                 "pgmmake 0.3 1 1" \
-                 "ppmmake rgbi:0.5/0.3/0.8 1 1"
-    do
-        ${generator} > ${test_pnm}
-        pamenlarge -xscale=66 -yscale=10 ${test_pnm} > ${stretch_pnm}
-        
-    for toppad in  0 8
-    do
-    for leftpad in  0 1 15 64
-    do
-        pnmpad -extend-edge -t=${toppad} -b=$((9 - ${toppad})) \
-         -l=${leftpad} -r=$((65 - ${leftpad})) ${test_pnm} |\
+    xs=$i; ys=$i
+    
+    pamenlarge -xscale=$xs -yscale=$ys ${test_pnm} > ${stretch_pnm}
+    if [ $? -eq 0 ] ; then
+    # center
+    pnmpad -extend-edge -w $xs -h $ys ${test_pnm} |\
                 cmp -s - ${stretch_pnm} && echo "match" ||\
-                echo "no match: ${generator} ${toppad} ${leftpad}"
-    done
-    done
+            echo "no match: ${generator} ${toppad} ${leftpad}"
+    # extend bottom and left
+    pnmpad -extend-edge -w $xs -h $ys -t=0 -r=0 ${test_pnm} |\
+                cmp -s - ${stretch_pnm} && echo "match" ||\
+            echo "no match: ${generator} ${toppad} ${leftpad}" ;
+    # extend top and right    
+    pnmpad -extend-edge -w $xs -h $ys -b=0 -l=0 ${test_pnm} |\
+                cmp -s - ${stretch_pnm} && echo "match" ||\
+            echo "no match: ${generator} ${toppad} ${leftpad}"
+    else
+	echo "Test 5.$i test image file generation failed" ;
+    fi
+    
     rm ${stretch_pnm} ${test_pnm}
+
 done
+

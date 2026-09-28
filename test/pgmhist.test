@@ -28,6 +28,7 @@ echo "Test Invalid"
 
 . ./test-invalid.inc
 
+invCmd "pgmhist /dev/null"
 invCmd "pgmhist -median   -quartile testgrid.pbm"
 invCmd "pgmhist -median   -decile   testgrid.pbm"
 invCmd "pgmhist -quartile -decile   testgrid.pbm"
