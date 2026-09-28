@@ -65,29 +65,26 @@ main(int argc, const char **argv) {
 
     ifP = pm_openr(inputFilespec);
 
-    eof = FALSE;  /* initial assumption */
+    for (eof = 0; !eof; ) {
+        int     rows, cols;
+        int     format;
+        pixval  maxval;
+        pixel * inputRow;
+        gray *  outputRow;
 
-    while (!eof) {
+        ppm_readppminit(ifP, &cols, &rows, &maxval, &format);
+        pgm_writepgminit(stdout, cols, rows, maxval, 0);
+
+        inputRow = ppm_allocrow(cols);
+        outputRow = pgm_allocrow(cols);
+
+        convertRaster(ifP, cols, rows, maxval, format,
+                      inputRow, outputRow, stdout);
+
+        ppm_freerow(inputRow);
+        pgm_freerow(outputRow);
+
         ppm_nextimage(ifP, &eof);
-        if (!eof) {
-            int     rows, cols;
-            int     format;
-            pixval  maxval;
-            pixel * inputRow;
-            gray *  outputRow;
-
-            ppm_readppminit(ifP, &cols, &rows, &maxval, &format);
-            pgm_writepgminit(stdout, cols, rows, maxval, 0);
-
-            inputRow = ppm_allocrow(cols);
-            outputRow = pgm_allocrow(cols);
-
-            convertRaster(ifP, cols, rows, maxval, format,
-                          inputRow, outputRow, stdout);
-
-            ppm_freerow(inputRow);
-            pgm_freerow(outputRow);
-        }
     }
     pm_close(ifP);
     pm_close(stdout);
