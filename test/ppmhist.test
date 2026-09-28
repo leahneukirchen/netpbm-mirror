@@ -29,6 +29,7 @@ echo "Test Invalid"
 
 . ./test-invalid.inc
 
+invCmd "ppmhist /dev/null"
 invCmd "ppmhist -hexcolor -float testimg.ppm"
 invCmd "ppmhist -hexcolor -map   testimg.ppm"
 invCmd "ppmhist -float    -map   testimg.ppm"

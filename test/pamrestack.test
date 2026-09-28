@@ -60,6 +60,7 @@ echo "Test Invalid."
 
 . ./test-invalid.inc
 
+invCmd "pamrestack /dev/null"
 invCmd "pamrestack testgrid.pbm maze.pbm"
 invCmd "pamrestack -abort -width=$((pixels * 2 + 1 )) maze.pbm"
 invCmd "pamrestack -crop -width=$((pixels * 2 + 1)) maze.pbm"

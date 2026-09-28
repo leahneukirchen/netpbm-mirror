@@ -10,3 +10,10 @@ echo
 pbmminkowski testgrid.pbm
 echo
 pbmminkowski maze.pbm
+
+echo "Test Invalid"
+
+. ./test-invalid.inc
+
+invCmd "pbmminkowski /dev/null"
+

@@ -10,3 +10,5 @@ Test 4.  Should print 2595564405 14 three times
 2595564405 14
 Test 7.  Should print 2896726098 15
 2896726098 15
+Test Invalid
+Expected failure 1 (no output)

@@ -11,43 +11,43 @@ out1_pam=${tmpdir}/out1.pam
 echo "Test 1.  Should print 1081361896 1432 five times"
 
 pgmhist -machine maze.pbm | cksum
-pamshuffle -randomseed=1 maze.pbm | pgmhist -machine | cksum
-pamshuffle -randomseed=2 maze.pbm | pgmhist -machine | cksum
-pamshuffle -column -randomseed=3 maze.pbm | pgmhist -machine | cksum
-pamrestack maze.pbm | pamshuffle -randomseed=3 | pgmhist -machine | cksum
+pamshuffle -randomseed=5442 maze.pbm | pgmhist -machine | cksum
+pamshuffle -randomseed=5448 maze.pbm | pgmhist -machine | cksum
+pamshuffle -column -randomseed=5454 maze.pbm | pgmhist -machine | cksum
+pamrestack maze.pbm | pamshuffle -randomseed=5460 | pgmhist -machine | cksum
 
 echo "Test 2.  Should print 1936883899 143517 four times"
 
 pamseq -tupletype="RGB" 3 15 > ${seq_pam}
 
 ppmhist -map ${seq_pam} | cksum
-pamshuffle -randomseed=2 ${seq_pam} | ppmhist -map | cksum
+pamshuffle -randomseed=5466 ${seq_pam} | ppmhist -map | cksum
 pamrestack -width=16 -trim=abort ${seq_pam} | tee ${seq16_pam} | \
   ppmhist -map | cksum
-pamshuffle -column -randomseed=3 ${seq16_pam} | ppmhist -map | cksum
+pamshuffle -column -randomseed=5472 ${seq16_pam} | ppmhist -map | cksum
 
 echo "Test 3.  Should print nomatch three times"
 
-pamshuffle -randomseed=$((100 +i)) ${seq16_pam} > ${out1_pam}
-pamshuffle -randomseed=${i} ${seq16_pam} | \
+pamshuffle -randomseed=5478 ${seq16_pam} > ${out1_pam}
+pamshuffle -randomseed=5484 ${seq16_pam} | \
 pnmpsnr -target=14.0 ${out1_pam} -
 rm ${seq_pam} ${seq16_pam} ${out1_pam}
 
-pamshuffle -randomseed=$((100 +i)) testimg.ppm > ${out1_pam}
-pamshuffle -randomseed=${i} testimg.ppm | \
+pamshuffle -randomseed=5490 testimg.ppm > ${out1_pam}
+pamshuffle -randomseed=5496 testimg.ppm | \
   pnmpsnr -target=14.0 ${out1_pam} -
 rm ${out1_pam}
 
-pamshuffle -randomseed=$((100 +i)) -column testimg.ppm > ${out1_pam}
-pamshuffle -randomseed=${i} -column testimg.ppm | \
+pamshuffle -randomseed=5502 -column testimg.ppm > ${out1_pam}
+pamshuffle -randomseed=5508 -column testimg.ppm | \
   pnmpsnr -target=14.0 ${out1_pam} -
 rm ${out1_pam}
 
-test_out=${tmpdir}/test_out
 echo "Test Invalid."
 
 . ./test-invalid.inc
 
+invCmd "pamshuffle /dev/null"
 invCmd "pamshuffle testimg.ppm testgrid.pbm"
 invCmd "pamshuffle -randomseed -column testgrid.pbm"
 invCmd "pamshuffle -randomseed=null testgrid.pbm"

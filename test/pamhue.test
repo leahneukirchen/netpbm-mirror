@@ -36,4 +36,5 @@ echo "Test Invalid"
 
 . ./test-invalid.inc
 
+invCmd "pamhue -huechange=0 /dev/null"
 invCmd "pamhue testimg.ppm "

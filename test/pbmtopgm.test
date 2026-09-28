@@ -11,6 +11,7 @@ echo "Test Invalid"
 
 . ./test-invalid.inc
 
+invCmd "pbmtopgm 5 5 /dev/null"
 invCmd "pbmtopgm 5 0 testgrid.pbm"
 invCmd "pbmtopgm 0 9 testgrid.pbm"
 invCmd "pbmtopgm 15 5 testgrid.pbm"

@@ -41,6 +41,7 @@ echo "Test: Invalid"
 
 . ./test-invalid.inc
 
+invCmd "pamditherbw -th -value=0.5      /dev/null"
 invCmd "pamditherbw -fs -atkinson       ${test_red}"
 invCmd "pamditherbw -floyd -atkinson    ${test_red}"
 invCmd "pamditherbw -dither8  -cluster3 ${test_red}"
@@ -50,7 +51,9 @@ invCmd "pamditherbw -cluster4 -cluster8 ${test_red}"
 invCmd "pamditherbw -hilbert -threshold ${test_red}"
 invCmd "pamditherbw -clump=8            ${test_red}"
 invCmd "pamditherbw -fs -clump=8        ${test_red}"
+invCmd "pamditherbw -hilbert -clump     ${test_red}"
 invCmd "pamditherbw -hilbert -clump=1   ${test_red}"
+invCmd "pamditherbw -th -value          ${test_red}"
 invCmd "pamditherbw -th -value=-1       ${test_red}"
 invCmd "pamditherbw -th -value=1.1      ${test_red}"
 

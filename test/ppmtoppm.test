@@ -13,3 +13,9 @@ ppmtoppm < maze.pbm | cksum
 
 echo "Test 4.  Should print 1926073387 101484"
 ppmtoppm < testimg.ppm | cksum
+
+echo "Test Invalid"
+
+. ./test-invalid.inc
+
+invCmdStdin "ppmtoppm" "/dev/null"

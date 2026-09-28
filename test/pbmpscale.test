@@ -29,6 +29,7 @@ echo "Test Invalid"
 
 . ./test-invalid.inc
 
+invCmd "pbmpscale 2 /dev/null"
 invCmd "pbmpscale testgrid.pbm"
 invCmd "pbmpscale 0 testgrid.pbm"
 invCmd "pbmpscale 2 3 testgrid.pbm"

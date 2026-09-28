@@ -31,18 +31,11 @@ pamchannel -infile maze.pbm 0 | \
 
 # Test invalid: specified channel does not exist
 
-echo 1>&2
-echo "Invalid command-line argument combinations." 1>&2
-echo "Error messages should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
-
-tmpdir=${tmpdir:-/tmp}
-test_out=${tmpdir}/test_out
-
 echo "Test Invalid"
 
 . ./test-invalid.inc
 
+invCmd "pamchannel  -infile /dev/null 0"
 invCmd "pamchannel  -infile testgrid.pbm 1"
 invCmd "pamchannel  -infile testimg.ppm 3"
 invCmd "pamtopam testimg.ppm | pamchannel -infile=- 4"

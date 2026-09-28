@@ -48,7 +48,7 @@ ppmpat-random.test
 ppmforge.test
 ppmrough.test
 ppmrough-parameters.test
-
+       
 # Analyzer tests
 
 pamfile.test
@@ -68,6 +68,7 @@ pnmcolormap2.test
 # Basic (internal) converter tests
 
 pamtopam.test
+pamtopnm.test
 pbmtopgm.test
 pgmtopgm.test
 ppmtoppm.test

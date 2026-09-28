@@ -29,3 +29,5 @@ vertices:	3376
     area:	1627
 perimeter:	3304
  eulerchi:	97
+Test Invalid
+Expected failure 1 (no output)

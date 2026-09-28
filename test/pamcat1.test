@@ -88,6 +88,9 @@ echo "Test Invalid"
 
 . ./test-invalid.inc
 
+# empty input file
+invCmd "pamcat -topbottom /dev/null"
+
 # direction not specified
 invCmd "pamcat testgrid.pbm testimg.ppm"
 
@@ -113,6 +116,6 @@ invCmd "pamcat -tb -jbottom  testgrid.pbm testimg.ppm"
 
 # more than one input image from standard input
 cat testgrid.pbm | pamcat -lr - - testimg.ppm > ${test_out} || \
-  printf "Expected failure 14 "
+  printf "Expected failure 15 "
   test -s ${test_out} && echo "unexpected output" || echo "(no output)"
   rm -f ${test_out}

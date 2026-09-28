@@ -27,7 +27,7 @@ echo "Test 3. Should produce match five timese"
 
 ppmtopgm testimg.ppm > ${testimg_pgm}
 
-for seed in 1057 17291 235048 72818754 1968870362 
+for seed in 9297 9372 9447 9522 9597
   do
   pamrecolor -randomseed=${seed} testimg.ppm | ppmtopgm |\
     pnmpsnr  -target=56.725 - ${testimg_pgm}
@@ -42,6 +42,7 @@ echo "Test Invalid."
 truncated_file=${tmpdir}/truncated.txt
 echo P6 > ${truncated_file}
 
+invCmd "pamrecolor -targetcolor=rgb:00/11/22 /dev/null"
 invCmd "pamrecolor -targetcolor=rgb:00/11/22 -colorfile=${base_pgm} testimg.ppm"
 invCmd "pamrecolor -rmult=0.3  -gmult=0.3  -bmult=0.3 -colorfile=${base_pgm} testimg.ppm"
 invCmd "pamrecolor -colorspace=void -targetcolor=rgb:80/80/80 testimg.ppm"

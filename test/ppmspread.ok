@@ -4,9 +4,12 @@ stdin: PPM RAW 227 149 3 255 RGB
 Test 2.
 57 59
 57 59
-Test 3. Should print 281226646 481
+Test 3. Should print 281226646 481 twice
 281226646 481
-Test 4. Should print 639729144 101484
-639729144 101484
-Test 5. Should print 3278353642 685
-3278353642 685
+281226646 481
+Test 4. Should print 3580853691 101484
+3580853691 101484
+Test 5. Should print 4108303021 685
+4108303021 685
+Test Invalid.
+Expected failure 1 (no output)

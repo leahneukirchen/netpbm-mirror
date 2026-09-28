@@ -7,3 +7,8 @@
      0     0   255	   29	     40 
      0    50     2	   30	     41 
    100     0     1	   30	     41 
+Test Invalid
+Expected failure 1 (no output)
+Expected failure 2 (no output)
+Expected failure 3 (no output)
+Expected failure 4 (no output)

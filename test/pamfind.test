@@ -35,6 +35,7 @@ echo "Test Invalid"
 
 . ./test-invalid.inc
 
+invCmd "pamfind -color=black /dev/null"
 invCmd "pamfind -color=black -target=1,1,1 testimg.ppm"
 invCmd "pamfind -target=0,0 testimg.ppm"
 invCmd "pamfind -target=0,0,0,0 testimg.ppm"

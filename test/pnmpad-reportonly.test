@@ -142,6 +142,7 @@ echo "Invalid command-line arguments." 1>&2
 echo "Error messages should appear below the line." 1>&2
 echo "-----------------------------------------------------------" 1>&2
 
+invcmd "pnmpad -reportonly -l 1 -t 1 /dev/null"
 invcmd "pnmpad -reportonly -l 1 -r 1 -w 100 testgrid.pbm"
 invcmd "pnmpad -reportonly -t 1 -b 1 -h 100 testgrid.pbm"
 invcmd "pnmpad -reportonly -black -white -l 1 testgrid.pbm"

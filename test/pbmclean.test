@@ -39,6 +39,8 @@ echo "Test Invalid"
 
 . ./test-invalid.inc
 
+invCmd "pbmclean -black /dev/null"
+
 # overspecification
 invCmd "pbmclean -black -white -min=1 -extended testgrid.pbm"
 # note that without -extended the above is valid.
