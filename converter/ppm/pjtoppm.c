@@ -161,7 +161,7 @@ main(int argc, const char ** argv) {
                 switch (c) {
                 case 'M':   /* transmission mode */
                     if (val != 0 && val != 1)
-                        pm_error("unimplemented trasmission mode %d", val);
+                        pm_error("unimplemented transmission mode %d", val);
                     mode = val;
                     modeIsSet = true;
                     break;
@@ -217,6 +217,13 @@ main(int argc, const char ** argv) {
                         val = row + val;
                     if (buffer[0] == '-')
                         val = row - val;
+                    if (val < 0)
+                        pm_error("invalid Y position");
+                    rowsX = MAX(rowsX, val);
+                    REALLOCARRAY(image, uintProduct(rowsX, planes));
+                    REALLOCARRAY(imlen, uintProduct(rowsX, planes));
+                    if (image == NULL || imlen == NULL)
+                        pm_error("out of memory");
                     for (; val > row; ++row)
                         for (plane = 0; plane < 3; ++plane) {
                             imlen[row * planes + plane] = 0;
@@ -273,6 +280,7 @@ main(int argc, const char ** argv) {
                  * lose a line, and probably die on the next line anyway
                  */
                 image[plane + row * planes] = realloc(buf, i);
+                imlen[plane + row * planes] = i;
             }
         }
         cols *= 8;
@@ -296,7 +304,7 @@ main(int argc, const char ** argv) {
                 for (i = 0; i < 8 && col + i < cols; ++i) {
                     unsigned int plane;
                     for (plane = 0; plane < planes; ++plane)
-                        if (mode == 0 && cmd >= imlen[row * planes + plane])
+                        if (cmd >= imlen[row * planes + plane])
                             bf[plane] = 0;
                         else
                             bf[plane] = (image[row * planes + plane][cmd] &

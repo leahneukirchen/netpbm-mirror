@@ -66,9 +66,11 @@ main(int argc, char ** argv) {
                 pm_error( "bad attributes header" );
             buf[8] = '\0';
             len = atoi( (char*) buf );
+            if (len >= sizeof(buf))
+                pm_error("AT chunk length %u too long.  We can handle "
+                         "a maximum of %u", len, (unsigned)sizeof(buf));
             if ( fread( buf, len, 1, ifp ) != 1 )
                 pm_error( "bad attributes buf" );
-            buf[len] = '\0';
             sscanf( (char*) buf, "%4u%4u%4u", &cols, &rows, &cmaplen );
             maxval = 255;
             gotAT = 1;
@@ -82,6 +84,9 @@ main(int argc, char ** argv) {
                 pm_error( "bad colormap header" );
             buf[8] = '\0';
             len = atoi((char*) buf );
+            if (len >= sizeof(buf))
+                pm_error("CM chunk length %u too long.  We can handle "
+                         "a maximum of %u", len, (unsigned)sizeof(buf));
             if ( fread( buf, len, 1, ifp ) != 1 )
                 pm_error( "bad colormap buf" );
             if ( cmaplen * 3 != len )

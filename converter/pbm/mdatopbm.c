@@ -241,8 +241,8 @@ main(int argc, char **argv) {
 
     {
         short yy;
-        pm_readlittleshort(infile, &yy); nInRows = yy;
-        pm_readlittleshort(infile, &yy); nInCols = yy;
+        pm_readlittleshort(infile, &yy); nInRows = (unsigned short)yy;
+        pm_readlittleshort(infile, &yy); nInCols = (unsigned short)yy;
     }
     
     nOutCols = 8 * nInCols;

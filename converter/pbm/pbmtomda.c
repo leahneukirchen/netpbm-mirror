@@ -74,7 +74,7 @@ do_translation(bit ** const bits,
     if (mdrow == NULL)
         pm_error("Not enough memory for conversion.");
 
-    for (row = 0; row < nOutRows; row+=step)
+    for (row = 0; row < nOutRows*step; row+=step)
     {
         int col;
         int x1;

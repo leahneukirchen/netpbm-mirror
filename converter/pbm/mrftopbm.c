@@ -153,7 +153,14 @@ readMrfImage(FILE *           const ifP,
         pm_error("can't handle file subtype %u", buf[12]);
 
     cols = (buf[4] << 24) | (buf[5] << 16) | (buf[06] << 8) | buf[07] << 0;
+
+    if (cols == 0)
+        pm_error("Invalid width in MRF input image: zero");
+
     rows = (buf[8] << 24) | (buf[9] << 16) | (buf[10] << 8) | buf[11] << 0;
+
+    if (rows == 0)
+        pm_error("Invalid height in MRF input image: zero");
 
     /* w64 is units-of-64-bits width, h64 same for height */
     w64 = (cols+63)/64;
