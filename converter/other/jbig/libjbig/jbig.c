@@ -40,6 +40,21 @@
 
 #include "jbig.h"
 
+static unsigned long
+ulongFmBig32(const unsigned char * const code) {
+/*----------------------------------------------------------------------------
+   The unsigned 32 bit integer encoded by the 4 bytes at 'code' in big-endian.
+-----------------------------------------------------------------------------*/
+    return
+        (unsigned long)code[0] << 24 |
+        (unsigned long)code[1] << 16 |
+        (unsigned long)code[2] <<  8 |
+        (unsigned long)code[3] <<  0
+        ;
+}
+
+
+
 #define MX_MAX  127
    /* maximal mx offset for adaptive template in the encoder */
 
@@ -2641,6 +2656,190 @@ decode_pscd(struct jbg_dec_state *s,
 
 
 
+static void
+interpretBih(struct jbg_dec_state * const s,
+             int *                  const errorCodeP) {
+/*----------------------------------------------------------------------------
+  Interpret 20-byte BIH in the buffer.
+
+  If there is something wrong with the BIH, return a code for it as
+  *errorCodeP.  Iff there is nothing wrong, return *errorCodeP == 0.
+-----------------------------------------------------------------------------*/
+    assert(s->bie_len >= 20);
+
+    *errorCodeP = 0;  /* initial assumption */
+
+    if (s->buffer[3] != 0)
+        *errorCodeP = JBG_EINVAL | 2; /* padding != 0 */
+    else if ((s->buffer[18] & 0xf0) != 0)
+        *errorCodeP = JBG_EINVAL | 3; /* padding != 0 */
+    else if ((s->buffer[19] & 0x80) != 0)
+        *errorCodeP = JBG_EINVAL | 4; /* padding != 0 */
+
+    if (!*errorCodeP) {
+        if (s->buffer[0] != s->d + 1) {
+            /* Lowest layer in this BIE is not one more than the last layer
+               we processed in the prior BIE.
+            */
+            *errorCodeP = JBG_ENOCONT | 1;
+        } else {
+            if (s->buffer[1] < s->buffer[0])
+                *errorCodeP = JBG_EINVAL | 1;
+            else {
+                s->dl = s->buffer[0];
+
+                s->d  = s->buffer[1];
+            }
+        }
+    }
+    if (!*errorCodeP) {
+        if (s->dl == 0)
+            s->planes = s->buffer[2];
+        else {
+            if (s->planes != s->buffer[2])
+                *errorCodeP = JBG_ENOCONT | 2;
+        }
+    }
+    if (!*errorCodeP) {
+        unsigned long int const x = ulongFmBig32(&s->buffer[4]);
+        unsigned long int const y = ulongFmBig32(&s->buffer[8]);
+
+        if (s->dl != 0 && ((s->xd << (s->d - s->dl + 1)) != x &&
+                           (s->yd << (s->d - s->dl + 1)) != y)) {
+            *errorCodeP = JBG_ENOCONT | 3;
+        } else {
+            s->xd = x;
+            s->yd = y;
+        }
+    }
+    if (!*errorCodeP) {
+        s->l0 = ulongFmBig32(&s->buffer[12]);
+        /* ITU-T T.85 trick not directly implemented by decoder; for full
+         * T.85 compatibility with respect to all NEWLEN marker scenarios,
+         * preprocess BIE with jbg_newlen() before passing it to the decoder,
+         * or consider using the decoder found in jbig85.c instead. */
+        if (s->yd == 0xffffffff)
+            *errorCodeP = JBG_EIMPL | 1;
+        else if (!s->planes)
+            *errorCodeP = JBG_EINVAL | 5;
+        else if (!s->xd)
+            *errorCodeP = JBG_EINVAL | 6;
+        else if (!s->yd)
+            *errorCodeP = JBG_EINVAL | 7;
+        else if (!s->l0)
+            *errorCodeP = JBG_EINVAL | 8;
+        /* prevent uint32 overflow: s->l0 * 2 ^ s->d < 2 ^ 32 */
+        else if (s->d > 31)
+            *errorCodeP = JBG_EIMPL | 2;
+        else if ((s->d != 0 && s->l0 >= (1UL << (32 - s->d))))
+            *errorCodeP = JBG_EIMPL | 3;
+    }
+    if (!*errorCodeP) {
+        s->mx = s->buffer[16];
+        if (s->mx > 127)
+            *errorCodeP = JBG_EINVAL | 9;
+    }
+
+    if (!*errorCodeP) {
+        s->my = s->buffer[17];
+        s->order = s->buffer[18];
+        if (iindex[s->order & 7][0] < 0)
+            *errorCodeP = JBG_EINVAL | 10;
+        /* HITOLO and SEQ currently not yet implemented */
+        else if (s->dl != s->d && (s->order & JBG_HITOLO ||
+                                   s->order & JBG_SEQ))
+            *errorCodeP = JBG_EIMPL | 5;
+    }
+    if (!*errorCodeP) {
+        s->options = s->buffer[19];
+    }
+}
+
+
+
+static void
+initializeDecompressor(struct jbg_dec_state * const s) {
+    /* calculate number of stripes that will be required */
+    s->stripes = jbg_stripes(s->l0, s->yd, s->d);
+
+    /* some initialization */
+    s->ii[iindex[s->order & 7][STRIPE]] = 0;
+    s->ii[iindex[s->order & 7][LAYER]] = s->dl;
+    s->ii[iindex[s->order & 7][PLANE]] = 0;
+    if (s->dl == 0) {
+        unsigned int i;
+
+        s->s      = (struct jbg_ardec_state **)
+            checked_malloc(s->planes, sizeof(struct jbg_ardec_state *));
+        s->tx     = (int **) checked_malloc(s->planes, sizeof(int *));
+        s->ty     = (int **) checked_malloc(s->planes, sizeof(int *));
+        s->reset  = (int **) checked_malloc(s->planes, sizeof(int *));
+        s->lntp   = (int **) checked_malloc(s->planes, sizeof(int *));
+        s->lhp[0] = (unsigned char **)
+            checked_malloc(s->planes, sizeof(unsigned char *));
+        s->lhp[1] = (unsigned char **)
+            checked_malloc(s->planes, sizeof(unsigned char *));
+        for (i = 0; i < s->planes; i++) {
+            s->s[i]     = (struct jbg_ardec_state *)
+                checked_malloc(s->d - s->dl + 1,
+                               sizeof(struct jbg_ardec_state));
+            s->tx[i]    = (int *)
+                checked_malloc(s->d - s->dl + 1, sizeof(int));
+            s->ty[i]    = (int *)
+                checked_malloc(s->d - s->dl + 1, sizeof(int));
+            s->reset[i] = (int *)
+                checked_malloc(s->d - s->dl + 1, sizeof(int));
+            s->lntp[i]  = (int *)
+                checked_malloc(s->d - s->dl + 1, sizeof(int));
+            s->lhp[ s->d    & 1][i] = (unsigned char *)
+                checked_malloc(s->yd, jbg_ceil_half(s->xd, 3));
+            s->lhp[(s->d-1) & 1][i] = (unsigned char *)
+                checked_malloc(jbg_ceil_half(s->yd, 1), jbg_ceil_half(s->xd,
+                                                                      1+3));
+        }
+    } else {
+        unsigned int i;
+        for (i = 0; i < s->planes; i++) {
+            s->s[i]     = (struct jbg_ardec_state *)
+                checked_realloc(s->s[i], s->d - s->dl + 1,
+                                sizeof(struct jbg_ardec_state));
+            s->tx[i]    = (int *)
+                checked_realloc(s->tx[i], s->d - s->dl + 1, sizeof(int));
+            s->ty[i]    = (int *)
+                checked_realloc(s->ty[i], s->d - s->dl + 1, sizeof(int));
+            s->reset[i] = (int *)
+                checked_realloc(s->reset[i], s->d - s->dl + 1, sizeof(int));
+            s->lntp[i]  = (int *)
+                checked_realloc(s->lntp[i], s->d - s->dl + 1, sizeof(int));
+            s->lhp[ s->d    & 1][i] = (unsigned char *)
+                checked_realloc(s->lhp[ s->d    & 1][i],
+                                s->yd, jbg_ceil_half(s->xd, 3));
+            s->lhp[(s->d-1) & 1][i] = (unsigned char *)
+                checked_realloc(s->lhp[(s->d-1) & 1][i],
+                                jbg_ceil_half(s->yd, 1), jbg_ceil_half(s->xd,
+                                                                       1+3));
+        }
+    }
+    {
+        unsigned int i;
+        for (i = 0; i < s->planes; i++) {
+            unsigned int j;
+            for (j = 0; j <= s->d - s->dl; j++)
+                arith_decode_init(s->s[i] + j, 0);
+        }
+    }
+    if (s->dl == 0 || (s->options & JBG_DPON && !(s->options & JBG_DPPRIV)))
+        s->dppriv = jbg_dptable;
+    s->comment_skip = 0;
+    s->buf_len = 0;
+    s->x = 0;
+    s->i = 0;
+    s->pseudo = 1;
+    s->at_moves = 0;
+}
+
+
+
 /*
  * Provide to the decoder a new BIE fragment of len bytes starting at data.
  *
@@ -2681,141 +2880,31 @@ jbg_dec_in(struct jbg_dec_state *s,
            size_t const len,
            size_t *cnt) {
 
-  int i, j, required_length;
-  unsigned long int x, y;
-  unsigned long int is[3], ie[3];
-  size_t dummy_cnt;
-  unsigned char *dppriv;
+    int i, j, required_length;
+    unsigned long int is[3], ie[3];
+    size_t dummy_cnt;
+    unsigned char *dppriv;
 
-  if (!cnt) cnt = &dummy_cnt;
-  *cnt = 0;
-  if (len < 1) return JBG_EAGAIN;
+    if (!cnt) cnt = &dummy_cnt;
+    *cnt = 0;
+    if (len < 1) return JBG_EAGAIN;
 
-  /* read in 20-byte BIH */
-  if (s->bie_len < 20) {
-    while (s->bie_len < 20 && *cnt < len)
-      s->buffer[s->bie_len++] = data[(*cnt)++];
-    if (s->bie_len < 20)
-      return JBG_EAGAIN;
-    /* test whether this looks like a valid JBIG header at all */
-    if (s->buffer[1] < s->buffer[0])
-      return JBG_EINVAL | 1;
-    if (s->buffer[3] != 0)           return JBG_EINVAL | 2; /* padding != 0 */
-    if ((s->buffer[18] & 0xf0) != 0) return JBG_EINVAL | 3; /* padding != 0 */
-    if ((s->buffer[19] & 0x80) != 0) return JBG_EINVAL | 4; /* padding != 0 */
-    if (s->buffer[0] != s->d + 1)
-      return JBG_ENOCONT | 1;
-    s->dl = s->buffer[0];
-    s->d = s->buffer[1];
-    if (s->dl == 0)
-      s->planes = s->buffer[2];
-    else
-      if (s->planes != s->buffer[2])
-        return JBG_ENOCONT | 2;
-    x = (((long int) s->buffer[ 4] << 24) | ((long int) s->buffer[ 5] << 16) |
-         ((long int) s->buffer[ 6] <<  8) | (long int) s->buffer[ 7]);
-    y = (((long int) s->buffer[ 8] << 24) | ((long int) s->buffer[ 9] << 16) |
-         ((long int) s->buffer[10] <<  8) | (long int) s->buffer[11]);
-    if (s->dl != 0 && ((s->xd << (s->d - s->dl + 1)) != x &&
-                       (s->yd << (s->d - s->dl + 1)) != y))
-      return JBG_ENOCONT | 3;
-    s->xd = x;
-    s->yd = y;
-    s->l0 = (((long int) s->buffer[12] << 24) | ((long int) s->buffer[13] << 16) |
-             ((long int) s->buffer[14] <<  8) | (long int) s->buffer[15]);
-    /* ITU-T T.85 trick not directly implemented by decoder; for full
-     * T.85 compatibility with respect to all NEWLEN marker scenarios,
-     * preprocess BIE with jbg_newlen() before passing it to the decoder,
-     * or consider using the decoder found in jbig85.c instead. */
-    if (s->yd == 0xffffffff)
-      return JBG_EIMPL | 1;
-    if (!s->planes) return JBG_EINVAL | 5;
-    if (!s->xd)     return JBG_EINVAL | 6;
-    if (!s->yd)     return JBG_EINVAL | 7;
-    if (!s->l0)     return JBG_EINVAL | 8;
-    /* prevent uint32 overflow: s->l0 * 2 ^ s->d < 2 ^ 32 */
-    if (s->d > 31)
-      return JBG_EIMPL | 2;
-    if ((s->d != 0 && s->l0 >= (1UL << (32 - s->d))))
-      return JBG_EIMPL | 3;
-    s->mx = s->buffer[16];
-    if (s->mx > 127)
-      return JBG_EINVAL | 9;
-    s->my = s->buffer[17];
-#if 0
-    if (s->my > 0)
-      return JBG_EIMPL | 4;
-#endif
-    s->order = s->buffer[18];
-    if (iindex[s->order & 7][0] < 0)
-      return JBG_EINVAL | 10;
-    /* HITOLO and SEQ currently not yet implemented */
-    if (s->dl != s->d && (s->order & JBG_HITOLO || s->order & JBG_SEQ))
-      return JBG_EIMPL | 5;
-    s->options = s->buffer[19];
+    /* read in 20-byte BIH */
+    if (s->bie_len < 20) {
+      int errorCode;
 
-    /* calculate number of stripes that will be required */
-    s->stripes = jbg_stripes(s->l0, s->yd, s->d);
+      while (s->bie_len < 20 && *cnt < len)
+          s->buffer[s->bie_len++] = data[(*cnt)++];
 
-    /* some initialization */
-    s->ii[iindex[s->order & 7][STRIPE]] = 0;
-    s->ii[iindex[s->order & 7][LAYER]] = s->dl;
-    s->ii[iindex[s->order & 7][PLANE]] = 0;
-    if (s->dl == 0) {
-      s->s      = (struct jbg_ardec_state **)
-        checked_malloc(s->planes, sizeof(struct jbg_ardec_state *));
-      s->tx     = (int **) checked_malloc(s->planes, sizeof(int *));
-      s->ty     = (int **) checked_malloc(s->planes, sizeof(int *));
-      s->reset  = (int **) checked_malloc(s->planes, sizeof(int *));
-      s->lntp   = (int **) checked_malloc(s->planes, sizeof(int *));
-      s->lhp[0] = (unsigned char **)
-        checked_malloc(s->planes, sizeof(unsigned char *));
-      s->lhp[1] = (unsigned char **)
-        checked_malloc(s->planes, sizeof(unsigned char *));
-      for (i = 0; i < s->planes; i++) {
-        s->s[i]     = (struct jbg_ardec_state *)
-          checked_malloc(s->d - s->dl + 1, sizeof(struct jbg_ardec_state));
-        s->tx[i]    = (int *) checked_malloc(s->d - s->dl + 1, sizeof(int));
-        s->ty[i]    = (int *) checked_malloc(s->d - s->dl + 1, sizeof(int));
-        s->reset[i] = (int *) checked_malloc(s->d - s->dl + 1, sizeof(int));
-        s->lntp[i]  = (int *) checked_malloc(s->d - s->dl + 1, sizeof(int));
-        s->lhp[ s->d    & 1][i] = (unsigned char *)
-          checked_malloc(s->yd, jbg_ceil_half(s->xd, 3));
-        s->lhp[(s->d-1) & 1][i] = (unsigned char *)
-          checked_malloc(jbg_ceil_half(s->yd, 1), jbg_ceil_half(s->xd, 1+3));
-      }
-    } else {
-      for (i = 0; i < s->planes; i++) {
-        s->s[i]     = (struct jbg_ardec_state *)
-          checked_realloc(s->s[i], s->d - s->dl + 1,
-                          sizeof(struct jbg_ardec_state));
-        s->tx[i]    = (int *) checked_realloc(s->tx[i],
-                                              s->d - s->dl + 1, sizeof(int));
-        s->ty[i]    = (int *) checked_realloc(s->ty[i],
-                                              s->d - s->dl + 1, sizeof(int));
-        s->reset[i] = (int *) checked_realloc(s->reset[i],
-                                              s->d - s->dl + 1, sizeof(int));
-        s->lntp[i]  = (int *) checked_realloc(s->lntp[i],
-                                              s->d - s->dl + 1, sizeof(int));
-        s->lhp[ s->d    & 1][i] = (unsigned char *)
-          checked_realloc(s->lhp[ s->d    & 1][i],
-                          s->yd, jbg_ceil_half(s->xd, 3));
-        s->lhp[(s->d-1) & 1][i] = (unsigned char *)
-          checked_realloc(s->lhp[(s->d-1) & 1][i],
-                          jbg_ceil_half(s->yd, 1), jbg_ceil_half(s->xd, 1+3));
-      }
-    }
-    for (i = 0; i < s->planes; i++)
-      for (j = 0; j <= s->d - s->dl; j++)
-        arith_decode_init(s->s[i] + j, 0);
-    if (s->dl == 0 || (s->options & JBG_DPON && !(s->options & JBG_DPPRIV)))
-      s->dppriv = jbg_dptable;
-    s->comment_skip = 0;
-    s->buf_len = 0;
-    s->x = 0;
-    s->i = 0;
-    s->pseudo = 1;
-    s->at_moves = 0;
+      if (s->bie_len < 20)
+          return JBG_EAGAIN;
+
+      interpretBih(s, &errorCode);
+
+      if (errorCode)
+          return errorCode;
+
+      initializeDecompressor(s);
   }
 
   /* read in DPTABLE */
@@ -2904,15 +2993,17 @@ jbg_dec_in(struct jbg_dec_state *s,
         } else
           return JBG_EIMPL | 7; /* more than JBG_ATMOVES_MAX ATMOVES */
         break;
-      case MARKER_NEWLEN:
-        y = (((long int) s->buffer[2] << 24) | ((long int) s->buffer[3] << 16) |
-             ((long int) s->buffer[4] <<  8) | (long int) s->buffer[5]);
+      case MARKER_NEWLEN: {
+        unsigned long int const y =
+          (((long int) s->buffer[2] << 24) | ((long int) s->buffer[3] << 16) |
+           ((long int) s->buffer[4] <<  8) | (long int) s->buffer[5]);
+
         if (y > s->yd)                   return JBG_EINVAL | 12;
         if (!(s->options & JBG_VLENGTH)) return JBG_EINVAL | 13;
         s->yd = y;
         /* calculate again number of stripes that will be required */
         s->stripes = jbg_stripes(s->l0, s->yd, s->d);
-        break;
+      } break;
       case MARKER_ABORT:
         return JBG_EABORT;
 
