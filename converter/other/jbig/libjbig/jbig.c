@@ -35,6 +35,9 @@
 #include <string.h>
 #include <assert.h>
 
+#include "pm_c_util.h"
+#include "nstring.h"
+
 #include "jbig.h"
 
 #define MX_MAX  127
@@ -2111,14 +2114,32 @@ jbg_enc_free(struct jbg_enc_state *s) {
 const char *
 jbg_strerror(int errnum) {
 
-  errnum >>= 4;
-  if (errnum < 0 || (unsigned int) errnum >= sizeof(errmsg)/sizeof(errmsg[0]))
-    return "Unknown error code passed to jbg_strerror()";
+  unsigned int const major = errno >> 4;
 
-  return errmsg[errnum];
+  if (major >= ARRAY_SIZE(errmsg))
+    return "??? invalid libjbig error code";
+  else
+    return errmsg[major];
 }
 
+const char *
+jbg_strerrorext(int errnum) {
 
+  unsigned int const major = errnum >> 4;
+  unsigned int const minor = errnum & 0xf;
+
+  const char * retval;
+
+  if (major >= ARRAY_SIZE(errmsg))
+    pm_asprintf(&retval, "??? invalid libjbig error code %d has "
+                "invalid major code %u", errnum, major);
+  else if (minor == 0)
+    pm_asprintf(&retval, "%s", errmsg[major]);
+  else
+    pm_asprintf(&retval, "%s (minor code %u)", errmsg[major], minor);
+
+  return retval;
+}
 
 /*
  * The constructor for a decoder

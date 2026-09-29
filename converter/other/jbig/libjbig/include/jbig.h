@@ -236,6 +236,7 @@ unsigned long jbg_dec_getsize_merged(const struct jbg_dec_state *s);
 void jbg_dec_free(struct jbg_dec_state *s);
 
 const char *jbg_strerror(int errnum);
+const char *jbg_strerrorext(int errnum);
 void jbg_int2dppriv(unsigned char *dptable, const char *internal);
 void jbg_dppriv2int(char *internal, const unsigned char *dptable);
 unsigned long jbg_ceil_half(unsigned long x, int n);

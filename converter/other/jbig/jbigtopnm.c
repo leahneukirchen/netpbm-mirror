@@ -19,6 +19,7 @@
 #include "pnm.h"
 #include "shhopt.h"
 #include "mallocvar.h"
+#include "nstring.h"
 
 #define BUFSIZE 8192
 
@@ -234,23 +235,27 @@ decompress(FILE *                 const ifP,
            and feeding that data to libjbig as long as libjbig says the data
            is valid.
         */
-    bool decompressFailed;
-        /* The input is bad -- libjbig was unable to decompress it */
-    int decompressFailCode;
-        /* Meaningful only when 'decompressFailed' is true.  Result code
-           from libjbig detailing why input could not be decompressed.
+    const char * decompError;
+        /* String explaining how decompression has failed.  Malloc'd.  Null if
+           it has not yet failed.
         */
+    unsigned int successfulDecompCt;
+       /* Number of bytes of the input we have passed to libjbig and it
+          accepted them.
+       */
 
     MALLOCARRAY(buffer, BUFSIZE);
     if (!buffer)
         pm_error("Failed to get %u bytes of memory for buffer", BUFSIZE);
 
-    /* send input file to decoder */
-
-    for (eof = false, decompressFailed = false, atEndOfImage = false;
-         !eof && !decompressFailed;
+    for (eof = false, decompError = NULL, atEndOfImage = false,
+             successfulDecompCt = 0;
+         !eof && !decompError;
         ) {
         size_t bytesRemainingCt;
+            /* How many bytes of the current buffer not yet processed by
+               libjbig
+            */
 
         bytesRemainingCt = fread(buffer, 1, BUFSIZE, ifP);
         if (bytesRemainingCt == 0)
@@ -258,7 +263,7 @@ decompress(FILE *                 const ifP,
         else {
             unsigned int cursor;
 
-            for (cursor = 0; bytesRemainingCt > 0 && !decompressFailed; ) {
+            for (cursor = 0; bytesRemainingCt > 0 && !decompError; ) {
 
                 int result;
                 size_t bytesProcessedCt;
@@ -268,28 +273,40 @@ decompress(FILE *                 const ifP,
 
                 switch (result) {
                 case JBG_EOK:
-                    cursor           += bytesProcessedCt;
-                    bytesRemainingCt -= bytesProcessedCt;
+                    cursor             += bytesProcessedCt;
+                    bytesRemainingCt   -= bytesProcessedCt;
+                    successfulDecompCt += bytesProcessedCt;
                     atEndOfImage = true;
                     break;
                 case JBG_EAGAIN:
                 case JBG_EOK_INTR:
-                    cursor           += bytesProcessedCt;
-                    bytesRemainingCt -= bytesProcessedCt;
+                    cursor             += bytesProcessedCt;
+                    bytesRemainingCt   -= bytesProcessedCt;
+                    successfulDecompCt += bytesProcessedCt;
                     atEndOfImage = false;
                     break;
-                default:
-                    decompressFailed = true;
-                    decompressFailCode = result;
+                default: {
+                    const char * const libjbigError = jbg_strerrorext(result);
+
+                    pm_asprintf(&decompError,
+                                "Invalid contents of input file detected "
+                                "somewhere in the %lu bytes at offset %u "
+                                "in input.  %s",
+                                bytesRemainingCt, successfulDecompCt,
+                                libjbigError);
+
+                    pm_strfree(libjbigError);
+                }
                 }
             }
         }
     }
     if (ferror(ifP))
         pm_error("Error reading input file");
-    else if (decompressFailed) {
-        pm_error("Invalid contents of input file.  %s",
-                 jbg_strerror(decompressFailCode));
+    else if (decompError) {
+        pm_errormsg("%s", decompError);
+        pm_strfree(decompError);
+        pm_longjmp();
     } else if (!atEndOfImage) {
         /* Note two significant cases of this: 1) input ends in the middle
            of a BIE; 2) input ends before any BIE at all -- it is empty
