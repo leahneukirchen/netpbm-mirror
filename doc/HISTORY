@@ -6,6 +6,10 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.17.00
 
+              jbigtopnm: fix bug: fails with bogus error message about
+              incremental BIE not continuing previous one when multi-BIE
+              image is of certain dimension.
+
 26.09.28 BJH  Release 11.16.00
 
               add pamnoise.

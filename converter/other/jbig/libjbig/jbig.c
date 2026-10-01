@@ -2704,10 +2704,26 @@ interpretBih(struct jbg_dec_state * const s,
         unsigned long int const x = ulongFmBig32(&s->buffer[4]);
         unsigned long int const y = ulongFmBig32(&s->buffer[8]);
 
-        if (s->dl != 0 && ((s->xd << (s->d - s->dl + 1)) != x &&
-                           (s->yd << (s->d - s->dl + 1)) != y)) {
-            *errorCodeP = JBG_ENOCONT | 3;
-        } else {
+        if (s->dl != 0) {
+            /* This BIE is supposed to be incremental to a previous one,
+               doubling the resolution of it.  (Except if it is the final BIE
+               of the image, in which case it just increases the resolution to
+               the full resolution of the image).
+
+               Validate that each dimension (i.e. resolution) is at least as
+               great as the prior one, but no more than twice it.
+            */
+
+            if (x < (s->xd << (s->d - s->dl)))
+                *errorCodeP = JBG_ENOCONT | 4;
+            else if (x > (s->xd << (s->d - s->dl + 1)))
+                *errorCodeP = JBG_ENOCONT | 5;
+            else if (y < (s->yd << (s->d - s->dl)))
+                *errorCodeP = JBG_ENOCONT | 6;
+            else if (y > (s->yd << (s->d - s->dl + 1)))
+                *errorCodeP = JBG_ENOCONT | 7;
+        }
+        if (!*errorCodeP) {
             s->xd = x;
             s->yd = y;
         }
