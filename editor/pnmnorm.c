@@ -591,12 +591,16 @@ resolvePercentParams(FILE *             const ifP,
                      xelval *           const bvalueP,
                      xelval *           const wvalueP) {
 /*----------------------------------------------------------------------------
-   Figure out the endpoint of the stretch (the value that is to be stretched
+   Figure out the endpoints of the stretch (the value that is to be stretched
    to black and the one that is to be stretched to white) as requested
    by the -{b,w}{value,percent,single} options.
 
    These values may be invalid because of overlapping, and they may exceed
    the maximum allowed stretch; Caller must deal with that.
+
+   This involves looking at the image.  The image is in the file 'ifP', which
+   is positioned just past the header (at the raster).  Leave it positioned
+   arbitrarily.
 -----------------------------------------------------------------------------*/
     unsigned int * hist;  /* malloc'ed */
 
@@ -692,11 +696,18 @@ computeLinearTransfer(xelval   const bvalue,
    Map the middle brightnesses (the ones that don't get clipped to full dark
    or full bright, i.e. from 'bvalue' to 'wvalue') linearly onto 0..maxval.
    Set this mapping in newBrightness[].
+
+   'wvalue' must be larger than 'bvalue' and newBrightness[] must have at
+   least 'wvalue' + 1 entries allocated.
 -----------------------------------------------------------------------------*/
     unsigned int const range = wvalue - bvalue;
 
     xelval i;
     unsigned int val;
+
+    assert(bvalue <= wvalue);
+    assert(range > 0);
+
     /* The following for structure is a hand optimization of this one:
        for (i = bvalue; i <= wvalue; ++i)
            newBrightness[i] = (i-bvalue)*maxval/range);
@@ -785,6 +796,9 @@ computeQuadraticTransfer(xelval   const bvalue,
    xelval middleNorm * maxval).
 
    Set this mapping in newBrightness[].
+
+   'bvalue', 'midvalue', and 'wvalue' must be in the proper order and
+   newBrightness[] must have at least 'wvalue' + 1 entries allocated.
 -----------------------------------------------------------------------------*/
     xelval const middle = pnm_unnormalize(middleNorm, maxval);
 
@@ -881,9 +895,11 @@ computeTransferFunction(bool      const quadratic,
         pm_error("Unable to allocate memory for transfer function.");
 
     /* Clip the lowest brightnesses to zero */
-    if (bvalue > 0)
+    if (bvalue > 0) {
+        xelval i;
         for (i = 0; i < bvalue; ++i)
             newBrightness[i] = 0;
+    }
 
     /* Map the middle brightnesses onto 0..maxval */
 
