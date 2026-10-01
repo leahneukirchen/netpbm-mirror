@@ -203,28 +203,30 @@ parseCommandLine(int argc, const char ** argv,
 
 
 static void
-buildHistogram(FILE *   const ifp,
-               int      const cols,
-               int      const rows,
-               xelval   const maxval,
-               int      const format,
-               unsigned int   hist[],
+buildHistogram(FILE *            const ifP,
+               int               const cols,
+               int               const rows,
+               xelval            const maxval,
+               int               const format,
+               unsigned int *    const hist,  /* array */
                enum brightMethod const brightMethod) {
 /*----------------------------------------------------------------------------
    Build the histogram of brightness values for the image that is in file
-   'ifp', which is positioned just after the header (at the raster).
+   'ifP', which is positioned just after the header (at the raster).
 
-   The histogram is the array hist[] such that hist[x] is the number
-   of xels in the image that have brightness x.  That brightness is
-   either the color value (intensity of most intense component) of the
-   xel or it is the luminosity of the xel, depending on
-   'brightMethod'.  In either case, it is based on the same maxval as
-   the image, which is 'maxval'.  The image is 'cols' columns wide by
-   'rows' rows high.
+   The histogram is the array hist[] such that hist[x] is the number of xels
+   in the image that have brightness x.  That brightness is either the color
+   value (intensity of most intense component) of the xel or it is the
+   luminosity of the xel, depending on 'brightMethod'.  In either case, it is
+   based on the same maxval as the image, which is 'maxval'.
+
+   The image is 'cols' columns wide by 'rows' rows high.
 
    Leave the file positioned arbitrarily.
+
+   'hist' must have at least 'maxval' + 1 entries allocated.
 -----------------------------------------------------------------------------*/
-    int row;
+    unsigned int row;
     xel * xelrow;
 
     xelrow = pnm_allocrow(cols);
@@ -235,11 +237,15 @@ buildHistogram(FILE *   const ifp,
             hist[i] = 0;
     }
     for (row = 0; row < rows; ++row) {
-        int col;
-        pnm_readpnmrow(ifp, xelrow, cols, maxval, format);
+        unsigned int col;
+
+        pnm_readpnmrow(ifP, xelrow, cols, maxval, format);
+
         for (col = 0; col < cols; ++col) {
-            xelval brightness;
             xel const p = xelrow[col];
+
+            xelval brightness;
+
             if (PNM_FORMAT_TYPE(format) == PPM_TYPE) {
                 switch(brightMethod) {
                 case BRIGHT_LUMINOSITY:
@@ -254,6 +260,7 @@ buildHistogram(FILE *   const ifp,
                 }
             } else
                 brightness = PNM_GET1(p);
+
             ++hist[brightness];
         }
     }
