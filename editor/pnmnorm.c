@@ -889,6 +889,12 @@ computeTransferFunction(bool      const quadratic,
     xelval * newBrightness;
     xelval i;
 
+    if (wvalue > maxval) {
+        pm_error("Selected value to stretch to white (%u) "
+                 "is greater than the maxval of the image (%u)",
+                 wvalue, maxval);
+    }
+
     MALLOCARRAY(newBrightness, maxval+1);
 
     if (newBrightness == NULL)

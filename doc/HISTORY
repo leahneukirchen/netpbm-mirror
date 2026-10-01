@@ -11,6 +11,10 @@ not yet  BJH  Release 11.17.00
               is of certain dimension.  Always broken (jbigtopnm was new in
               Netpbm 9.2 (May 2000)).
 
+              pnmnorm: fix memory corruption when -wvalue is greater than
+              maxval.  Always broken (pnmnorm was new in Netpbm 9.25 (March
+              2002.  Its predecessors were in primordial Netpbm).
+
 26.09.28 BJH  Release 11.16.00
 
               add pamnoise.
