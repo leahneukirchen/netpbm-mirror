@@ -20,3 +20,10 @@ pbmmake -g 7 7 | pnmpad -white -top 1 | \
 # 000001010100000
 # 000001010101000
 # 000000010101000
+
+echo "Test Invalid"
+ 
+. ./test-invalid.inc
+
+invCmd "pnmshear 45 /dev/null"
+invCmdStdin "pnmshear" "testimg.ppm"

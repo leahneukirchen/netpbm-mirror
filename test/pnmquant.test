@@ -33,50 +33,14 @@ pnmquant 2 testgrid.pbm | ppmhist | \
 
 echo "Test Invalid"
 
-echo 1>&2
-echo "Invalid command-line arguments." 1>&2
-echo "Error messages should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
+. ./test-invalid.inc
 
-tmpdir=${tmpdir:-/tmp}
-test_out=${tmpdir}/test_out
-
-pnmquant 0 testimg.ppm   > ${test_out} || \
-  printf "Expected failure 1 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pnmquant testimg.ppm  > ${test_out} || \
-  printf "Expected failure 2 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pnmquant 10.5 testimg.ppm > ${test_out} || \
-  printf "Expected failure 3 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pnmquant -center -meancolor 16 testimg.ppm > ${test_out} || \
-  printf "Expected failure 4 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pnmquant -center -meanpixel 16 testimg.ppm    > ${test_out} || \
-  printf "Expected failure 5 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pnmquant -meancolor -meanpixel 16 testimg.ppm > ${test_out} || \
-  printf "Expected failure 6 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pnmquant -spreadbrightness -spreadluminosity 16 testimg.ppm > ${test_out} || \
-  printf "Expected failure 7 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
-
-pnmquant -randomseed 1 -norandom 10 testimg.ppm > ${test_out} || \
-  printf "Expected failure 8 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "pnmquant 32 /dev/null"
+invCmd "pnmquant 0 testimg.ppm"
+invCmd "pnmquant testimg.ppm"
+invCmd "pnmquant 10.5 testimg.ppm"
+invCmd "pnmquant -center -meancolor 16 testimg.ppm"
+invCmd "pnmquant -center -meanpixel 16 testimg.ppm"
+invCmd "pnmquant -meancolor -meanpixel 16 testimg.ppm"
+invCmd "pnmquant -spreadbrightness -spreadluminosity 16 testimg.ppm"
+invCmd "pnmquant -randomseed 1 -norandom 10 testimg.ppm"

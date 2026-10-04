@@ -120,6 +120,19 @@ echo "Test Invalid"
 
 . ./test-invalid.inc
 
+# No input image file
+
+invCmd "pamarith -add"
+
+# Just one input image file
+
+invCmd "pamarith -add testimg.ppm"
+
+# Empty input image file
+
+invCmd "pamarith -add /dev/null testimg.ppm"
+invCmd "pamarith -add testimg.ppm /dev/null"
+
 # multiple functions
 
 invCmd "pamarith -add -subtract testimg.ppm testimg.ppm"
@@ -132,7 +145,7 @@ invCmd "pamarith -or -nand testimg.ppm testimg.ppm"
 invCmd "pamarith -nor -xor testimg.ppm testimg.ppm"
 invCmd "pamarith -shiftleft -shiftright testimg.ppm testimg.ppm"
 
-# -add does not take a value
+# -add given a value
 
 invCmd "pamarith -add=1 testimg.ppm testimg.ppm"
 
@@ -140,14 +153,6 @@ invCmd "pamarith -add=1 testimg.ppm testimg.ppm"
 
 invCmd "pamarith -plain testimg.ppm testimg.ppm"
 invCmd "pamarith testimg.ppm testimg.ppm"
-
-# Just one input image file
-
-invCmd "pamarith -add testimg.ppm"
-
-# No input image file
-
-invCmd "pamarith -add"
 
 # Input images with different depth (number of planes)
 

@@ -72,6 +72,7 @@ echo "Test invalid"
 
 . ./test-invalid.inc
 
+invCmd "pnmtile 100 100 /dev/null"
 invCmd "pnmtile 100 testgrid.pbm"
 invCmd "pnmtile 100 0 testgrid.pbm"
 invCmd "pnmtile 0 100 testgrid.pbm"

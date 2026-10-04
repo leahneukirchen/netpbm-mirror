@@ -2,7 +2,6 @@
 # This script tests: ppmrelief
 # Also requires: pbmmake pgmramp pamflip
 
-
 # Test 1.  Should print 3637356697 688
 pbmmake -w 15 15 | ppmrelief | cksum
 
@@ -11,7 +10,6 @@ pgmramp -diagonal -maxval=30 16 16 | ppmrelief | cksum
 
 # Test 3.  Should print 2954951371 780
 pgmramp -diagonal -maxval=30 16 16 | pamflip -lr | ppmrelief | cksum
-
 
 # pgmramp -diagonal -maxval=30 16 16 | ppmrelief | ppmtopgm -plain
 
@@ -34,3 +32,9 @@ pgmramp -diagonal -maxval=30 16 16 | pamflip -lr | ppmrelief | cksum
 # 0 14 14 14 14 14 14 14 14 14 14 14 14 14 14 0
 # 0 14 14 14 14 14 14 14 14 14 14 14 14 14 14 0
 # 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+
+echo "Test Invalid"
+
+. ./test-invalid.inc
+ 
+invCmd "ppmrelief /dev/null"

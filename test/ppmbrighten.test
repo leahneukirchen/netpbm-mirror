@@ -25,6 +25,6 @@ echo "Test Invalid"
 
 . ./test-invalid.inc
 
-invCmd "pambrighten -v -120 testimg.ppm"
-invCmd "pambrighten -s -120 testimg.ppm"
-
+invCmd "ppmbrighten /dev/null"
+invCmd "ppmbrighten -v -120 testimg.ppm"
+invCmd "ppmbrighten -s -120 testimg.ppm"

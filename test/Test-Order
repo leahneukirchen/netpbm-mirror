@@ -69,12 +69,13 @@ pnmcolormap2.test
 
 pamtopam.test
 pamtopnm.test
+pnmtopnm.test
+pnmtopnm-plain.test
 pbmtopgm.test
 pgmtopgm.test
 ppmtoppm.test
 pgmtoppm.test
 ppmtopgm.test
-pnmtopnm-plain.test
 
 # Editor tests
 

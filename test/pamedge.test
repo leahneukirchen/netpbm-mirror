@@ -2,7 +2,12 @@
 # This script tests: pamedge
 # Also requires: pbmpscale pbmtext pgmtopbm pgmtopgm ppmtopgm
 
+pbmtext " F " -nomargin | pbmpscale 5 | \
+  pgmtopgm | pamedge | \
+  ppmtopgm | pgmtopbm -th -val=.5 -plain
 
-pbmtext " F " -nom | pbmpscale 5 | \
-pgmtopgm | pamedge | \
-ppmtopgm | pgmtopbm -th -val=.5 -plain
+echo "Test Invalid"
+
+. ./test-invalid.inc
+
+invCmd "pamedge /dev/null"

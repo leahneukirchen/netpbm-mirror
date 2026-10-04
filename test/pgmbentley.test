@@ -5,3 +5,10 @@
 
 # Test. Should produce 4127286153 16399
 pgmramp -rect 128 128 | pgmbentley | cksum
+
+
+echo "Test Invalid"
+ 
+. ./test-invalid.inc
+
+invCmd "pgmbentley /dev/null"

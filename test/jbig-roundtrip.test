@@ -6,10 +6,48 @@ tmpdir=${tmpdir:-/tmp}
 test_pam=${tmpdir}/testimg.pam
 test_pgm=${tmpdir}/testimg.pgm
 
-echo Test 1.  Should print 281226646 481
+echo Test 1.  Should print 281226646 481 twenty-two times
+
+# cat /home/netpbm/netpbm-code-r5352-trunk/test/maze.pbm | cksum
 pnmtojbig maze.pbm | jbigtopnm | cksum
 
-echo Test 2.  Should print 1571496937 33838 seven times
+pnmtojbig -q maze.pbm | jbigtopnm | cksum
+
+pnmtojbig -x 32 -y 32 maze.pbm | jbigtopnm | cksum
+pnmtojbig -x 12 -y 12 maze.pbm | jbigtopnm | cksum
+pnmtojbig -x 2 -y 2 maze.pbm | jbigtopnm | cksum
+
+pnmtojbig -m 0 maze.pbm | jbigtopnm | cksum
+pnmtojbig -m 8 maze.pbm | jbigtopnm | cksum
+pnmtojbig -m 38 maze.pbm | jbigtopnm | cksum
+
+pnmtojbig -s 2 maze.pbm | jbigtopnm | cksum
+pnmtojbig -s 6 maze.pbm | jbigtopnm | cksum
+pnmtojbig -s 12 maze.pbm | jbigtopnm | cksum
+
+pnmtojbig -o 0 maze.pbm | jbigtopnm | cksum
+pnmtojbig -o 2 maze.pbm | jbigtopnm | cksum
+pnmtojbig -o 4 maze.pbm | jbigtopnm | cksum
+pnmtojbig -o 5 maze.pbm | jbigtopnm | cksum
+pnmtojbig -o 6 maze.pbm | jbigtopnm | cksum
+
+pnmtojbig -p 0 maze.pbm | jbigtopnm | cksum
+pnmtojbig -p 4 maze.pbm | jbigtopnm | cksum
+pnmtojbig -p 8 maze.pbm | jbigtopnm | cksum
+pnmtojbig -p 16 maze.pbm | jbigtopnm | cksum
+pnmtojbig -p 64 maze.pbm | jbigtopnm | cksum
+
+pnmtojbig -c maze.pbm | jbigtopnm | cksum
+
+
+echo Test 2.  Should print 281226646 481
+
+( pnmtojbig --differential=1 --lowest-layer=0 --highest-layer=0 maze.pbm ; \
+  pnmtojbig --differential=1 --lowest-layer=1 --highest-layer=1 maze.pbm ) | \
+  jbigtopnm | cksum
+
+
+echo Test 3.  Should print 1571496937 33838 seven times
 pamchannel -infile=testimg.ppm -tupletype="GRAYSCALE" 0 | \
   tee ${test_pam} | pamtopnm | \
   tee ${test_pgm} | pnmtojbig | jbigtopnm | cksum
@@ -24,3 +62,23 @@ for maxval in 1023 4095 65535
   done
 
 rm ${test_pgm} ${test_pam}
+
+
+echo "Test Invalid"
+
+. ./test-invalid.inc
+
+invCmd "pnmtojbig /dev/null"
+invCmd "jbigtopnm /dev/null"
+
+invCmd "pnmtojbig -x -32 -y 32 maze.pbm"
+invCmd "pnmtojbig -x 32 -y -32 maze.pbm"
+
+invCmd "pnmtojbig -m -1 maze.pbm"
+
+invCmd "pnmtojbig -s 0 maze.pbm"
+invCmd "pnmtojbig -s -2 maze.pbm"
+
+invCmd "pnmtojbig -o -1 maze.pbm"
+
+invCmd "pnmtojbig -p -1 maze.pbm"

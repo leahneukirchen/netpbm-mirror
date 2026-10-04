@@ -1,0 +1,26 @@
+#! /bin/sh
+# This script tests: pnmtopnm
+# Also requires: pamtopam pgmramp
+
+if [ ${CHECK_TYPE} = tree ]
+  then echo "Skipping." 1>&2
+       echo "Running \"make package; make check\" is recommended." 1>&2
+  exit 80;
+fi
+
+echo "Test 1. Should print 281226646 481"
+pnmtopnm < maze.pbm | cksum
+
+echo "Test 2. Should print 6517929 73 twice"
+pgmramp -maxval 7 -diag 8 8 | pnmtopnm | cksum
+pgmramp -maxval 7 -diag 8 8 | pamtopam | pnmtopnm | cksum 
+
+echo "Test 3. Should print 1926073387 101484 twice"
+pnmtopnm < testimg.ppm | cksum
+pamtopam < testimg.ppm | pnmtopnm | cksum
+
+echo "Test Invalid"
+
+. ./test-invalid.inc
+
+invCmdStdin "pnmtopnm" "/dev/null"

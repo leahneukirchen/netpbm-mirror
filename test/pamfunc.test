@@ -89,6 +89,7 @@ echo "Test Invalid"
 
 . ./test-invalid.inc
 
+invCmd "pamfunc -adder=1 /dev/null"
 invCmd "pamfunc -multiplier testimg.ppm"
 invCmd "pamfunc -multiplier=-1 testimg.ppm"
 invCmd "pamfunc -divisor testimg.ppm"

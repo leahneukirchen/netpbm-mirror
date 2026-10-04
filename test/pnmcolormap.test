@@ -38,10 +38,11 @@ echo "Test Invalid."
 
 . ./test-invalid.inc
 
-invCmd "pnmcolormap 0 testimg.ppm  "
-invCmd "pnmcolormap -1 testimg.ppm "
+invCmd "pnmcolormap -sort 2 /dev/null"
+invCmd "pnmcolormap 0   testimg.ppm"
+invCmd "pnmcolormap -1  testimg.ppm"
 invCmd "pnmcolormap 0.1 testimg.ppm"
-invCmd "pnmcolormap -center -meancolor 16 testimg.ppm   "
-invCmd "pnmcolormap -center -meanpixel 16 testimg.ppm   "
+invCmd "pnmcolormap -center    -meancolor 16 testimg.ppm"
+invCmd "pnmcolormap -center    -meanpixel 16 testimg.ppm"
 invCmd "pnmcolormap -meancolor -meanpixel 16 testimg.ppm"
 invCmd "pnmcolormap -spreadbrightness -spreadluminosity 16 testimg.ppm"

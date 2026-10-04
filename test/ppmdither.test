@@ -6,3 +6,15 @@
 ppmdither testimg.ppm | cksum
 ppmdither -red 2 -green 2 -blue 2 testimg.ppm | cksum
 ppmdither -dim 2 testimg.ppm | cksum
+
+echo "Test Invalid"
+ 
+. ./test-invalid.inc
+ 
+invCmd "ppmdither /dev/null"
+invCmd "ppmdither -red   1 testimg.ppm"
+invCmd "ppmdither -green 1 testimg.ppm"
+invCmd "ppmdither -blue  1 testimg.ppm"
+
+# See MAX_DITH_POWER in ppmdither.c
+invCmd "ppmdither -dim 100 testimg.ppm"

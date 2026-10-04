@@ -19,22 +19,23 @@ echo bjlqv | asciitopgm 1 5 | pnmnorm -plain
 # pnmnorm ${abcde_pgm} -noblack -nowhite -plain | tr '\n' ' '
 # pnmnorm ${abcde_pgm} -gray    -plain | tr '\n' ' '
 # 
-# pnmnorm ${abcde_pgm} -wmap=${wmap} -plain | tr '\n' ' '
-# pnmnorm ${abcde_pgm} -rmap=${wmap} -plain | tr '\n' ' '
-# 
 # rm ${abcde_pgm}
-# rm ${wmap}
-# 
 # 
 # echo "Test 3"
 # ppmpat -tartan -color rgb:11/11/11,rgb:f1/f1/f1,rgb:f1/00/f1 5 5 | \
-#   asciitopgm 1 5 | pnmnorm -gray
+#   pnmnorm -gray
 # 
-# 
-# echo "Test Invalid"
-# 
-# . ./test-invalid.inc
-# 
-# invCmd "pnmnorm -wmap < testgrid.pbm"
-# invCmd "pnmnorm -rmap < testgrid.pbm"
-# 
+ 
+echo "Test Invalid"
+ 
+. ./test-invalid.inc
+ 
+invCmd "pnmnorm /dev/null"
+invCmd "pnmnorm -bvalue=-1   testimg.ppm"
+invCmd "pnmnorm -bvalue=255  testimg.ppm"
+invCmd "pnmnorm -wvalue=0    testimg.ppm"
+invCmd "pnmnorm -wvalue=256  testimg.ppm"
+invCmd "pnmnorm -bpercent=-0.1  testimg.ppm"
+invCmd "pnmnorm -bpercent=100.1 testimg.ppm"
+invCmd "pnmnorm -wpercent=-0.1  testimg.ppm"
+invCmd "pnmnorm -wpercent=100.1 testimg.ppm"

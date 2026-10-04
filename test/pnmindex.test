@@ -1,7 +1,10 @@
 #! /bin/sh
 # This script tests: pnmindex
 # Also requires: pamcat pamscale pbmtext pnmcolormap
-# Also requires: pnminvert pnmquant pnmremap pnmpsnnr ppmhist
+# Also requires: pnminvert pnmquant pnmremap
+# Also requires: pnmpsnr ppmhist
+
+# Note: above requirements based on programs called by pnmindex
 
 tmpdir=${tmpdir:-/tmp}
 pnmindex256_ppm=${tmpdir}/pnmindex256.ppm
@@ -49,6 +52,7 @@ echo "Test Invalid"
 
 . ./test-invalid.inc
 
+invCmd "pnmindex /dev/null"
 invCmd "pnmindex -size -1 testgrid.pbm"
 invCmd "pnmindex -size  0 testgrid.pbm"
 invCmd "pnmindex -size    testgrid.pbm"

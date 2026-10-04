@@ -2,8 +2,9 @@
 # This script tests: ppmdim
 # Also requires: pamfunc pamarith pamsumm
 
-
 tmpdir=${tmpdir:-/tmp}
+
+echo Test 1.  Should print ok fourteen times
 
 # Compare ppmdim and pamfunc with various dim factors
 # Due to the difference in rounding methods, pamfunc produces slightly
@@ -23,3 +24,21 @@ for i in  0.125 0.25 0.5 0.75 0.1 0.0117 0.2 0.4 0.333 0.666 0.8 0.9 0.95
   done
 
 rm ${dim1_ppm} ${dim2_ppm}
+
+echo Test 2.  Should print 3083028153 685
+
+ppmdim 0.0 testgrid.pbm | cksum  # Total black
+
+echo Test 3.  Should print 829921912 685
+
+ppmdim 1.0 testgrid.pbm | cksum  # Origial grid in PPM
+
+echo "Test Invalid"
+ 
+. ./test-invalid.inc
+ 
+invCmd "ppmdim 0.2 /dev/null"
+
+invCmdStdin "ppmdim" "testimg.ppm"
+invCmd "ppmdim  -1 testimg.ppm"
+invCmd "ppmdim 1.1 testimg.ppm"

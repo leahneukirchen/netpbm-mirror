@@ -1,15 +1,11 @@
-Test 1. Should print 281226646 481 three times
+Test 1. Should print 281226646 481 twice
 281226646 481
 281226646 481
-281226646 481
-Test 1. Should print 1926073387 101484 three times
+Test 2. Should print 6517929 73 twice
 6517929 73
 6517929 73
-6517929 73
-Test 3. Should print 1926073387 101484 three times
-1926073387 101484
+Test 3. Should print 1926073387 101484 twice
 1926073387 101484
 1926073387 101484
 Test Invalid
 Expected failure 1 (no output)
-Expected failure 2 (no output)

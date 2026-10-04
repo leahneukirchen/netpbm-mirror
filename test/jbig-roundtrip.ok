@@ -1,6 +1,29 @@
-Test 1. Should print 281226646 481
+Test 1. Should print 281226646 481 twenty-two times
 281226646 481
-Test 2. Should print 1571496937 33838 seven times
+281226646 481
+281226646 481
+281226646 481
+281226646 481
+281226646 481
+281226646 481
+281226646 481
+281226646 481
+281226646 481
+281226646 481
+281226646 481
+281226646 481
+281226646 481
+281226646 481
+281226646 481
+281226646 481
+281226646 481
+281226646 481
+281226646 481
+281226646 481
+281226646 481
+Test 2. Should print 281226646 481
+281226646 481
+Test 3. Should print 1571496937 33838 seven times
 1571496937 33838
 1571496937 33838
 1571496937 33838
@@ -8,3 +31,13 @@ Test 2. Should print 1571496937 33838 seven times
 1571496937 33838
 1571496937 33838
 1571496937 33838
+Test Invalid
+Expected failure 1 (no output)
+Expected failure 2 (no output)
+Expected failure 3 (no output)
+Expected failure 4 (no output)
+Expected failure 5 (no output)
+Expected failure 6 (no output)
+Expected failure 7 (no output)
+Expected failure 8 (no output)
+Expected failure 9 (no output)

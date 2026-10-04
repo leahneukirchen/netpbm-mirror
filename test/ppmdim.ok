@@ -1,3 +1,4 @@
+Test 1. Should print ok fourteen times
 ok
 ok
 ok
@@ -11,3 +12,12 @@ ok
 ok
 ok
 ok
+Test 2. Should print 3083028153 685
+3083028153 685
+Test 3. Should print 829921912 685
+829921912 685
+Test Invalid
+Expected failure 1 (no output)
+Expected failure 2 (no output)
+Expected failure 3 (no output)
+Expected failure 4 (no output)
