@@ -1,3 +1,4 @@
+Test 1. Print a pretty checkerboard pattern
 P2
 8 8
 3
@@ -9,9 +10,20 @@ P2
 0 1 0 1 2 3 2 3 
 1 0 1 0 3 2 3 2 
 0 1 0 1 2 3 2 3 
+Test 2. Mix image with itself.
 1926073387 101484
 1926073387 101484
 1926073387 101484
 1926073387 101484
+Test 3. Mix image with its own inverse.
 127
 127
+Test Invalid
+Expected failure 1 (no output)
+Expected failure 2 (no output)
+Expected failure 3 (no output)
+Expected failure 4 (no output)
+Expected failure 5 (no output)
+Expected failure 6 (no output)
+Expected failure 7 (no output)
+Expected failure 8 (no output)

@@ -2,3 +2,5 @@ Test 1.  Should print match
 match
 Test 2.  Should print match
 match
+Test Invalid
+Expected failure 1 (no output)

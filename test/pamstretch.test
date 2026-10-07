@@ -47,3 +47,25 @@ pamcut -left=0 -top=0 ${width_height} ${blackedge_ppm} | cksum
 pamcut -left=0 -top=0 ${width_height} ${dropedge_ppm} | cksum
 
 rm ${stretch_ppm} ${dropedge_ppm} ${dropedge1_ppm} ${blackedge_ppm}
+
+echo test 7
+#cat maze.pbm | cksum
+pamstretch -xscale=1 -yscale=1 maze.pbm | cksum
+pamstretch -xscale=1 -yscale=1 -dropedge maze.pbm  | cksum
+pamstretch -xscale=1 -yscale=1 -blackedge maze.pbm | cksum 
+
+
+echo "Test Invalid"
+
+. ./test-invalid.inc
+
+# Expected failure cases
+
+invCmd "pamstretch  /dev/null"
+
+invCmd "pamstretch  -xscale=-10 testgrid.pbm"
+invCmd "pamstretch  -xscale=0   testgrid.pbm"
+invCmd "pamstretch  -yscale=-10 testgrid.pbm"
+invCmd "pamstretch  -yscale=0   testgrid.pbm"
+
+invCmd "pamstretch  -xscale=2 -yscale=2 -blackedge -dropedge testgrid.pbm"

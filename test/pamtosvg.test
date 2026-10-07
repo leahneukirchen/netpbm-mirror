@@ -43,3 +43,10 @@ echo "Test 2.  Should print match"
 pamtosvg testgrid.pbm |\
     cmp -s ${testgrid_svg} - && echo "match" || echo "no match"
 rm ${testgrid_svg}
+
+
+echo "Test Invalid"
+
+. ./test-invalid.inc
+
+invCmd "pamtosvg /dev/null"

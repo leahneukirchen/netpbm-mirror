@@ -4,23 +4,22 @@
 
 tmpdir=${tmpdir:-/tmp}
 
-# Test 1.  Should print 1926073387 101484 six times
-echo Test 1.
+echo Test 1. Should print 1926073387 101484 six times
 
+#cat testimg.ppm | cksum
 pammixmulti testimg.ppm | cksum
 pammixmulti testimg.ppm testimg.ppm | cksum
 pammixmulti testimg.ppm testimg.ppm testimg.ppm | cksum
 pammixmulti -blend=average testimg.ppm testimg.ppm | cksum
 pammixmulti -blend=average testimg.ppm testimg.ppm testimg.ppm | cksum
-pammixmulti -blend=random -randomseed=222 \
+pammixmulti -blend=random -randomseed=1028 \
     testimg.ppm testimg.ppm testimg.ppm | cksum
 
 
-# Test 2.  Should print 1926073387 101484 three times
-echo Test 2.
+echo Test 2. Should print 1926073387 101484 three times
 
 mask_pam=${tmpdir}/mask.pam
-pamnoise -maxval=2 -randomseed=260 -w 227 -h 149 -d 1 > ${mask_pam}
+pamnoise -maxval=2 -randomseed=1058 -w 227 -h 149 -d 1 > ${mask_pam}
 
 for sd in 0.5 1.2 3.0 
   do
@@ -29,11 +28,10 @@ for sd in 0.5 1.2 3.0
   done
 rm ${mask_pam}
 
-# Test 3.  Should print
-echo Test 3.
+echo Test 3. Should print 1926073387 101484 three times
 
 noise_pam=${tmpdir}/noise.pam
-pamnoise --randomseed=298 -width=227 -height=149 -depth=1 > ${noise_pam}
+pamnoise --randomseed=1088 -width=227 -height=149 -depth=1 > ${noise_pam}
 
 pammixmulti -blend=mask -maskfile=${noise_pam} \
     testimg.ppm testimg.ppm | cksum
@@ -44,12 +42,11 @@ pammixmulti -blend=mask -maskfile=${noise_pam} \
 rm ${noise_pam}
 
 
-# Test 4.
 
 # Mix image with its own inverse.
 # Output should be a monotone gray sheet.
-#  Should print 127 six times
-echo Test 4.
+
+echo Test 4. Should print 127 six times
 
 invert_ppm=${tmpdir}/invert.ppm
 monotone_ppm=${tmpdir}/monotone.ppm

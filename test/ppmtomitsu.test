@@ -29,3 +29,16 @@ echo "Test 6. Should print 3103038403 101549"
 ppmtomitsu -tiny ${testimg216_ppm} | cksum
 
 rm ${testimg216_ppm}
+
+echo "Test Invalid"
+
+. ./test-invalid.inc
+
+invCmd "ppmtomitsu /dev/null"
+invCmd "ppmtomitsu -sharpness 0 testimg.ppm"
+invCmd "ppmtomitsu -sharpness 5 testimg.ppm"
+invCmd "ppmtomitsu -enlarge 0 testimg.ppm"
+invCmd "ppmtomitsu -enlarge 4 testimg.ppm"
+invCmd "ppmtomitsu -copy 0  testimg.ppm"
+invCmd "ppmtomitsu -copy 10 testimg.ppm"
+

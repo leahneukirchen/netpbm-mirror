@@ -6,7 +6,8 @@
 
 tmpdir=${tmpdir:-/tmp}
 
-# Test 1. Print a pretty checkerboard pattern
+echo Test 1. Print a pretty checkerboard pattern
+
 a1_pgm=${tmpdir}/a1.pgm
 a2_pgm=${tmpdir}/a2.pgm
 
@@ -15,14 +16,15 @@ pbmmake -g 2 2 | pamenlarge 4 | pgmtopgm > ${a2_pgm} &&
 ppmmix 0.75 ${a1_pgm} ${a2_pgm} | ppmtopgm | pamdepth 3 -plain &&
 rm ${a1_pgm} ${a2_pgm}
 
-# Mix image with itself.
+echo Test 2.  Mix image with itself.
+
 # Output should match input regardless of ratio.
 for i in 0 0.5 0.6 1
 do
 ppmmix $i testimg.ppm testimg.ppm | cksum
 done
 
-# Mix image with its own inverse.
+echo Test 3.  Mix image with its own inverse.
 # Output should be a monotone gray sheet.
 a3_ppm=${tmpdir}/a3.ppm
 
@@ -31,3 +33,21 @@ pnminvert testimg.ppm | ppmmix .5 \
   pamsumm -brief -max &&
   pamsumm -brief -min ${a3_ppm} &&
 rm ${a3_ppm}
+
+echo "Test Invalid"
+
+. ./test-invalid.inc
+
+
+invCmd "ppmmix 0.5 /dev/null testgrid.pbm"
+invCmd "ppmmix 0.5 testgrid.pbm /dev/null"
+invCmd "ppmmix 0.5 /dev/null /dev/null"
+
+invCmd "ppmmix 0.5 testgrid.pbm"
+
+invCmd "ppmmix      testgrid.pbm testgrid.pbm"
+invCmd "ppmmix -0.5 testgrid.pbm testgrid.pbm"
+invCmd "ppmmix 1.5  testgrid.pbm testgrid.pbm"
+
+invCmd "ppmmix 0.5 testgrid.pbm maze.pbm"
+

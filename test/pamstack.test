@@ -64,6 +64,8 @@ pamstack -lcmmaxval ${max_pgm} ${std_pgm} ${i31_pgm} ${i7_pgm} ${i1_pgm} | pamfi
 
 pamstack -firstmaxval ${max_pgm} ${i2_pgm} | pamfile
 
+rm ${max_pgm}
+
 
 # test 4
 echo test 4: maxval should be 255 then 767
@@ -75,6 +77,9 @@ echo test 5: Should print 2741208386 719 twice
 
 pamstack -lcmmaxval   ${i31_pgm} ${i1_pgm} ${i7_pgm} | cksum
 pamstack -firstmaxval ${i31_pgm} ${i1_pgm} ${i7_pgm}  | cksum
+
+rm ${i2_pgm} ${i7_pgm} ${i31_pgm}
+
 
 # test 6
 echo test 6: Should print true four times
@@ -100,9 +105,12 @@ echo "Test Invalid"
 
 . ./test-invalid.inc
 
-invCmd "pamstack testgrid.pbm testimg.ppm"
-invCmd "pamstack ${i1_pgm} ${std_pgm}"
+invCmd "pamstack /dev/null"
+invCmd "pamstack /dev/null testgrid.pbm"
+invCmd "pamstack testgrid.pbm /dev/null"
+invCmd "pamstack testgrid.pbm testimg.ppm" # different size
+invCmd "pamstack ${i1_pgm} ${std_pgm}"     # different maxvals
 invCmd "pamstack -lcmmaxval -firstmaxval testgrid.pbm testgrid.pbm"
 
-rm ${i1_pgm} ${i2_pgm} ${i7_pgm} ${i31_pgm} ${std_pgm} ${max_pgm}
 
+rm ${i1_pgm} ${std_pgm}

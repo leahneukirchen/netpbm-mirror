@@ -18,3 +18,14 @@ test 6
 3948746482 903111
 3948746482 903111
 220708621 903111
+test 7
+4220597914 3374
+4220597914 3374
+4220597914 3374
+Test Invalid
+Expected failure 1 (no output)
+Expected failure 2 (no output)
+Expected failure 3 (no output)
+Expected failure 4 (no output)
+Expected failure 5 (no output)
+Expected failure 6 (no output)

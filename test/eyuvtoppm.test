@@ -2,7 +2,20 @@
 # This script tests: eyuvtoppm
 # Also requires:
 
+tmpdir=${tmpdir:-/tmp}
+zero_eyuv=${tmpdir}/zero.eyuv
 
-# Should produce 1719878124 253455
+echo Test 1. Should produce 1719878124 253455
 
-head -c 126720 /dev/zero |  eyuvtoppm -quiet | cksum
+head -c 126720 /dev/zero | tee ${zero_eyuv} | eyuvtoppm -quiet | cksum
+
+
+echo "Test Invalid"
+
+. ./test-invalid.inc
+
+invCmd "eyuvtoppm /dev/null"
+invCmd "eyuvtoppm -w 1 ${zero_eyuv}"
+invCmd "eyuvtoppm -h 1 ${zero_eyuv}"
+
+rm ${zero_eyuv}

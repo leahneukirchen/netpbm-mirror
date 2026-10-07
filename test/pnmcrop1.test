@@ -1,6 +1,6 @@
 #! /bin/sh
 # This script tests: pnmcrop
-# Also requires: pnmpad pnmmargin pamcut
+# Also requires: pnmpad pnmmargin pamcut pgmmake
 
 tmpdir=${tmpdir:-/tmp}
 
@@ -55,30 +55,29 @@ for input_file in ${test_pbm} ${test_ppm}
 
 rm ${test_pbm} ${test_ppm}
 
-# Test 3
 echo "Test Invalid"
 
-test_out=${tmpdir}/test_out
+. ./test-invalid.inc
 
-echo 1>&2
-echo "Invalid command-line argument combinations." 1>&2
-echo "Error messages should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
+invCmd "pnmcrop /dev/null"
+invCmd "pnmcrop -reportfull -reportsize testgrid.pbm"
+invCmd "pnmcrop -reportfull -borderfile=testgrid.pbm testgrid.pbm"
+invCmd "pnmcrop -reportsize -borderfile=testgrid.pbm testgrid.pbm"
+invCmd "pnmcrop -black -white testgrid.pbm"
+invCmd "pnmcrop -black -sides testgrid.pbm"
+invCmd "pnmcrop -white -bg-color=red testgrid.pbm"
+invCmd "pnmcrop -white -bg-corner=topleft testgrid.pbm"
+invCmd "pnmcrop -white -bg-corner=top testgrid.pbm"
+invCmd "pnmcrop -blank-image=pasturize testgrid.pbm"
+invCmd "pnmcrop -bg-color=black -closeness=-1 testgrid.pbm"
+invCmd "pnmcrop -bg-color=black -closeness=101 testgrid.pbm"
+invCmd "pnmcrop -bg-color=black -margin=-1 testgrid.pbm"
 
-for option in "-reportfull -reportsize" \
-              "-reportfull -borderfile=testgrid.pbm" \
-              "-reportsize -borderfile=testgrid.pbm" \
-              "-black -white" \
-              "-black -sides" \
-              "-white -bg-color=red" \
-              "-white -bg-corner=topleft" \
-              "-white -bg-corner=top" \
-              "-blank-image=pasturize" \
-              "-bg-color=black -closeness=-1" \
-              "-bg-color=black -closeness=101"
-    do
-    pnmcrop -reportfull ${option} testgrid.pbm > ${test_out} || \
-        printf "Expected failure:  %s" "${option} "
-        test -s ${test_out} && echo "unexpected output" || echo "(no output)"	
-        rm ${test_out}
-    done
+blank_pgm=${tmpdir}/blank.pgm
+
+pgmmake 0 5 5 > ${blank_pgm}
+
+invCmd "pnmcrop  ${blank_pgm}"
+invCmd "pnmcrop -blank-image=abort ${blank_pgm}"
+
+rm ${blank_pgm}

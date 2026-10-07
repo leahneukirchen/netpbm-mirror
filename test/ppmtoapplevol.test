@@ -1,30 +1,28 @@
-#! /bin/sh
+  #! /bin/sh
 # This script tests: ppmtoapplevol 
 # Also requires: ppmmake pbmmake
 
 echo "Test: should print 1518149010 3065"
 ppmmake rgb:0/0/0 255 12 | ppmtoapplevol | cksum
 
-echo "Invalid input." 1>&2
-echo "Error messages should appear below the line." 1>&2
-echo "-----------------------------------------------------------" 1>&2
 
 echo "Test Invalid"
 
-tmpdir=${tmpdir:-/tmp}
-test_out=${tmpdir}/test_out
+. ./test-invalid.inc
 
-pbmmake 10 11 | ppmtoapplevol > ${test_out} || \
-  printf "Expected failure 1 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
- 
-pbmmake 10 13 | ppmtoapplevol > ${test_out} || \
-  printf "Expected failure 2 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
- 
-pbmmake 256 12 | ppmtoapplevol > ${test_out} || \
-  printf "Expected failure 3 "
-  test -s ${test_out} && echo "unexpected output" || echo "(no output)"
-  rm -f ${test_out}
+invCmd "ppmtoapplevol /dev/null"
+
+tmpdir=${tmpdir:-/tmp}
+test_input=${tmpdir}/test_input
+
+pbmmake 10 11 > ${test_input}
+invCmd "ppmtoapplevol ${test_input}"
+rm -f ${test_input}
+  
+pbmmake 10 13 > ${test_input}
+invCmd "ppmtoapplevol ${test_input}"
+rm -f ${test_input}
+
+pbmmake 256 12 > ${test_input}
+invCmd "ppmtoapplevol ${test_input}"
+rm -f ${test_input}

@@ -4,3 +4,4 @@ Test 1.  Should print 242428674 57 three times
 242428674 57
 Test Invalid
 Expected failure 1 (no output)
+Expected failure 2 (no output)

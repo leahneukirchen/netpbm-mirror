@@ -63,7 +63,8 @@ pamenlarge -xscale 1 -yscale 2 testgrid.pbm | pbmtoascii | asciitopgm 16 14 | pg
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
-invCmd "pbmtoascii -1x2 -2x4 testgrid.pbm"
+invCmd "pbmtoascii /dev/null"
 invCmd "pbmtoascii testimg.ppm"
+invCmd "pbmtoascii -1x2 -2x4 testgrid.pbm"

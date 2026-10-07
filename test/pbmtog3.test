@@ -32,3 +32,9 @@ pbmmake -g 1700 2286 | pbmtog3 | cksum
 
 echo "Test 10.  Should print 4159089282 2226575"
 pbmmake -g 1800 2286 | pbmtog3 | cksum
+
+echo "Test Invalid"
+
+. ./test-invalid.inc
+
+invCmd "pbmtog3 /dev/null"

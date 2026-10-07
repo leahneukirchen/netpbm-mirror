@@ -13,3 +13,18 @@ echo "Test 4.  Should print 1618994486 1194"
 pamenlarge -xscale=21 -yscale=2 testgrid.pbm | cksum
 echo "Test 5.  Should print 398497872 6806"
 pamseq 3 4 | pamtopnm -assume | pamenlarge 3 -plain | cksum
+
+echo "Test Invalid"
+
+. ./test-invalid.inc
+
+invCmd "pamenlarge /dev/null"
+invCmd "pamenlarge -1 testgrid.pbm"
+invCmd "pamenlarge  0 testgrid.pbm"
+
+invCmd "pamenlarge -xscale    -yscale=2  testgrid.pbm"
+invCmd "pamenlarge -xscale=-1 -yscale=3  testgrid.pbm"
+invCmd "pamenlarge -xscale=0  -yscale=2  testgrid.pbm"
+invCmd "pamenlarge -xscale=2  -yscale=0  testgrid.pbm"
+invCmd "pamenlarge -yscale    -xscale=2  testgrid.pbm"
+invCmd "pamenlarge -xscale=2  -yscale=-2 testgrid.pbm"

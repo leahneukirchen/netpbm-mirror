@@ -50,6 +50,7 @@ echo "Test Invalid"
 
 . ./test-invalid.inc
 
+invCmd "infotopam /dev/null"
 invCmd "infotopam -selected ${test1_info}"
 invCmd "infotopam -selected -forcecolor ${test1_info}"
 invCmd "infotopam -numcolors 0 0 rgb:0/0/f ${test1_info}"

@@ -18,3 +18,5 @@ Test 9.  Should print 2820255307 2191856
 2820255307 2191856
 Test 10.  Should print 4159089282 2226575
 4159089282 2226575
+Test Invalid
+Expected failure 1 (no output)

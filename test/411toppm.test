@@ -10,4 +10,11 @@
 #
 # See comment at head of source file 411toppm.c.
 
+echo Test 1. should produce: 240376509 9229
 head -c 4608 /dev/zero | 411toppm -quiet | cksum
+
+echo "Test Invalid"
+
+. ./test-invalid.inc
+
+invCmd "411toppm /dev/null"

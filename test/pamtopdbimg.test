@@ -101,3 +101,11 @@ pamtopdbimg -uncompressed -notefile=${text65534} maze.pbm > ${out_pdbimg}
     echo $?
     cat ${out_pdbimg} | wc -c | tr -d ' '
     rm ${text65534} ${out_pdbimg}
+
+echo "Test Invalid"
+
+. ./test-invalid.inc
+
+invCmd "pamtopdbimg /dev/null"
+invCmd "pamtopdbimg -compressed -uncompressed testgrid.pbm"
+invCmd "pamtopdbimg -maybecompressed -uncompressed testgrid.pbm"

@@ -23,9 +23,41 @@ echo "Test Invalid"
 
 # Expected failure cases
 
+invCmd "pamscale -reportonly /dev/null"
+
+invCmd "pamscale -reportonly -xsize=-10 -ysize=400 testimg.ppm"
+invCmd "pamscale -reportonly -xsize=0   -ysize=400 testimg.ppm"
+invCmd "pamscale -reportonly -xsize=640 -ysize=-10 testimg.ppm"
+invCmd "pamscale -reportonly -xsize=640 -ysize=0   testimg.ppm"
+
+invCmd "pamscale -reportonly -xscale=-10 -yscale=2   testimg.ppm"
+invCmd "pamscale -reportonly -xscale=0   -yscale=2   testimg.ppm"
+invCmd "pamscale -reportonly -xscale=4   -yscale=-10 testimg.ppm"
+invCmd "pamscale -reportonly -xscale=6   -yscale=0   testimg.ppm"
+
+invCmd "pamscale -reportonly -xysize   0  400 testimg.ppm"
+invCmd "pamscale -reportonly -xysize -10  400 testimg.ppm"
+invCmd "pamscale -reportonly -xysize 200    0 testimg.ppm"
+invCmd "pamscale -reportonly -xysize 200 -400 testimg.ppm"
+invCmd "pamscale -reportonly -xysize 200      testimg.ppm"
+
+invCmd "pamscale -reportonly -xyfit    0  400 testimg.ppm"
+invCmd "pamscale -reportonly -xyfit  -10  400 testimg.ppm"
+invCmd "pamscale -reportonly -xyfit  200    0 testimg.ppm"
+invCmd "pamscale -reportonly -xyfit  200 -400 testimg.ppm"
+invCmd "pamscale -reportonly -xyfit  200      testimg.ppm"
+
+invCmd "pamscale -reportonly -xyfill   0  400 testimg.ppm"
+invCmd "pamscale -reportonly -xyfill -10  400 testimg.ppm"
+invCmd "pamscale -reportonly -xyfill 200    0 testimg.ppm"
+invCmd "pamscale -reportonly -xyfill 200 -400 testimg.ppm"
+invCmd "pamscale -reportonly -xyfill 200      testimg.ppm"
+
 invCmd "pamscale -reportonly -xsize=640 -ysize=400 -xscale=2 testimg.ppm"
 invCmd "pamscale -reportonly -xsize=640 -xscale=2 -yscale=3 testimg.ppm"
-invCmd "pamscale -reportonly -xsize=640 -ysize=400 -pixels=200000 testimg.ppm"
-invCmd "pamscale -reportonly -xsize=640 -ysize=400 -xysize 640 400 testimg.ppm"
-invCmd "pamscale -reportonly -xsize=640 -ysize=400 -xyfit  640 400 testimg.ppm"
-invCmd "pamscale -reportonly -xsize=640 -ysize=400 -xyfill 640 400 testimg.ppm"
+invCmd "pamscale -reportonly -pixels=0 testimg.ppm"
+
+invCmd "pamscale -reportonly -xysize 640 400 -xyfit  640 400 testimg.ppm"
+invCmd "pamscale -reportonly -xysize 640 400 -xyfill 640 400 testimg.ppm"
+invCmd "pamscale -reportonly -xyfit  640 400 -xyfill 640 400 testimg.ppm"
+
