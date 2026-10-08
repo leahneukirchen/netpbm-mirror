@@ -4,6 +4,25 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+not yet  BJH  Release 11.16.01
+
+              jbigtopnm: fix bug: fails with bogus error message about
+              incremental BIE not continuing previous one when multi-BIE image
+              is of certain dimension.  Always broken (jbigtopnm was new in
+              Netpbm 9.2 (May 2000)).
+
+              pnmnorm: fix incorrect output when image contains more pixels
+              than can be represented in 32 bits.  Always broken (pnmnorm was
+              new in Netpbm 9.25 (March 2002).  Its predecessors were in
+              primordial Netpbm).
+
+              pnmnorm: fix memory corruption when -wvalue is greater than
+              maxval.  Always broken (pnmnorm was new in Netpbm 9.25 (March
+              2002).  Its predecessors were in primordial Netpbm).
+
+              ppmglobe: fix bug: accepts only color names for the background
+              color specification.  Thanks Scott Pakin.
+
 26.09.28 BJH  Release 11.16.00
 
               add pamnoise.
