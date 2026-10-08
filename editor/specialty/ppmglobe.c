@@ -134,9 +134,9 @@ main(int argc, char *argv[]) {
     if (cmdline.background == NULL)
         PPM_ASSIGN(backgroundColor, 0, 0, 0);
     else
-        pm_parse_dictionary_name(cmdline.background,
-                                 dstMaxval, cmdline.closeok,
-                                 &backgroundColor);
+        backgroundColor = ppm_parsecolor2(cmdline.background,
+                                          dstMaxval,
+                                          cmdline.closeok);
 
     dstPixels = ppm_allocarray(dstCols, dstRows);
 

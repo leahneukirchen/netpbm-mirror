@@ -20,6 +20,9 @@ not yet  BJH  Release 11.17.00
               maxval.  Always broken (pnmnorm was new in Netpbm 9.25 (March
               2002).  Its predecessors were in primordial Netpbm).
 
+              ppmglobe: fix bug: accepts only color names for the background
+              color specification.
+
 26.09.28 BJH  Release 11.16.00
 
               add pamnoise.
