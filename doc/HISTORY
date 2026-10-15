@@ -20,6 +20,10 @@ not yet  BJH  Release 11.17.00
               maxval.  Always broken (pnmnorm was new in Netpbm 9.25 (March
               2002).  Its predecessors were in primordial Netpbm).
 
+              xwdtopnm: fix arbitrary memory access with invalid XWD input.
+              Always broken (xwdtopnm ancestors were in primordial Netpbm in
+              1988).
+
               ppmglobe: fix bug: accepts only color names for the background
               color specification.  Thanks Scott Pakin.
 
