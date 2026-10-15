@@ -1246,9 +1246,9 @@ convertRowSimpleIndex(pixelReader *  const pixelReaderP,
         unsigned long const index = pixelReader_getpix(pixelReaderP);
 
         if (index >= colorCt) {
-            pm_message("Invalid input - raster contains index %lu, "
-                       "but header says there are only %u colors",
-                       index, colorCt);
+            pm_error("Invalid input - raster contains index %lu, "
+                     "but header says there are only %u colors",
+                     index, colorCt);
         } else
             xelrow[col] = colors[index];
     }
