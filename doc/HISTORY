@@ -24,6 +24,9 @@ not yet  BJH  Release 11.17.00
               Always broken (xwdtopnm ancestors were in primordial Netpbm in
               1988).
 
+              ilbmtoppm: fix arbitrary memory access when issuing error
+              message.  Broken in Netpbm 10.83 (June 2018).
+
               ppmglobe: fix bug: accepts only color names for the background
               color specification.  Thanks Scott Pakin.
 
