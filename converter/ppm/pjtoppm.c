@@ -1,4 +1,4 @@
-/* pjtoppm.c - convert an HP PainJetXL image to a PPM
+/* pjtoppm.c - convert an HP PaintJetXL image to a PPM
 **
 ** Copyright (C) 1990 by Christos Zoulas (christos@ee.cornell.edu)
 **
@@ -34,8 +34,8 @@ uintProduct(unsigned int const multiplicand,
 struct Raster {
     unsigned int planes;  /* constant */
     unsigned int allocRowCt;
-    unsigned char ** rowplane;  /* malloc'ed */
-    int * rowLen;  /* malloc'ed */
+    unsigned char ** rowplane;  /* malloc'ed array */
+    unsigned int * rowLen;  /* malloc'ed array */
 };
 
 
