@@ -27,6 +27,10 @@ not yet  BJH  Release 11.17.00
               ilbmtoppm: fix arbitrary memory access when issuing error
               message.  Broken in Netpbm 10.83 (June 2018).
 
+              pjtoppm: fix arbitrary memory access with invalid input that uses
+              mode 1 compression but a plane has an odd number of bytes.
+              Always broken (pjtoppm was in primordial Netpbm in 1991).
+
               ppmglobe: fix bug: accepts only color names for the background
               color specification.  Thanks Scott Pakin.
 

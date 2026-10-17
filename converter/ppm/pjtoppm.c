@@ -147,7 +147,7 @@ decompressImageMode1(unsigned int          const rows,
    Return as *colsP the number of pixels in the longest line in the raster.
 -----------------------------------------------------------------------------*/
     unsigned int const newcols = 10240;
-    /* It could not be larger than that! */
+        /* It could not be larger than that! */
 
     unsigned int cols;
     unsigned int row;
@@ -168,17 +168,24 @@ decompressImageMode1(unsigned int          const rows,
                 for (i = 0, col = 0;
                      col < rasterP->rowLen[rowplaneIndex];
                      col += 2) {
-                    int cmd, val;
-                    for (cmd = rasterP->rowplane[rowplaneIndex][col],
-                             val = rasterP->rowplane[rowplaneIndex][col+1];
-                         cmd >= 0 && i < newcols; --cmd, ++i)
-                        buf[i] = val;
+
+                    if (col + 1 >= rasterP->rowLen[rowplaneIndex]) {
+                        pm_error("Invalid input.  Mode 1 compressed row %u, "
+                                 "plane %u ends in the middle of the run "
+                                 "descriptor at index %u", row, plane, col);
+                    } else {
+                        int cmd, val;
+                        for (cmd = rasterP->rowplane[rowplaneIndex][col],
+                                 val = rasterP->rowplane[rowplaneIndex][col+1];
+                             cmd >= 0 && i < newcols; --cmd, ++i)
+                            buf[i] = val;
+                    }
                 }
                 cols = MAX(cols, i);
                 free(rasterP->rowplane[rowplaneIndex]);
 
                 /*
-                 * This is less than what we have so it realloc should
+                 * This is less than what we have so realloc should
                  * not return null. Even if it does, tough! We will
                  * lose a line, and probably die on the next line anyway
                  */
