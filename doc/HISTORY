@@ -31,6 +31,10 @@ not yet  BJH  Release 11.17.00
               mode 1 compression but a plane has an odd number of bytes.
               Always broken (pjtoppm was in primordial Netpbm in 1991).
 
+              pjtoppm: fix crash when input image has absent rowplanes other
+              than Plane 0.  Always broken (pjtoppm was in primordial Netpbm
+              in 1991).
+
               ppmglobe: fix bug: accepts only color names for the background
               color specification.  Thanks Scott Pakin.
 

@@ -153,12 +153,13 @@ decompressImageMode1(unsigned int          const rows,
     unsigned int row;
 
     for (row = 0, cols = 0; row < rows; ++row) {
-        if (rasterP->rowplane[row * planes + 0]) {
-            unsigned int plane;
-            for (plane = 0; plane < planes; ++plane) {
-                unsigned int const rowplaneIndex = row * planes + plane;
+        unsigned int plane;
 
-                unsigned int i;
+        for (plane = 0; plane < planes; ++plane) {
+            unsigned int const rowplaneIndex = row * planes + plane;
+
+            if (rasterP->rowplane[rowplaneIndex]) {
+                unsigned int i;  /* index into rowplane compressed data */
                 unsigned int col;
                 unsigned char * buf;
 
@@ -166,31 +167,31 @@ decompressImageMode1(unsigned int          const rows,
                 if (buf == NULL)
                     pm_error("out of memory");
                 for (i = 0, col = 0;
-                     col < rasterP->rowLen[rowplaneIndex];
-                     col += 2) {
+                     i < rasterP->rowLen[rowplaneIndex];
+                     i += 2) {
 
-                    if (col + 1 >= rasterP->rowLen[rowplaneIndex]) {
+                    if (i + 1 >= rasterP->rowLen[rowplaneIndex]) {
                         pm_error("Invalid input.  Mode 1 compressed row %u, "
                                  "plane %u ends in the middle of the run "
-                                 "descriptor at index %u", row, plane, col);
+                                 "descriptor at index %u", row, plane, i);
                     } else {
                         int cmd, val;
-                        for (cmd = rasterP->rowplane[rowplaneIndex][col],
-                                 val = rasterP->rowplane[rowplaneIndex][col+1];
-                             cmd >= 0 && i < newcols; --cmd, ++i)
-                            buf[i] = val;
+                        for (cmd = rasterP->rowplane[rowplaneIndex][i],
+                                 val = rasterP->rowplane[rowplaneIndex][i+1];
+                             cmd >= 0 && col < newcols; --cmd, ++col)
+                            buf[col] = val;
                     }
                 }
-                cols = MAX(cols, i);
                 free(rasterP->rowplane[rowplaneIndex]);
 
-                /*
-                 * This is less than what we have so realloc should
-                 * not return null. Even if it does, tough! We will
-                 * lose a line, and probably die on the next line anyway
-                 */
-                rasterP->rowplane[rowplaneIndex] = realloc(buf, i);
-                rasterP->rowLen[rowplaneIndex]   = i;
+                rasterP->rowplane[rowplaneIndex] = realloc(buf, col);
+                if (!rasterP->rowplane[rowplaneIndex]) {
+                    pm_error("Out of memory allocating buffer for %u "
+                             "columns for row %u, plane %u", col, row, plane);
+                }
+                rasterP->rowLen[rowplaneIndex] = col;
+
+                cols = MAX(cols, col);
             }
         }
     }
@@ -214,41 +215,38 @@ writePpm(FILE *                const ofP,
     pixrow = ppm_allocrow(cols);
 
     for (row = 0; row < rows; ++row) {
-        if (rasterP->rowplane[row * planes + 0] == NULL) {
-            /* This row is not present in the raster; make a row of padding */
-            unsigned int col;
-            for (col = 0; col < cols; ++col)
-                PPM_ASSIGN(pixrow[col], 0, 0, 0);
-        } else {
-            unsigned int col;
-            for (col = 0; col < cols; col += 8) {
-                unsigned int i;
-                for (i = 0; i < 8 && col + i < cols; ++i) {
-                    unsigned int plane;
-                    unsigned char bf[3];
+        unsigned int col;
 
-                    assert(planes == 3);
+        for (col = 0; col < cols; col += 8) {
+            unsigned int i;  /* column number mod 8 */
 
-                    for (plane = 0; plane < planes; ++plane) {
-                        unsigned int const rowplaneIndex =
-                            row * planes + plane;
+            for (i = 0; i < 8 && col + i < cols; ++i) {
+                unsigned int plane;
+                unsigned char bf[3];
 
-                        /* Oddly enough, *rasterP can contain rowplanes of
-                           varying widths ('cols' is just a maximum) and can
-                           skip rowplanes altogether.  rasterP->rowLen[i] tells
-                           how many bytes of data are in rowplane i, and can
-                           be zero to mean the entire rowplane is absent.
-                        */
-                        if (col/8 >= rasterP->rowLen[rowplaneIndex])
-                            bf[plane] = 0;
-                        else {
-                            bf[plane] =
-                                (rasterP->rowplane[rowplaneIndex][col/8] &
-                                 (1 << (7 - i))) ? 255 : 0;
-                        }
+                assert(planes == 3);  /* Because it's PPM */
+
+                for (plane = 0; plane < planes; ++plane) {
+                    unsigned int const rowplaneIndex =
+                        row * planes + plane;
+
+                    /* Oddly enough, *rasterP can contain rowplanes of
+                       varying widths ('cols' is just a maximum) and can
+                       skip rowplanes altogether.  rasterP->rowLen[i] tells
+                       how many bytes of data are in rowplane i, and can
+                       be zero to mean the entire rowplane is absent.
+                    */
+                    if (col/8 >= rasterP->rowLen[rowplaneIndex])
+                        bf[plane] = 0;
+                    else {
+                        assert(rasterP->rowplane[rowplaneIndex]);
+                            /* Because row plane length > 0 */
+                        bf[plane] =
+                            (rasterP->rowplane[rowplaneIndex][col/8] &
+                             (1 << (7 - i))) ? 255 : 0;
                     }
-                    PPM_ASSIGN(pixrow[col + i], bf[0], bf[1], bf[2]);
                 }
+                PPM_ASSIGN(pixrow[col + i], bf[0], bf[1], bf[2]);
             }
         }
         ppm_writeppmrow(stdout, pixrow, cols, 255, 0);
