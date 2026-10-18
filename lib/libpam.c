@@ -1185,7 +1185,7 @@ pnm_writepaminit(struct pam * const pamP) {
    Note that a program that generates GIF just ignores -plain.  Note also that
    a program could conceivably generate both a PPM image and a PAM image.
 
-   Note also how we handle the other a user can request plain format: the
+   Note also how we handle the other way a user can request plain format: the
    'plainformat' member of the PAM struct.  In the case of PAM, we ignore that
    member.
 */
@@ -1207,7 +1207,7 @@ pnm_checkpam(const struct pam *   const pamP,
     }
         break;
     case PPM_TYPE:
-        pgm_check(pamP->file, checkType, pamP->format,
+        ppm_check(pamP->file, checkType, pamP->format,
                   pamP->width, pamP->height, pamP->maxval, retvalP);
         break;
     case PGM_TYPE:
