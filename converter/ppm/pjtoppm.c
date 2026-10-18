@@ -186,7 +186,8 @@ decompressImageMode1(unsigned int          const rows,
                 }
                 free(rasterP->rowplane[rowplaneIndex]);
 
-                rasterP->rowplane[rowplaneIndex] = realloc(buf, colByte);
+                rasterP->rowplane[rowplaneIndex] =
+                    realloc(buf, MAX(1, colByte));
                 if (!rasterP->rowplane[rowplaneIndex]) {
                     pm_error("Out of memory allocating buffer for %u "
                              "columns for row %u, plane %u",
