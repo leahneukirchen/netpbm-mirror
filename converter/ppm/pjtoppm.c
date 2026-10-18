@@ -133,7 +133,6 @@ egetc(FILE * const ifP) {
 
 static void
 decompressImageMode1(unsigned int          const rows,
-                     unsigned int          const planes,
                      const struct Raster * const rasterP,
                      unsigned int *        const colsP) {
 /*----------------------------------------------------------------------------
@@ -146,27 +145,29 @@ decompressImageMode1(unsigned int          const rows,
 
    Return as *colsP the number of pixels in the longest line in the raster.
 -----------------------------------------------------------------------------*/
-    unsigned int const newcols = 10240;
+    unsigned int const newcolByteCt = 10240;
         /* It could not be larger than that! */
 
-    unsigned int cols;
+    unsigned int colByteCt;
+        /* Maximum rowplane width (in 8-column bytes) seen so far */
     unsigned int row;
 
-    for (row = 0, cols = 0; row < rows; ++row) {
+    for (row = 0, colByteCt = 0; row < rows; ++row) {
         unsigned int plane;
 
-        for (plane = 0; plane < planes; ++plane) {
-            unsigned int const rowplaneIndex = row * planes + plane;
+
+        for (plane = 0; plane < rasterP->planes; ++plane) {
+            unsigned int const rowplaneIndex = row * rasterP->planes + plane;
 
             if (rasterP->rowplane[rowplaneIndex]) {
                 unsigned int i;  /* index into rowplane compressed data */
-                unsigned int col;
+                unsigned int colByte;  /* 8-column byte number */
                 unsigned char * buf;
 
-                MALLOCARRAY(buf, newcols);
+                MALLOCARRAY(buf, newcolByteCt);
                 if (buf == NULL)
                     pm_error("out of memory");
-                for (i = 0, col = 0;
+                for (i = 0, colByte = 0;
                      i < rasterP->rowLen[rowplaneIndex];
                      i += 2) {
 
@@ -178,24 +179,26 @@ decompressImageMode1(unsigned int          const rows,
                         int cmd, val;
                         for (cmd = rasterP->rowplane[rowplaneIndex][i],
                                  val = rasterP->rowplane[rowplaneIndex][i+1];
-                             cmd >= 0 && col < newcols; --cmd, ++col)
-                            buf[col] = val;
+                             cmd >= 0 && colByte < newcolByteCt;
+                             --cmd, ++colByte)
+                            buf[colByte] = val;
                     }
                 }
                 free(rasterP->rowplane[rowplaneIndex]);
 
-                rasterP->rowplane[rowplaneIndex] = realloc(buf, col);
+                rasterP->rowplane[rowplaneIndex] = realloc(buf, colByte);
                 if (!rasterP->rowplane[rowplaneIndex]) {
                     pm_error("Out of memory allocating buffer for %u "
-                             "columns for row %u, plane %u", col, row, plane);
+                             "columns for row %u, plane %u",
+                             colByte * 8, row, plane);
                 }
-                rasterP->rowLen[rowplaneIndex] = col;
+                rasterP->rowLen[rowplaneIndex] = colByte;
 
-                cols = MAX(cols, col);
+                colByteCt = MAX(colByteCt, colByte);
             }
         }
     }
-    *colsP = cols * 8;  assert(cols < UINT_MAX/8);
+    *colsP = colByteCt * 8;  assert(colByteCt < UINT_MAX/8);
 }
 
 
@@ -204,10 +207,17 @@ static void
 writePpm(FILE *                const ofP,
          unsigned int          const cols,
          unsigned int          const rows,
-         unsigned int          const planes,
          const struct Raster * const rasterP,
          int                   const mode) {
+/*----------------------------------------------------------------------------
+   Write out the PPM image to file *ofP, 'cols' columns by 'rows' rows,
+   maxval 255.
 
+   *rasterP is the image raster and contains 8-pixel bytes, one bit per
+   sample.  Our output samples are therefore either 0 or maxval.
+
+   The number of planes in *rasterP must be 3.
+-----------------------------------------------------------------------------*/
     pixel * pixrow;
     unsigned int row;
 
@@ -224,11 +234,11 @@ writePpm(FILE *                const ofP,
                 unsigned int plane;
                 unsigned char bf[3];
 
-                assert(planes == 3);  /* Because it's PPM */
+                assert(rasterP->planes == 3);   /* Calling requirement */
 
-                for (plane = 0; plane < planes; ++plane) {
+                for (plane = 0; plane < rasterP->planes; ++plane) {
                     unsigned int const rowplaneIndex =
-                        row * planes + plane;
+                        row * rasterP->planes + plane;
 
                     /* Oddly enough, *rasterP can contain rowplanes of
                        varying widths ('cols' is just a maximum) and can
@@ -499,9 +509,9 @@ main(int argc, const char ** argv) {
     rows = row;
 
     if (mode == 1)
-        decompressImageMode1(rows, planes, &raster, &cols);
+        decompressImageMode1(rows, &raster, &cols);
 
-    writePpm(stdout, cols, rows, planes, &raster, mode);
+    writePpm(stdout, cols, rows, &raster, mode);
 
     pm_close(stdout);
 
