@@ -22,7 +22,7 @@ pbmmake -g 8 8 | pnminvert | cksum
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 # Empty input
 invCmd "pnminvert /dev/null"

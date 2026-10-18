@@ -64,11 +64,11 @@ rm ${mult_ppm}
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
-invCmd "pampick 6 < ${mult_pnm}"
-invCmd "pampick -1 < ${mult_pnm}"
-invCmd "pampick 2.1 < ${mult_pnm}"
-invCmd "pampick < ${mult_pnm} | pampick 0"
+invCmdStdin "pampick 0"  "/dev/null"
+invCmdStdin "pampick 6"  "${mult_pnm}"
+invCmdStdin "pampick -1" "${mult_pnm}"
+invCmdStdin "pampick 2.1" "${mult_pnm}"
 
 rm ${mult_pnm}

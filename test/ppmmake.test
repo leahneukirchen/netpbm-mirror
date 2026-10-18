@@ -39,7 +39,7 @@ ppmmake -maxval=1  ${blue}   2 2 | cksum
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 # No color specified
 

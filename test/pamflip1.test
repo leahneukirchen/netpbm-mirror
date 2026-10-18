@@ -60,7 +60,7 @@ rm ${test_pam}
 
 echo "Test Invalid"
 
-. ${srcdir}/test-invalid.inc
+. ./test-invalid.inc
 
 # Empty input
 invCmd "pamflip /dev/null"

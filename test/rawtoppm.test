@@ -55,6 +55,7 @@ rgb3toppm testimg.blu testimg.grn testimg.red | \
 echo "Test 4"
 
 test1_ppm=${tmpdir}/test1.ppm
+test1_rppm=${tmpdir}/test1.rppm
 
 cat <<EOF > ${test1_ppm}
 P3
@@ -67,6 +68,21 @@ P3
 9 8 7  6 5 4  3 2 1  0 0 0  0 0 0
 EOF
 
-ppmtoppm < ${test1_ppm} | rawtoppm -headerskip 9 5 5 -plain
+ppmtoppm < ${test1_ppm} | tee ${test1_rppm} | rawtoppm -headerskip 9 5 5 -plain
 
 rm ${test1_ppm} testimg.red testimg.grn testimg.blu
+
+echo "Test Invalid"
+
+. ./test-invalid.inc
+
+invCmd "rawtoppm /dev/null"
+invCmd "rawtoppm -interpixel -interrow -headerskip 9 5 5 ${test1_rppm}"
+invCmd "rawtoppm -headerskip -9  5  5 ${test1_rppm}"
+invCmd "rawtoppm -headerskip  9  0  5 ${test1_rppm}"
+invCmd "rawtoppm -headerskip  9 -1  5 ${test1_rppm}"
+invCmd "rawtoppm -headerskip  9  5  0 ${test1_rppm}"
+invCmd "rawtoppm -headerskip  9  5 -1 ${test1_rppm}"
+invCmd "rawtoppm -rowskip -1 -headerskip 9 5 5 ${test1_rppm}"
+
+rm ${test1_rppm}

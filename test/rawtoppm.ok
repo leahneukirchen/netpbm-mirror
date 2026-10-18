@@ -21,3 +21,12 @@ P3
 0 1 2  3 4 0  1 2 3  4 0 1  2 3 4
 0 1 2  3 4 1  2 3 4  5 2 3  4 5 6
 9 8 7  6 5 4  3 2 1  0 0 0  0 0 0
+Test Invalid
+Expected failure 1 (no output)
+Expected failure 2 (no output)
+Expected failure 3 (no output)
+Expected failure 4 (no output)
+Expected failure 5 (no output)
+Expected failure 6 (no output)
+Expected failure 7 (no output)
+Expected failure 8 (no output)
