@@ -19,23 +19,80 @@
 
     See the file mdaspec.txt for a specification of the MDA format.
 ******************************************************************************/
+#include <stdbool.h>
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
 
 #include "mallocvar.h"
+#include "shhopt.h"
 #include "pbm.h"
 
-/* Simple MDA -> portable bitmap converter */
+
+struct CmdlineInfo {
+    /* All the information the user supplied in the command line,
+       in a form easy for the program to use.
+    */
+    const char * inputFileName;
+    unsigned int doubleheight;
+    unsigned int invert;
+    unsigned int ascii;
+};
+
+
+
+static void
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
+/*----------------------------------------------------------------------------
+   Note that the file spec array we return is stored in the storage that
+   was passed to as as the argv array.
+-----------------------------------------------------------------------------*/
+    optEntry * option_def;
+        /* Instructions to pm_optParseOptions4 on how to parse our options.
+         */
+    optStruct3 opt;
+
+    unsigned int option_def_index;
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
+
+    option_def_index = 0;   /* incremented by OPTENT3 */
+    OPTENT3(0,   "doubleheight", OPT_FLAG,  NULL, &cmdlineP->doubleheight,  0);
+    OPTENT3(0,   "D",            OPT_FLAG,  NULL, &cmdlineP->doubleheight,  0);
+    OPTENT3(0,   "invert",       OPT_FLAG,  NULL, &cmdlineP->invert,        0);
+    OPTENT3(0,   "I",            OPT_FLAG,  NULL, &cmdlineP->invert,        0);
+    OPTENT3(0,   "ascii",        OPT_FLAG,  NULL, &cmdlineP->ascii,         0);
+    OPTENT3(0,   "A",            OPT_FLAG,  NULL, &cmdlineP->ascii,         0);
+
+    opt.opt_table     = option_def;
+    opt.short_allowed = false; /* We have no short (old-fashioned) options */
+    opt.allowNegNum   = false; /* We have no parms that are negative numbers */
+
+    pm_optParseOptions4(&argc, argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others */
+
+    if (argc-1 < 1)
+        cmdlineP->inputFileName = "-";
+    else {
+        cmdlineP->inputFileName = argv[1];
+
+        if (argc-1 > 1) {
+            pm_error("Too many arguments.  The only possible non-option "
+                     "argument is the input file name");
+        }
+    }
+
+    free(option_def);
+}
+
+
 
 typedef unsigned char mdbyte;   /* Must be exactly one byte */
 
 static mdbyte header[128];      /* MDA file header */
 static bit **data;          /* PBM image */
 static mdbyte *mdrow;           /* MDA row after decompression (MD3 only) */
-static int bInvert = 0;     /* Invert image? */
-static int bScale  = 0;     /* Scale image? */
-static int bAscii  = 0;     /* Output ASCII PBM? */
 
 static mdbyte
 getbyte(FILE * const ifP) {
@@ -55,10 +112,12 @@ getbyte(FILE * const ifP) {
 static void
 renderByte(unsigned int   const nInCols,
            unsigned int   const nOutRows,
+           bool           const doubleheight,
            unsigned int * const colP,
            unsigned int * const xP,
            unsigned int * const yP,
-           int            const b) {
+           int            const b,
+           bool           const invert) {
 /*----------------------------------------------------------------------------
   Convert a byte to 8 cells in the destination bitmap
 
@@ -71,17 +130,20 @@ renderByte(unsigned int   const nInCols,
 
   As output, update *colP, *xP and *yP to point to the next bit of the raster.
 -----------------------------------------------------------------------------*/
-    int const y3 =  bScale ? *yP * 2 : *yP;
+    int const y3 =  doubleheight ? *yP * 2 : *yP;
+
+    assert(*colP < nInCols);
 
     if (y3 < nOutRows) {
         unsigned int n;
-        int mask;
+        unsigned int mask;
 
         for (n = 0, mask = 0x80; n < 8; ++n) {
-            if (bInvert) data[y3][*xP] = (b & mask) ? PBM_BLACK : PBM_WHITE;
-            else         data[y3][*xP] = (b & mask) ? PBM_WHITE : PBM_BLACK;
-            mask = mask >> 1;
-            if (bScale)
+            data[y3][*xP] = invert ?
+                ((b & mask) ? PBM_BLACK : PBM_WHITE) :
+                ((b & mask) ? PBM_WHITE : PBM_BLACK);
+            mask >>= 1;
+            if (doubleheight)
                 data[y3+1][*xP] = data[y3][*xP];
             ++(*xP);
         }
@@ -102,11 +164,18 @@ md2Trans(FILE *       const ifP,
          unsigned int const nInRows,
          unsigned int const nInCols,
          unsigned int const nOutRows,
-         unsigned int const nOutCols) {
+         bool         const doubleheight,
+         unsigned int const nOutCols,
+         bool         const invert) {
 /*----------------------------------------------------------------------------
    Convert a MicroDesign 2 area to PBM
 
    MD2 has RLE encoding that may go over
+
+   *ifP must be positioned to the MDA raster, which the MDA header says is
+   'nInRows' by 'nInCols'.
+
+   'nInCols' must be at least 1.
 -----------------------------------------------------------------------------*/
     unsigned int x1, y1, col;    /* multiple lines. */
     mdbyte b;
@@ -125,12 +194,14 @@ md2Trans(FILE *       const ifP,
             if (c == 0)
                 c = 256;
             while (c > 0) {
-                renderByte(nInCols, nOutRows, &col, &x1, &y1, b);
+                renderByte(nInCols, nOutRows, doubleheight, &col, &x1, &y1,
+                           b, invert);
                 --c;
             }
         } else
             /* Not RLE */
-            renderByte(nInCols, nOutRows, &col, &x1, &y1, b);
+            renderByte(nInCols, nOutRows, doubleheight, &col, &x1, &y1,
+                       b, invert);
     }
 }
 
@@ -141,9 +212,13 @@ md3Trans(FILE *       const ifP,
          unsigned int const nInRows,
          unsigned int const nInCols,
          unsigned int const nOutRows,
-         unsigned int const nOutCols) {
+         bool         const doubleheight,
+         unsigned int const nOutCols,
+         bool         const invert) {
 /*----------------------------------------------------------------------------
    Convert MD3 file. MD3 are encoded as rows, and there are three types.
+
+   Arguments are like 'md2Trans'.
 -----------------------------------------------------------------------------*/
     unsigned int y1;
 
@@ -206,7 +281,8 @@ md3Trans(FILE *       const ifP,
             for (i = 0, x1 = 0, col = 0; i < nInCols; ++i) {
                 unsigned int d;
                 d = y1;
-                renderByte(nInCols, nOutRows, &col, &x1, &d, mdrow[i]);
+                renderByte(nInCols, nOutRows, doubleheight,
+                           &col, &x1, &d, mdrow[i], invert);
             }
         }
     }
@@ -214,31 +290,12 @@ md3Trans(FILE *       const ifP,
 
 
 
-static void
-usage(const char *s) {
-    printf("mdatopbm v1.00, Copyright (C) 1999 "
-           "John Elliott <jce@seasip.demon.co.uk>\n"
-           "This program is redistributable under the terms of "
-           "the GNU General Public\n"
-           "License, version 2 or later.\n\n"
-           "Usage: %s [ -a ] [ -d ] [ -i ] [ -- ] [ infile ]\n\n"
-           "-a: Output an ASCII pbm file\n"
-           "-d: Double height (to compensate for the PCW aspect ratio)\n"
-           "-i: Invert colors\n"
-           "--: No more options (use if filename begins with a dash)\n",
-           s);
-
-    exit(0);
-}
-
-
 
 int
 main(int argc, const char **argv) {
 
+    struct CmdlineInfo cmdline;
     FILE * ifP;
-    int n, optstop = 0;
-    const char * fname;
     unsigned int nInRows, nInCols;
         /* Height, width of input (rows x bytes) */
     unsigned int nOutCols, nOutRows;
@@ -246,32 +303,9 @@ main(int argc, const char **argv) {
 
     pm_proginit(&argc, argv);
 
-    /* Parse options */
+    parseCommandLine(argc, argv, &cmdline);
 
-    fname = NULL;  /* initial value */
-    for (n = 1; n < argc; ++n) {
-        if (argv[n][0] == '-' && !optstop) {
-            if (argv[n][1] == 'a' || argv[n][1] == 'A') bAscii = 1;
-            if (argv[n][1] == 'd' || argv[n][1] == 'D') bScale = 1;
-            if (argv[n][1] == 'i' || argv[n][1] == 'I') bInvert = 1;
-            if (argv[n][1] == 'h' || argv[n][1] == 'H') usage(argv[0]);
-            if (argv[n][1] == '-' && argv[n][2] == 0 && !fname) {
-                /* "--" */
-                optstop = 1;
-            }
-            if (argv[n][1] == '-' && (argv[n][2] == 'h' || argv[n][2] == 'H'))
-                usage(argv[0]);
-        }
-        else if (argv[n][0] && !fname) {
-            /* Filename */
-            fname = argv[n];
-        }
-    }
-
-    if (fname)
-        ifP = pm_openr(fname);
-    else
-        ifP = stdin;
+    ifP = pm_openr(cmdline.inputFileName);
 
     /* Read MDA file header */
 
@@ -289,9 +323,8 @@ main(int argc, const char **argv) {
     }
 
     nOutCols = 8 * nInCols;
-    nOutRows = nInRows;
-    if (bScale)
-        nOutRows *= 2;
+
+    nOutRows = cmdline.doubleheight ? nInRows * 2 : nInRows;
 
     data = pbm_allocarray(nOutCols, nOutRows);
 
@@ -301,11 +334,13 @@ main(int argc, const char **argv) {
         pm_error("Input image is zero width; we cannot handle that");
 
     if (header[21] == '0')
-        md2Trans(ifP, nInRows, nInCols, nOutRows, nOutCols);
+        md2Trans(ifP, nInRows, nInCols,
+                 nOutRows, !!cmdline.doubleheight, nOutCols, !!cmdline.invert);
     else
-        md3Trans(ifP, nInRows, nInCols, nOutRows, nOutCols);
+        md3Trans(ifP, nInRows, nInCols,
+                 nOutRows, !!cmdline.doubleheight, nOutCols, !!cmdline.invert);
 
-    pbm_writepbm(stdout, data, nOutCols, nOutRows, bAscii);
+    pbm_writepbm(stdout, data, nOutCols, nOutRows, cmdline.ascii);
 
     if (ifP != stdin)
         pm_close(ifP);
