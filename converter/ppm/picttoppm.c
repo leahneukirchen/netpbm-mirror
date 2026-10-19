@@ -2219,53 +2219,87 @@ readPixmap(FILE *          const ifP,
 
 
 
-static struct RGBColor*
+static struct RGBColor *
 readColorTable(FILE * const ifP) {
 
     Longword ctSeed;
-    Word ctFlags;
-    Word ctSize;
-    Word val;
-    int i;
-    struct RGBColor* colorTable;
+    Word     ctFlags;
+    Word     ctSize;
+    bool     ctInIndexOrder;
+    unsigned int i;
+    struct RGBColor * colorTable;
 
+    /* Reverse engineering from earlier code, it appears that the color table
+       in the PICT header has the form of a variable number of (index, color)
+       pairs.  As color indices in the raster are 8 bits, this could have up
+       to 256 entries.  There are two formats for the table, determined by a
+       flag in the header: 1) the way most graphics formats work and the way
+       most PICT files are coded: the index in the entry is meaningless and
+       the colors are presented in index order starting at 0; 2) the entries
+       are in arbitrary order and each one tells its index.
+    */
     stage = "getting color table info";
 
     ctSeed  = readLong(ifP);
     ctFlags = readWord(ifP);
     ctSize  = readWord(ifP);
 
+    ctInIndexOrder = !!(ctFlags & 0x80);
+
     if (verbose) {
         pm_message("ctSeed:  %ld", ctSeed);
-        pm_message("ctFlags: %d", ctFlags);
-        pm_message("ctSize:  %d", ctSize);
+        pm_message("ctFlags: %d",  ctFlags);
+        pm_message("ctSize:  %d",  ctSize);
+        pm_message("color table %s in index order",
+                   ctInIndexOrder ? "IS" : "IS NOT");
     }
 
     stage = "reading color table";
 
-    MALLOCARRAY(colorTable, ctSize + 1);
+    MALLOCARRAY(colorTable, 256);
     if (!colorTable)
-        pm_error("no memory for color table");
+        pm_error("Could not allocate 256 entries for the color table");
+
+    /* Initialize all entries to black so that if the input image
+       (invalidly) contains an index not in the table, results are
+       predictable and code checkers don't see a reference to
+       uninitialized memory.
+    */
+    for (i = 0; i < 256; ++i) {
+        colorTable[i].red = 0;
+        colorTable[i].grn = 0;
+        colorTable[i].blu = 0;
+    }
 
     for (i = 0; i <= ctSize; ++i) {
-        val = readWord(ifP);
-        /* The indices in a device color table are bogus and usually == 0.
-         * so I assume we allocate up the list of colors in order.
-         */
-        if (ctFlags & 0x8000)
-            val = i;
-        if (val > ctSize)
-            pm_error("pixel value greater than color table size");
+        Word const indexVal = readWord(ifP);
+            /* The index value given in the color table in the file.  It
+               is either an actual color index or meaningless, depending
+               on the color table properties, per 'ctFlags'.
+            */
+        unsigned int colorIndex;
 
-        colorTable[val].red = readWord(ifP);
-        colorTable[val].grn = readWord(ifP);
-        colorTable[val].blu = readWord(ifP);
+        if (ctInIndexOrder)
+            colorIndex = i;
+        else {
+            if (indexVal < 0 || indexVal > 255) {
+                pm_error("Invalid color index %u in color table in "
+                         "PICT header.  Color indexes are 8 bits", indexVal);
+            } else
+                colorIndex = indexVal;
+        }
+        assert(colorIndex < 256);
 
-        if (verbose > 1)
-            pm_message("Color %3u: [%u,%u,%u]", val,
-                colorTable[val].red,
-                colorTable[val].grn,
-                colorTable[val].blu);
+        colorTable[colorIndex].red = readWord(ifP);
+        colorTable[colorIndex].grn = readWord(ifP);
+        colorTable[colorIndex].blu = readWord(ifP);
+
+        if (verbose > 1) {
+            pm_message("Color %3u: [%u,%u,%u]", colorIndex,
+                colorTable[colorIndex].red,
+                colorTable[colorIndex].grn,
+                colorTable[colorIndex].blu);
+        }
     }
 
     return colorTable;

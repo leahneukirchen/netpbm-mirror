@@ -40,6 +40,10 @@ not yet  BJH  Release 11.17.00
               pjtoppm: fix crash when input image has zero-length rowplane.
               Always broken (pjtoppm was in primordial Netpbm in 1991).
               
+              picttoppm: fix arbitrary memory access with invalid input that
+              contains undefined color indices.  Always broken (picttoppm was
+              in primordial Netpbm in 1989).
+
               ppmglobe: fix bug: accepts only color names for the background
               color specification.  Thanks Scott Pakin.
 
