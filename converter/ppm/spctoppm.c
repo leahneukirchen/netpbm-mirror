@@ -49,7 +49,6 @@ doRaster(FILE *       const ifP,
            so far.
         */
 
-    pm_message("BRYAN: rasterLength=%u", rasterLength);
     /* Zero out first scan line. */
     for (i = 0; i < 160; ++i)
         screen[i] = 0;
@@ -90,7 +89,6 @@ doRaster(FILE *       const ifP,
     /* Convert the char version of the screen to short. */
     for (i = 0; i < ROWS*COLS/4; ++i)
         sscreen[i] = (screen[i*2+0] << 8) + (screen[i*2+1] & 0xff);
-    pm_message("BRYAN: done with reaster");
 }
 
 
