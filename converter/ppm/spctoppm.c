@@ -10,6 +10,7 @@
 ** implied warranty.
 */
 
+#include "pm_c_util.h"
 #include "ppm.h"
 
 #define ROWS 200
@@ -30,7 +31,11 @@ doChar(unsigned int  const n,
         160 + 2 * (n / 7960) + 8 * ((n % 7960) / 2) + (n % 2);
         /* Screen index */
 
-    screen[i] = c;
+    if (i >= ARRAY_SIZE(screen)) {
+        pm_error("Invalid input; raster is larger than the screen "
+                 "(%u x %u)", ROWS, COLS);
+    } else
+        screen[i] = c;
 }
 
 

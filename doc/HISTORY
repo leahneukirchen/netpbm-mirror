@@ -44,6 +44,10 @@ not yet  BJH  Release 11.17.00
               contains undefined color indices.  Always broken (picttoppm was
               in primordial Netpbm in 1989).
 
+              spctoppm: fix arbitrary memory access with invalid input that
+              contains too much raster data.  Always broken (spctoppm was
+              in primordial Netpbm in 1989).
+
               ppmglobe: fix bug: accepts only color names for the background
               color specification.  Thanks Scott Pakin.
 
