@@ -9,8 +9,11 @@
   Design notes:
 
   This program reads the entire image into memory at once (with 32 bits per
-  sample).  The only reason for that is coding expedience.  It ought to be
-  enhanced to go row by row to save memory.
+  sample).  It ought to be possible to read a row at a time and have libjxl
+  convert in chunks, but libjxl does not appear to have that capability.  The
+  closest it comes is 'JxlEncoderAddChunkedFrame' in which the encoder uses a
+  callback to request an arbitrary rectangle of the input image.  That is not
+  useful with libnetpbm, since it reads full rows.
 
   The program converts samples to floating point before passing them to
   'libjxl'.  It is alternatively possible to pass the original integer samples
@@ -354,14 +357,11 @@ pamtojpegxl(FILE *             const ifP,
     tuple ** tuples;
     struct pam inpam;
 
-    /* Design note: There is probably a way to make this convert row by row
-       instead of passing the entire image to libjxl at once.  We'll find it
-       some day.
-    */
-
     tuples = pnm_readpam(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
     convert(inpam, tuples, ofP);
+
+    pnm_freepamarray(tuples, &inpam);
 }
 
 
