@@ -50,6 +50,9 @@ not yet  BJH  Release 11.17.00
               contains too much raster data.  Always broken (spctoppm was
               in primordial Netpbm in 1989).
 
+              ddbugtopbm: add various checks of invalid input; fix arbitrary
+              memory access with invalid input.
+
               ppmglobe: fix bug: accepts only color names for the background
               color specification.  Thanks Scott Pakin.
 

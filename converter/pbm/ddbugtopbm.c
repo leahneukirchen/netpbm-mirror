@@ -27,6 +27,8 @@
  * from ftp:ibiblio.com/pub/linux/apps/graphics/convert, dated 2002.08.21.
  */
 
+#include <stdbool.h>
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,9 +42,40 @@
 
 
 static void
+readHeader(FILE *         const ifP,
+           bool *         const isDiddleP,
+           unsigned int * const recCtP) {
+
+    unsigned char buf[64];
+    size_t bytesReadCt;
+
+    /* main DB header */
+    bytesReadCt = fread(buf, 1, 64, ifP);
+
+    if (bytesReadCt < 64)
+        pm_error("Invalid input -- too small to contain the header");
+
+    bytesReadCt = fread(buf, 1, 14, ifP);
+
+    if (bytesReadCt < 14)
+        pm_error("Invalid input -- too small to contain the header");
+
+    if (!memeq(buf, "DIDL", 4) && ! memeq(buf, "DIDB", 4))
+        pm_error("not a Diddle or DiddleBug DB.  Doesn't contain "
+                 "'DIDL' or 'DIBD' signature");
+
+    *isDiddleP = memeq(buf, "DIDL", 4);
+
+    *recCtP = buf[12] * 256 + buf[13];
+}
+
+
+
+static void
 uncompressSketch(const unsigned char * const compressed,
+                 unsigned int          const compressedLen,
                  unsigned char *       const uncompressed,
-                 unsigned int          const compressedLen) {
+                 unsigned int          const uncompressedSz) {
 
     /* This is basically UncompressSketch() from DiddleBug 2.50's
        diddlebug.c
@@ -58,13 +91,18 @@ uncompressSketch(const unsigned char * const compressed,
         unsigned int byteCt;
 
         if (compressed[inputCursor] & 0x80) {
-            byteCt = compressed[inputCursor] & 0x3f;  /* ~(0x40|0x80) */
-            ++byteCt;
+            byteCt = (compressed[inputCursor] & 0x3f) + 1;  /* ~(0x40|0x80) */
+
+            if (outputCursor + byteCt > uncompressedSz)
+                pm_error("Record too big for this program to handle");
+
             if (compressed[inputCursor] & 0x40) {
                 /* Mixed */
+
                 memmove(&uncompressed[outputCursor],
                         &compressed[inputCursor + 1],
                         byteCt);
+
                 inputCursor += byteCt;
             } else {
                 /* Black */
@@ -72,8 +110,11 @@ uncompressSketch(const unsigned char * const compressed,
             }
         } else {
             /* White */
-            byteCt = compressed[inputCursor] & 0x7f; /* ~0x80 */
-            ++byteCt;
+            byteCt = (compressed[inputCursor] & 0x7f) + 1; /* ~0x80 */
+
+            if (outputCursor + byteCt > uncompressedSz)
+                pm_error("Record too big for this program to handle");
+
             memset(&uncompressed[outputCursor], 0x00, byteCt);
         }
         outputCursor += byteCt;
@@ -85,11 +126,12 @@ uncompressSketch(const unsigned char * const compressed,
 static const char *
 makeNoname(void) {
 
-    static char name[128];
-    static int num=0;
+    char name[128];
+    unsigned int num;
     FILE * ofP;
 
     ofP = NULL;
+    num = 0;
 
     do {
         ++num;
@@ -101,22 +143,29 @@ makeNoname(void) {
     if (num >= 10000)
         pm_error("too many unnamed sketches!");
 
-    return name;
+    return pm_strdup(name);
 }
 
 
 
 static void
 makeOutFileName(const char *  const name,
+                size_t        const nameSz,
                 const char ** const outfilenameP) {
-
+/*----------------------------------------------------------------------------
+   'name' is what is in the input file where the name field belongs.  It is
+   supposed to be a null-terminated ASCII string, but there are 'nameSz' bytes
+   physically allocated to it.
+-----------------------------------------------------------------------------*/
     unsigned int i;
 
     char * buffer;
 
-    MALLOCARRAY_NOFAIL(buffer, strlen(name) + 1);
+    MALLOCARRAY_NOFAIL(buffer, nameSz + 1);
 
-    strcpy(buffer, name);
+    for (i = 0; name[i] && i < nameSz; ++i)
+        buffer[i] = name[i];
+    buffer[i] = '\0';
 
     for (i = 0; buffer[i]; ++i) {
         if (!isalnum(buffer[i]) &&
@@ -127,7 +176,7 @@ makeOutFileName(const char *  const name,
     }
 
     if (buffer[0] == '\0') {
-        *outfilenameP = pm_strdup(makeNoname());
+        *outfilenameP = makeNoname();
     } else {
         pm_asprintf(outfilenameP, "%s.pbm", buffer);
     }
@@ -162,10 +211,10 @@ main(int argc, const char ** argv) {
 
     FILE * const ifP = stdin;
 
-    static unsigned char buf[64*1024];
+    unsigned char * inbuf;  /* malloced */
     unsigned int * recoffsets;  /* malloced */
-    int f;
-    int recCt;
+    unsigned int f;
+    unsigned int recCt;
     bool isDiddle;
 
     pm_proginit(&argc, argv);
@@ -173,57 +222,82 @@ main(int argc, const char ** argv) {
     if (argc-1 > 0)
         pm_error("Program takes no arguments.");
 
-    /* main DB header */
-    fread(buf, 1, 64, ifP);
-
-    fread(buf, 1, 14, ifP);
-
-    if (!memeq(buf, "DIDL", 4) && ! memeq(buf, "DIDB", 4))
-        pm_error("not a Diddle or DiddleBug DB.");
-
-    isDiddle = memeq(buf, "DIDL", 4);
-
-    recCt = buf[12] * 256 + buf[13];
+    readHeader(ifP, &isDiddle, &recCt);
 
     MALLOCARRAY_NOFAIL(recoffsets, recCt);
 
     for (f = 0; f < recCt; ++f) {
         unsigned char buf[8];
-        fread(buf, 1, 8, ifP);
+        size_t bytesReadCt;
+
+        bytesReadCt = fread(buf, 1, 8, ifP);
+
+        if (bytesReadCt < 8)
+            pm_error("Invalid input -- file ends in the middle of "
+                     "record offset table entry for Record %u", f);
+
         recoffsets[f] =
             (unsigned)(buf[0]<<24) | (buf[1]<<16) | (buf[2]<<8) | (buf[3]<<0);
     }
 
     for (f = 0; f < recCt; ++f) {
-        static unsigned char obuf[64*1024];
-        char * name;  /* pointer into buf[] */
+        size_t const inbufSz = 64*1024;
+        size_t const obufSz  = 64*1024;
+
+        unsigned char * obuf;  /* malloced */
+        const char * name;  /* pointer into inbuf[] */
         const char * outfilename;
+        size_t bytesReadCt;
+        size_t nameSz;
+
+        MALLOCARRAY(inbuf, inbufSz);
+        if (!inbuf) {
+            pm_error("Unable to allocate %u bytes for input buffer.",
+                     (unsigned)inbufSz);
+        }
+
+        MALLOCARRAY(obuf, obufSz);
+        if (!obuf) {
+            pm_error("Unable to allocate %u bytes for output buffer.",
+                     (unsigned)obufSz);
+        }
 
         fseek(ifP, recoffsets[f], SEEK_SET);
-        fread(buf, 1, 16*1024, ifP);  /* XXX crappy! */
+        bytesReadCt = fread(inbuf, 1, 16*1024, ifP);  /* XXX crappy! */
 
         if (isDiddle) {
             /* Diddle */
             unsigned int const sketchLen = 160*160/8;
-            memcpy(obuf, buf, sketchLen);
-            name = (char*)&(buf[sketchLen]);
+
+            if (sketchLen > bytesReadCt) {
+                pm_error("Invalid input - too small to contain 160x160 "
+                         "uncompressed sketch for record %u", f);
+            }
+            assert(sketchLen <= obufSz);
+            memcpy(obuf, inbuf, sketchLen);
+            name = (const char*)&(inbuf[sketchLen]);
+            nameSz = bytesReadCt - sketchLen;
         } else {
             /* DiddleBug */
             unsigned int const sketchLen =
-                (unsigned int)(buf[8] << 8) | (buf[9] << 0);
+                (unsigned int)(inbuf[8] << 8) | (inbuf[9] << 0);
 
-            uncompressSketch(&buf[26+80+1], obuf, sketchLen-80-1);
+            uncompressSketch(&inbuf[26+80+1], sketchLen-80-1,
+                             obuf, obufSz);
 
-            name = (char*)&buf[26+sketchLen];
+            name = (const char*)&inbuf[26+sketchLen];
+            nameSz = bytesReadCt - 26 - sketchLen;
         }
 
-        makeOutFileName(name, &outfilename);
+        makeOutFileName(name, nameSz, &outfilename);
 
         pm_message("extracting sketch %2d as `%s'", f, outfilename);
 
         writeOneSketch(obuf, outfilename);
 
         pm_strfree(outfilename);
+
+        free(obuf);
     }
     return 0;
 }
