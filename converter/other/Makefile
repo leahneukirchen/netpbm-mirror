@@ -160,7 +160,7 @@ ifneq ($(JPEGLIB),NONE)
   PORTBINARIES += jpegtopnm pnmtojpeg
 endif
 ifneq ($(JPEGXLLIB),NONE)
-  PORTBINARIES += pamtojpegxl
+  PORTBINARIES += pamtojpegxl jpegxltopam
 endif
 ifneq ($(TIFF_PREREQ_MISSING),Y)
   PORTBINARIES += tifftopnm pamtotiff pnmtotiffcmyk
@@ -249,7 +249,8 @@ jpegtopnm: LDFLAGS_TARGET = $(shell $(LIBOPT) $(LIBOPTR) $(JPEGLIB))
 
 pnmtojpeg: LDFLAGS_TARGET = $(shell $(LIBOPT) $(LIBOPTR) $(JPEGLIB))
 
-pamtojpegxl: LDFLAGS_TARGET = $(shell $(LIBOPT) $(LIBOPTR) $(JPEGXLLIB))
+pamtojpegxl jpegxltopam: \
+  LDFLAGS_TARGET = $(shell $(LIBOPT) $(LIBOPTR) $(JPEGXLLIB))
 
 srftopam pamtosrf: srf.o
 srftopam pamtosrf: ADDL_OBJECTS = srf.o

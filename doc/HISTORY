@@ -6,7 +6,7 @@ CHANGE HISTORY
 
 not yet  BJH  Release 11.17.00
 
-              add pamtojpegxl.
+              Add pamtojpegxl, jpegxltopam.
 
               jbigtopnm: fix bug: fails with bogus error message about
               incremental BIE not continuing previous one when multi-BIE image
@@ -55,7 +55,7 @@ not yet  BJH  Release 11.17.00
 
 26.09.28 BJH  Release 11.16.00
 
-              add pamnoise.
+              Add pamnoise.
 
               pnmtojbig: add long options.
 
