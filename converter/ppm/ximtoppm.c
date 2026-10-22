@@ -120,7 +120,6 @@ readXimHeader(FILE *     const ifP,
     }
     headerP->width          = atoi(aHead.image_width);
     headerP->height         = atoi(aHead.image_height);
-    headerP->ncolors        = atoi(aHead.num_colors);
     headerP->nchannels      = atoi(aHead.num_channels);
     headerP->bytes_per_line = atoi(aHead.bytes_per_line);
 #if 0
@@ -151,14 +150,24 @@ readXimHeader(FILE *     const ifP,
     if (headerP->nchannels == 3 && headerP->bits_channel == 8)
         headerP->ncolors = 0;
     else if (headerP->nchannels == 1 && headerP->bits_channel == 8) {
-        unsigned int i;
+        short const numColorsFld = atoi(aHead.num_colors);
 
-        MALLOCARRAY_NOFAIL(headerP->colors, headerP->ncolors);
+        if (numColorsFld > ARRAY_SIZE(aHead.c_map)) {
+            pm_error("Invalid Xim - header says %u colors in "
+                     "colormap, but 256 is the maximum possible",
+                     numColorsFld);
+        } else {
+            unsigned int i;
 
-        for (i=0; i < headerP->ncolors; ++i) {
-            headerP->colors[i].red = aHead.c_map[i][0];
-            headerP->colors[i].grn = aHead.c_map[i][1];
-            headerP->colors[i].blu = aHead.c_map[i][2];
+            headerP->ncolors = numColorsFld;
+
+            MALLOCARRAY_NOFAIL(headerP->colors, numColorsFld);
+
+            for (i=0; i < numColorsFld; ++i) {
+                headerP->colors[i].red = aHead.c_map[i][0];
+                headerP->colors[i].grn = aHead.c_map[i][1];
+                headerP->colors[i].blu = aHead.c_map[i][2];
+            }
         }
     }
     return 1;
