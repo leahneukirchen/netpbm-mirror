@@ -81,6 +81,11 @@ ifneq ($(JPEGLIB),NONE)
     EXTERN_INCLUDES += -I$(JPEGHDR_DIR)
   endif
 endif
+ifneq ($(JPEGXLLIB),NONE)
+  ifneq ($(JPEGXLHDR_DIR)x,x)
+    EXTERN_INCLUDES += -I$(JPEGXLHDR_DIR)
+  endif
+endif
 ifneq ($(URTLIB),NONE)
   ifneq ($(URTHDR_DIR)x,x)
     EXTERN_INCLUDES += -I$(URTHDR_DIR)
@@ -153,6 +158,9 @@ ifeq ($(HAVE_PNGLIB),Y)
 endif
 ifneq ($(JPEGLIB),NONE)
   PORTBINARIES += jpegtopnm pnmtojpeg
+endif
+ifneq ($(JPEGXLLIB),NONE)
+  PORTBINARIES += pamtojpegxl
 endif
 ifneq ($(TIFF_PREREQ_MISSING),Y)
   PORTBINARIES += tifftopnm pamtotiff pnmtotiffcmyk
@@ -239,10 +247,12 @@ jpegtopnm: jpegdatasource.o exif.o
 jpegtopnm: ADDL_OBJECTS = jpegdatasource.o exif.o
 jpegtopnm: LDFLAGS_TARGET = $(shell $(LIBOPT) $(LIBOPTR) $(JPEGLIB))
 
+pnmtojpeg: LDFLAGS_TARGET = $(shell $(LIBOPT) $(LIBOPTR) $(JPEGLIB))
+
+pamtojpegxl: LDFLAGS_TARGET = $(shell $(LIBOPT) $(LIBOPTR) $(JPEGXLLIB))
+
 srftopam pamtosrf: srf.o
 srftopam pamtosrf: ADDL_OBJECTS = srf.o
-
-pnmtojpeg: LDFLAGS_TARGET = $(shell $(LIBOPT) $(LIBOPTR) $(JPEGLIB))
 
 svgtopam: LDFLAGS_TARGET = $(XML2_LIBS)
 
