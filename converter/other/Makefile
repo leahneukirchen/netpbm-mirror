@@ -7,6 +7,11 @@ VPATH=.:$(SRCDIR)/$(SUBDIR)
 
 include $(BUILDDIR)/config.mk
 
+SUBDIRS = jbig pnmtopalm jpeg2000 cameratopam pamtosvg
+ifneq ($(BUILD_FIASCO), N)
+  SUBDIRS += fiasco
+endif
+
 # The pkg-config test used to be just 'pkg-config libxml-2.0', without the
 # --exists, and on at least one system, it does the same thing as --exists:
 # exit code 0 if the package exists; 1 if it does not, with no Standard
@@ -37,11 +42,6 @@ else
     XML2_LIBS=$(shell xml2-config --libs)
     XML2_CFLAGS=$(shell xml2-config --cflags)
   endif
-endif
-
-SUBDIRS = jbig pnmtopalm jpeg2000 cameratopam pamtosvg
-ifneq ($(BUILD_FIASCO), N)
-  SUBDIRS += fiasco
 endif
 
 ifneq ($(TIFFLIB),NONE)
@@ -76,14 +76,26 @@ else
   endif
 endif
 
+TEST_PKGCONFIG_LIBJXL := \
+  if $(PKG_CONFIG) libjxl --exists; then echo exists; fi
+
+ifneq ($(shell $(TEST_PKGCONFIG_LIBJXL)),)
+  # pkg-config works and says libjxl exists on this system
+  JPEGXL_LIBS = $(shell $(PKG_CONFIG) libjxl --libs)
+  JPEGXL_CFLAGS = $(shell $(PKG_CONFIG) libjxl --cflags)
+else	
+  JPEGXL_LIBS = NONE
+  JPEGXL_CFLAGS = NONE
+endif
+
+ifneq ($(TIFFLIB),NONE)
+  ifneq ($(TIFFHDR_DIR)x,x)
+    EXTERN_INCLUDES += -I$(TIFFHDR_DIR)
+  endif
+endif
 ifneq ($(JPEGLIB),NONE)
   ifneq ($(JPEGHDR_DIR)x,x)
     EXTERN_INCLUDES += -I$(JPEGHDR_DIR)
-  endif
-endif
-ifneq ($(JPEGXLLIB),NONE)
-  ifneq ($(JPEGXLHDR_DIR)x,x)
-    EXTERN_INCLUDES += -I$(JPEGXLHDR_DIR)
   endif
 endif
 ifneq ($(URTLIB),NONE)
@@ -94,6 +106,11 @@ endif
 ifneq ($(XML2_LIBS),NONE)
   ifneq ($(XML2_CFLAGS),NONE)
     EXTERN_INCLUDES += $(XML2_CFLAGS)
+  endif
+endif
+ifneq ($(JPEGXL_LIBS),NONE)
+  ifneq ($(JPEGXL_CFLAGS),NONE)
+    EXTERN_INCLUDES += $(JPEGXL_CFLAGS)
   endif
 endif
 
@@ -250,7 +267,7 @@ jpegtopnm: LDFLAGS_TARGET = $(shell $(LIBOPT) $(LIBOPTR) $(JPEGLIB))
 pnmtojpeg: LDFLAGS_TARGET = $(shell $(LIBOPT) $(LIBOPTR) $(JPEGLIB))
 
 pamtojpegxl jpegxltopam: \
-  LDFLAGS_TARGET = $(shell $(LIBOPT) $(LIBOPTR) $(JPEGXLLIB))
+  LDFLAGS_TARGET = $(shell $(LIBOPT) $(LIBOPTR) $(JPEGXL_LIBS))
 
 srftopam pamtosrf: srf.o
 srftopam pamtosrf: ADDL_OBJECTS = srf.o

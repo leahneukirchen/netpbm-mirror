@@ -1193,42 +1193,6 @@ sub getJpegLibrary($@) {
 
 
 
-sub getJpegxlLibrary($@) {
-
-    my ($platform, @suggestedHdrDir) = @_;
-
-    my $jpegxllib;
-    {
-        my $default = "libjxl" . libSuffix($platform);
-
-        print("What is your JPEG XL (graphics format) library?\n");
-
-        my $response = prompt("library filename or 'none'", $default);
-
-        if ($response ne "none") {
-            $jpegxllib = $response;
-        }
-    }
-    my $jpegxlhdr_dir;
-    if (defined($jpegxllib)) {
-        my $default = "default";
-
-        print("Where are the interface headers for it?\n");
-
-        my $response = prompt("JPEG header directory", $default);
-
-        if ($response ne "default") {
-            $jpegxlhdr_dir = $response;
-        }
-        if (defined($jpegxlhdr_dir) and !-d($jpegxlhdr_dir)) {
-            warnUser("No directory named '$jpegxlhdr_dir' exists.");
-        }
-    }
-    return($jpegxllib, $jpegxlhdr_dir);
-}
-
-
-
 sub getPngLibrary($@) {
 
     my ($platform, @suggestedHdrDir) = @_;
@@ -2264,11 +2228,11 @@ my ($zlib, $zhdr_dir)       = getZLibrary($platform,
                                           $tiffhdr_dir,
                                           $jpeghdr_dir);
 print("\n");
-my ($jpegxllib, $jpegxlhdr_dir) = getJpegxlLibrary($platform);
-print("\n");
 my ($x11lib, $x11hdr_dir) = getX11Library($platform);
+
 print("\n");
 my ($linuxsvgalib, $linuxsvgahdr_dir) = getLinuxsvgaLibrary($platform);
+
 print("\n");
 
 # We should add the URT, JBIG, and Jasper libraries here too.  They're a
@@ -2598,13 +2562,6 @@ if (defined($jpeghdr_dir)) {
 }
 if (defined($jpeglib)) {
     push(@config_mk, "JPEGLIB = $jpeglib\n");
-}
-
-if (defined($jpegxlhdr_dir)) {
-    push(@config_mk, "JPEGXLHDR_DIR = $jpegxlhdr_dir\n");
-}
-if (defined($jpegxllib)) {
-    push(@config_mk, "JPEGXLLIB = $jpegxllib\n");
 }
 
 if (defined($pnghdr_dir)) {
