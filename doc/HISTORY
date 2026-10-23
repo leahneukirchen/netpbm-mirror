@@ -55,7 +55,11 @@ not yet  BJH  Release 11.17.00
               was new in Netpbm 20.18 (September 2003).
 
               ximtoppm: fix arbitrary memory access with invalid input.
-              Always broken (ximtoppm was in primordial Netpbm, ca 1989).
+              Always broken (ximtoppm was in primordial Netpbm in 1989).
+
+              gouldtoppm: fix divide-by-zero crash when head contains invalid
+              value for bits per pixel.  Always broken (gouldtoppm was in
+              primordial Netpbm in 198).
 
               ppmglobe: fix bug: accepts only color names for the background
               color specification.  Thanks Scott Pakin.

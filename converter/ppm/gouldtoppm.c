@@ -57,6 +57,16 @@ getGouldHeader(FILE *         ifP,
         }
     }
 
+    switch (bitsperpixel) {
+    case 1:
+    case 2:
+    case 4:
+    case 8:
+        break;
+    default:
+        pm_error("Invalid bits per pixel in Gould header: %u.  "
+                 "Only 1, 2, 4, and 8 are valid", bitsperpixel);
+    }
     bytesperline = bytesperlineOld == 0 ? bytesperlineNew : bytesperlineOld;
 
     *lineCtP       = lineCtOld == 0 ? lineCtNew : lineCtOld;
