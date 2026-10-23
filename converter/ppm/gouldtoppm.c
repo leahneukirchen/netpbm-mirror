@@ -1,4 +1,4 @@
-/* gouldtoppm.c - read GOULD imaging system files and write a portable pixmap
+/* gouldtoppm.c - read GOULD imaging system files and write a PPM
 **
 ** Copyright (C) 1990  Stephen P. Lesniewski
 **
@@ -11,127 +11,129 @@
 */
 
 #include <stdio.h>
+
 #include "ppm.h"
-
-#define MAXVAL 255
-
-static void getgouldheader ( FILE *infile,
-                             unsigned long int *cols,
-                             unsigned long int *nlines,
-                             unsigned long int *bytesperline,
-                             unsigned long int *bitsperpixel,
-                             unsigned long int *NB );
-
-
-
-int
-main( int argc, char * argv[] ) {
-
-    FILE *ifp;
-    pixel *pixrow;
-
-    unsigned long int cols, nlines, bytesperline, bitsperpixel, NB, x, y;
-    unsigned char pbuffer[4];
-
-    int color_type;
-
-
-    ppm_init( &argc, argv );
-
-    if ( argc > 2 )
-        pm_usage( "[gouldfile]" );
-
-    if ( argc == 2 )
-        ifp = pm_openr( argv[1] );
-    else
-        ifp = stdin;
-
-    getgouldheader( ifp, &cols, &nlines, &bytesperline, &bitsperpixel, &NB);
-
-    ppm_writeppminit(stdout, cols, nlines, MAXVAL, 0);
-
-    color_type = bitsperpixel/8;
-    if (color_type == 0) color_type = NB;
-
-    pixrow = ppm_allocrow(cols);
-
-    for (y = 0; y < nlines; ++y)
-    {
-        for (x = 0; x < cols; ++x)
-        {
-            switch (color_type)
-            {
-            case 0:
-                pm_error("incorrect color type" );
-
-            case 1:
-                fread(pbuffer, 1, 1, ifp);
-                PPM_ASSIGN( pixrow[x], pbuffer[0], pbuffer[0], pbuffer[0]);
-                break;
-
-            case 2:
-                fread(pbuffer, 2, 1, ifp);
-                PPM_ASSIGN( pixrow[x], pbuffer[0], pbuffer[1], pbuffer[1]);
-                break;
-
-            case 3:
-                fread(pbuffer, 3, 1, ifp);
-                PPM_ASSIGN( pixrow[x], pbuffer[0], pbuffer[1], pbuffer[2]);
-                break;
-
-            default :
-                fread(pbuffer, 3, 1, ifp);
-                PPM_ASSIGN( pixrow[x], pbuffer[0], pbuffer[1], pbuffer[2]);
-                break;
-
-            } /* switch */
-        }
-        ppm_writeppmrow(stdout, pixrow, cols, MAXVAL, 0);
-    }
-
-    pm_close(ifp);
-    pm_close(stdout);
-
-    exit(0);
-}
 
 
 
 static void
-getgouldheader(FILE * infile,
-               unsigned long int *cols,
-               unsigned long int *nlines,
-               unsigned long int *bytesperline,
-               unsigned long int *bitsperpixel,
-               unsigned long int *NB ) {
+getGouldHeader(FILE *         ifP,
+               unsigned int * colsP,
+               unsigned int * lineCtP,
+               unsigned int * bytesperlineP,
+               unsigned int * bitsperpixelP,
+               unsigned int * NBP) {
 
-    unsigned long int nlines_new, bytesperline_new, numheaderrec;
+    unsigned int lineCtOld, lineCtNew;
+    unsigned int bytesperlineOld, bytesperlineNew;
+    unsigned int headerRecCt;
     unsigned char headerblk[512];
-    int i;
+    size_t bytesReadCt;
 
-    if (fread(headerblk, 512, 1, infile) == 0)
-        pm_error("cannot read gould header" );
+    bytesReadCt = fread(headerblk, 512, 1, ifP);
+    if (bytesReadCt == 0)
+        pm_error("Failed to read 512 byte gould header");
 
-    *nlines       = (headerblk[3]<<8) | headerblk[2];
-    *bytesperline = (headerblk[5]<<8) | headerblk[4];
-    *bitsperpixel = (headerblk[7]<<8) | headerblk[6];
-    numheaderrec  = (headerblk[9]<<8) | headerblk[8];
-    nlines_new    = (headerblk[15]<<24)| (headerblk[14]<<16) |\
-                    (headerblk[13]<<8) | (headerblk[12]);
-    bytesperline_new = (headerblk[19]<<24)| (headerblk[18]<<16) |\
-                       (headerblk[17]<<8) | (headerblk[16]);
-    *NB           = (headerblk[23]<<24)| (headerblk[22]<<16) |\
-                    (headerblk[21]<<8) | (headerblk[20]);
+    lineCtOld       = (headerblk[3]<<8) | headerblk[2];
+    bytesperlineOld = (headerblk[5]<<8) | headerblk[4];
+    *bitsperpixelP  = (headerblk[7]<<8) | headerblk[6];
+    headerRecCt     = (headerblk[9]<<8) | headerblk[8];
+    lineCtNew       = (headerblk[15]<<24)| (headerblk[14]<<16) |
+                      (headerblk[13]<<8) | (headerblk[12]);
+    bytesperlineNew = (headerblk[19]<<24)| (headerblk[18]<<16) |
+                      (headerblk[17]<<8) | (headerblk[16]);
+    *NBP            = (headerblk[23]<<24)| (headerblk[22]<<16) |
+                      (headerblk[21]<<8) | (headerblk[20]);
 
-    if (numheaderrec > 1)
-        for (i = 1 ; i <numheaderrec; ++i)
-            if (fread(headerblk, 512, 1, infile) == 0)
-                pm_error("cannot read gould header(2nd)" );
+    if (headerRecCt > 1) {
+        unsigned int i;
+        for (i = 1 ; i < headerRecCt; ++i) {
+            size_t bytesReadCt;
+            bytesReadCt = fread(headerblk, 512, 1, ifP);
+            if (bytesReadCt == 0)
+                pm_error("failed to read second 512-byte gould header %u",
+                         i);
+        }
+    }
+    *lineCtP = lineCtOld == 0 ? lineCtNew : lineCtOld;
 
-    if (*nlines==0) *nlines=nlines_new;
-    if (*bytesperline==0) *bytesperline=bytesperline_new;
+    *bytesperlineP = bytesperlineOld == 0 ? bytesperlineNew : bytesperlineOld;
 
-    *cols = (*bytesperline)*8 / (*bitsperpixel);
+    *colsP = *bytesperlineP * 8 / *bitsperpixelP;
+}
+
+
+
+int
+main(int argc, const char ** const argv) {
+
+    pixval const maxval = 255;
+
+    FILE * ifP;
+    pixel * pixrow;
+
+    unsigned int cols, lineCt, bytesperline, bitsperpixel, NB;
+    unsigned char pbuffer[4];
+    unsigned int row;
+
+    int colorType;
+
+
+    pm_proginit(&argc, argv);
+
+    if (argc-1 > 1)
+        pm_error("Too many arguments.  The only possible argument is the "
+                 "input file name");
+
+    if (argc-1 > 0)
+        ifP = pm_openr(argv[1]);
+    else
+        ifP = stdin;
+
+    getGouldHeader(ifP, &cols, &lineCt, &bytesperline, &bitsperpixel, &NB);
+
+    ppm_writeppminit(stdout, cols, lineCt, maxval, 0);
+
+    colorType = bitsperpixel == 0 ? NB : bitsperpixel / 8;
+
+    pixrow = ppm_allocrow(cols);
+
+    for (row = 0; row < lineCt; ++row) {
+        unsigned int col;
+        for (col = 0; col < cols; ++col) {
+            switch (colorType) {
+            case 0:
+                pm_error("invalid color type 0 in Gould header");
+
+            case 1:
+                fread(pbuffer, 1, 1, ifP);
+                PPM_ASSIGN(pixrow[col], pbuffer[0], pbuffer[0], pbuffer[0]);
+                break;
+
+            case 2:
+                fread(pbuffer, 2, 1, ifP);
+                PPM_ASSIGN(pixrow[col], pbuffer[0], pbuffer[1], pbuffer[1]);
+                break;
+
+            case 3:
+                fread(pbuffer, 3, 1, ifP);
+                PPM_ASSIGN(pixrow[col], pbuffer[0], pbuffer[1], pbuffer[2]);
+                break;
+
+            default :
+                fread(pbuffer, 3, 1, ifP);
+                PPM_ASSIGN(pixrow[col], pbuffer[0], pbuffer[1], pbuffer[2]);
+                break;
+
+            } /* switch */
+        }
+        ppm_writeppmrow(stdout, pixrow, cols, maxval, 0);
+    }
+
+    pm_close(ifP);
+    pm_close(stdout);
+
+    return 0;
 }
 
 
