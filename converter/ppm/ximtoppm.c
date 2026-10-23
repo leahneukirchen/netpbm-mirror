@@ -152,12 +152,16 @@ readXimHeader(FILE *     const ifP,
             (headerP->bits_channel == 1 && headerP->nchannels == 1) ?
                 (headerP->width + 7) / 8 :
                 headerP->width;
+    if (headerP->height > UINT_MAX/headerP->bytes_per_line)
+        pm_error("Image is too large for computation "
+                 "(%u lines of %u bytes each)",
+                 headerP->height, headerP->bytes_per_line);
     headerP->datasize =
         (unsigned int)headerP->bytes_per_line * headerP->height;
     if (headerP->nchannels == 3 && headerP->bits_channel == 8)
         headerP->ncolors = 0;
     else if (headerP->nchannels == 1 && headerP->bits_channel == 8) {
-        short const numColorsFld = atoi(aHead.num_colors);
+        unsigned int const numColorsFld = atoi(aHead.num_colors);
 
         if (numColorsFld > ARRAY_SIZE(aHead.c_map)) {
             pm_error("Invalid Xim - header says %u colors in "

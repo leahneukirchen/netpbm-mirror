@@ -46,27 +46,27 @@ typedef struct Color {
 } Color;
 
 typedef struct XimImage {
-    int width;             /* width of the image in pixels */
-    int height;            /* height of the image in pixels */
-    unsigned datasize;     /* size of one channel of data */
-    short nchannels;     /* number data channels in image */
-    short bits_channel;  /* usually 1 or 8 */
-    short bytes_per_line; /* bytes to hold one scanline */
+    unsigned int width;             /* width of the image in pixels */
+    unsigned int height;            /* height of the image in pixels */
+    unsigned int datasize;     /* size of one channel of data */
+    unsigned int nchannels;     /* number data channels in image */
+    unsigned int bits_channel;  /* usually 1 or 8 */
+    unsigned int bytes_per_line; /* bytes to hold one scanline */
     byte* data;            /* pixmap or red channel data */
     byte* grn_data;        /* green channel data */
     byte* blu_data;        /* blue  channel data */
     byte* other;           /* other (alpha) data */
-    unsigned alpha_flag :1; /* alpha channel flag */
-    unsigned packed_flag:1; /* data packed in one chunk of memory */
-    unsigned runlen_flag:1; /* runlength encoded data flag */
-    unsigned : 0;           /* future flags, word alignment */
-    short tpics, npics;    /* number of images, total & left in file */
-    short ncolors;         /*   "    "  colors in the color table */
+    unsigned int alpha_flag :1; /* alpha channel flag */
+    unsigned int packed_flag:1; /* data packed in one chunk of memory */
+    unsigned int runlen_flag:1; /* runlength encoded data flag */
+    unsigned int : 0;           /* future flags, word alignment */
+    unsigned int tpics, npics;    /* number of images, total & left in file */
+    unsigned int ncolors;         /*   "    "  colors in the color table */
     Color* colors;         /* colortable, one byte per r/g/b & pixel */
     const char* author;         /* author credit, copyright, etc */
     const char* date;           /* date image was made, grabbed, etc. */
     const char* program;        /* program used to make this */
-    short ncomments;       /* number of comments strings */
+    unsigned int ncomments;       /* number of comments strings */
     char** comments;      /* pointers to null terminated strings */
     char* offset;         /* original offset in machine memory */
     float chroma_red[2];   /* x, y image chromacity coords */
