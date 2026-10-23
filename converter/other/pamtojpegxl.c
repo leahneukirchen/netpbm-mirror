@@ -110,14 +110,20 @@ planeDescFmDepth(unsigned int const depth) {
 
 
 static void
-tuplesToRawSamples(struct pam  const inpam,
-                   tuple **    const tuples,
-                   float **    const samplesP,
-                   size_t *    const samplesSzP) {
+readRaster(struct pam             const inpam,
+           const unsigned char ** const samplesP,
+           size_t *               const samplesSzP) {
+/*----------------------------------------------------------------------------
+   Read the raster from the PAM input file, per 'inpam'.
 
+   Return its value in the form expected by libjxl -- an array of samples,
+   in row-column-plane order, each sample encoded as a 4-byte IEEE float
+   in native endianness.
+
+   Return that array as *samplesP and its size in bytes as *samplesSzP.
+-----------------------------------------------------------------------------*/
     float * samples;  /* malloced */
-    size_t const samplesSz =
-        inpam.width * inpam.height * inpam.depth * sizeof(samples[0]);
+    size_t const samplesSz = inpam.width * inpam.height * inpam.depth;
     struct PamPlaneDesc const planeDesc = planeDescFmDepth(inpam.depth);
 
     MALLOCARRAY(samples, samplesSz);
@@ -125,26 +131,36 @@ tuplesToRawSamples(struct pam  const inpam,
         pm_error("Failed to allocated buffer for %u 32-bit samples",
                  (unsigned)samplesSz);
     else {
+        tuple * tuplerow;
         unsigned int row;
         unsigned int outCursor;
 
+        tuplerow = pnm_allocpamrow(&inpam);
+
         for (row = 0, outCursor = 0; row < inpam.height; ++row) {
             unsigned int col;
+
+            pnm_readpamrow(&inpam, tuplerow);
+
             for (col = 0; col < inpam.width; ++col) {
                 unsigned int plane;
+
                 for (plane = 0;
                      plane < planeDesc.colorPlaneCt + planeDesc.alphaPlaneCt;
                      ++plane) {
 
                     samples[outCursor++] =
-                        (float)tuples[row][col][plane]/inpam.maxval;
+                        (float)tuplerow[col][plane]/inpam.maxval;
                 }
             }
         }
-        assert(outCursor * sizeof(samples[0]) == samplesSz);
+        assert(outCursor == samplesSz);
+
+        pnm_freepamrow(tuplerow);
+
+        *samplesP   = (const unsigned char *)samples;
+        *samplesSzP = samplesSz * sizeof(samples[0]);
     }
-    *samplesP   = samples;
-    *samplesSzP = samplesSz;
 }
 
 
@@ -291,20 +307,17 @@ writeJpegXlFmRawSamples(JxlEncoder * const encoderP,
 
 
 static void
-convert(struct pam const inpam,
-        tuple **   const tuples,
-        FILE *     const ofP) {
+convert(struct pam            const inpam,
+        const unsigned char * const samples,
+        size_t                const samplesSz,
+        FILE *                const ofP) {
 
     JxlEncoder * const encoderP = JxlEncoderCreate(memoryManagerP);
 
     if (!encoderP)
         pm_error("JxlEncoderCreate failed");
     else {
-        float *      samples;
-        size_t       samplesSz;
         JxlBasicInfo basicInfo;
-
-        tuplesToRawSamples(inpam, tuples, &samples, &samplesSz);
 
         setBasicInfo(encoderP, inpam, &basicInfo);
 
@@ -341,7 +354,6 @@ convert(struct pam const inpam,
                modularity violation, 'JxlEncoderDestroy' does that.
             */
         }
-        free(samples);
 
         JxlEncoderDestroy(encoderP);
     }
@@ -354,14 +366,17 @@ pamtojpegxl(FILE *             const ifP,
             FILE *             const ofP,
             struct CmdlineInfo const cmdline) {
 
-    tuple ** tuples;
-    struct pam inpam;
+    struct pam            inpam;
+    const unsigned char * samples;
+    size_t                samplesSz;
 
-    tuples = pnm_readpam(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
+    pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
-    convert(inpam, tuples, ofP);
+    readRaster(inpam, &samples, &samplesSz);
 
-    pnm_freepamarray(tuples, &inpam);
+    convert(inpam, samples, samplesSz, ofP);
+
+    free((unsigned char *)samples);
 }
 
 
