@@ -25,7 +25,8 @@ getGouldHeader(FILE *         ifP,
                unsigned int * NBP) {
 
     unsigned int lineCtOld, lineCtNew;
-    unsigned int bytesperlineOld, bytesperlineNew;
+    unsigned int bytesperlineOld, bytesperlineNew, bytesperline;
+    unsigned int bitsperpixel;
     unsigned int headerRecCt;
     unsigned char headerblk[512];
     size_t bytesReadCt;
@@ -36,7 +37,7 @@ getGouldHeader(FILE *         ifP,
 
     lineCtOld       = (headerblk[3]<<8) | headerblk[2];
     bytesperlineOld = (headerblk[5]<<8) | headerblk[4];
-    *bitsperpixelP  = (headerblk[7]<<8) | headerblk[6];
+    bitsperpixel    = (headerblk[7]<<8) | headerblk[6];
     headerRecCt     = (headerblk[9]<<8) | headerblk[8];
     lineCtNew       = (headerblk[15]<<24)| (headerblk[14]<<16) |
                       (headerblk[13]<<8) | (headerblk[12]);
@@ -55,11 +56,13 @@ getGouldHeader(FILE *         ifP,
                          i);
         }
     }
-    *lineCtP = lineCtOld == 0 ? lineCtNew : lineCtOld;
 
-    *bytesperlineP = bytesperlineOld == 0 ? bytesperlineNew : bytesperlineOld;
+    bytesperline = bytesperlineOld == 0 ? bytesperlineNew : bytesperlineOld;
 
-    *colsP = *bytesperlineP * 8 / *bitsperpixelP;
+    *lineCtP       = lineCtOld == 0 ? lineCtNew : lineCtOld;
+    *bitsperpixelP = bitsperpixel;
+    *bytesperlineP = bytesperline;
+    *colsP         = bytesperline * 8 / bitsperpixel;
 }
 
 
