@@ -87,7 +87,7 @@ parseCommandLine(int argc, const char ** argv,
    X.V11R4 version of xim_io.c.
 */
 
-static int
+static void
 readXimHeader(FILE *     const ifP,
               XimImage * const headerP) {
 
@@ -101,23 +101,20 @@ readXimHeader(FILE *     const ifP,
             *cp++ = 0;
     }
     /* Read header and verify image file formats */
-    if (fread((char *)&aHead, sizeof(ImageHeader), 1, ifP) != 1) {
-        pm_message("ReadXimHeader: unable to read file header" );
-        return 0;
-    }
+    if (fread((char *)&aHead, sizeof(ImageHeader), 1, ifP) != 1)
+        pm_error("failed to read file header");
+
     /* Force broken ASCIIZ strings to at least be valid ASCIIZ */
     aHead.author [sizeof(aHead.author)  - 1] = '\0';
     aHead.date   [sizeof(aHead.date)    - 1] = '\0';
     aHead.program[sizeof(aHead.program) - 1] = '\0';
 
-    if (atoi(aHead.header_size) != sizeof(ImageHeader)) {
-        pm_message("ReadXimHeader: header size mismatch" );
-        return(0);
-    }
-    if (atoi(aHead.file_version) != IMAGE_VERSION) {
-        pm_message("ReadXimHeader: incorrect Image_file version" );
-        return(0);
-    }
+    if (atoi(aHead.header_size) != sizeof(ImageHeader))
+        pm_error("Invalid header size in header");
+
+    if (atoi(aHead.file_version) != IMAGE_VERSION)
+        pm_error("Incorrect Image_file version in header");
+
     headerP->width          = atoi(aHead.image_width);
     headerP->height         = atoi(aHead.image_height);
     headerP->nchannels      = atoi(aHead.num_channels);
@@ -170,7 +167,6 @@ readXimHeader(FILE *     const ifP,
             }
         }
     }
-    return 1;
 }
 
 
@@ -333,10 +329,9 @@ readXim(FILE *     const ifP,
 
     int retval;
 
-    if (!readXimHeader(ifP, ximP)) {
-        pm_message("can't read xim header");
-        retval = 0;
-    } else if (!readXimImage(ifP, ximP)) {
+    readXimHeader(ifP, ximP);
+
+    if (!readXimImage(ifP, ximP)) {
         pm_message("can't read xim data");
         retval = 0;
     } else
