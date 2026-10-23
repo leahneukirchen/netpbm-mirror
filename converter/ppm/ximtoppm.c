@@ -105,12 +105,22 @@ readXimHeader(FILE *     const ifP,
         pm_error("failed to read file header");
 
     /* Force broken ASCIIZ strings to at least be valid ASCIIZ */
-    aHead.author [sizeof(aHead.author)  - 1] = '\0';
-    aHead.date   [sizeof(aHead.date)    - 1] = '\0';
-    aHead.program[sizeof(aHead.program) - 1] = '\0';
+    aHead.author          [sizeof(aHead.author          ) - 1] = '\0';
+    aHead.date            [sizeof(aHead.date            ) - 1] = '\0';
+    aHead.program         [sizeof(aHead.program         ) - 1] = '\0';
+    aHead.header_size     [sizeof(aHead.header_size     ) - 1] = '\0';
+    aHead.file_version    [sizeof(aHead.file_version    ) - 1] = '\0';
+    aHead.image_width     [sizeof(aHead.image_width     ) - 1] = '\0';
+    aHead.image_height    [sizeof(aHead.image_height    ) - 1] = '\0';
+    aHead.num_channels    [sizeof(aHead.num_channels    ) - 1] = '\0';
+    aHead.bytes_per_line  [sizeof(aHead.bytes_per_line  ) - 1] = '\0';
+    aHead.num_pictures    [sizeof(aHead.num_pictures    ) - 1] = '\0';
+    aHead.bits_per_channel[sizeof(aHead.bits_per_channel) - 1] = '\0';
+    aHead.alpha_channel   [sizeof(aHead.alpha_channel   ) - 1] = '\0';
+    aHead.num_colors      [sizeof(aHead.num_colors      ) - 1] = '\0';
 
     if (atoi(aHead.header_size) != sizeof(ImageHeader))
-        pm_error("Invalid header size in header");
+        pm_error("Invalid header size in header: '%s'", aHead.header_size);
 
     if (atoi(aHead.file_version) != IMAGE_VERSION)
         pm_error("Incorrect Image_file version in header");
