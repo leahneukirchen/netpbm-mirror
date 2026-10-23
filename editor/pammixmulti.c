@@ -432,8 +432,8 @@ precomputeImageWeights(struct ProgramState * const stateP,
     }
 
     /* Populate the image-weight arrays. */
-    for (i = 0; i <= maxGray; ++i) {
-        double const pctGray = i / (double)maxGray;
+    for (grayLevel = 0; grayLevel <= maxGray; ++i) {
+        double const pctGray = grayLevel / (double)maxGray;
 
         unsigned int j;
 
@@ -448,7 +448,7 @@ precomputeImageWeights(struct ProgramState * const stateP,
                     r[k] * sigma + pctGray * stateP->inFileCt * 0.999999;
                     /* Scale [0, 1] to [0, 1) (sort of). */
                 if (img >= 0 && img < (int)stateP->inFileCt) {
-                    ++stateP->imageWeights[i][img];
+                    ++stateP->imageWeights[grayLevel][img];
                     ++j;
                 }
             }
@@ -473,10 +473,10 @@ blendTuplesMask(struct ProgramState * const stateP,
 
     /* Initialize outTuple[] to zeroes */
     {
-        unsigned int samp;
+        unsigned int plane;
 
-        for (samp = 0; samp < depth; ++samp)
-            outTuple[samp] = 0;
+        for (plane = 0; plane < depth; ++plane)
+            outTuple[plane] = 0;
     }
 
     /* Accumulate to outTuple[] */
@@ -484,19 +484,19 @@ blendTuplesMask(struct ProgramState * const stateP,
         unsigned long weight = stateP->imageWeights[grayLevel][img];
 
         if (weight != 0) {
-            unsigned int samp;
+            unsigned int plane;
 
-            for (samp = 0; samp < depth; ++samp)
-                outTuple[samp] +=
-                    ((sample *)stateP->inTupleRows[img][col])[samp] * weight;
+            for (plane = 0; plane < depth; ++plane)
+                outTuple[plane] +=
+                    ((sample *)stateP->inTupleRows[img][col])[plane] * weight;
         }
     }
     /* Scale all outTuple[] */
     {
-        unsigned int samp;
+        unsigned int plane;
 
-        for (samp = 0; samp < depth; ++samp)
-            outTuple[samp] /= randSampleCt * stateP->inFileCt;
+        for (plane = 0; plane < depth; ++plane)
+            outTuple[plane] /= randSampleCt * stateP->inFileCt;
     }
 }
 
