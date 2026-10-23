@@ -2,7 +2,7 @@
 <html><head><title>Mdatopbm User Manual</title></head>
 <body>
 <h1>mdatopbm</h1>
-Updated: 03 December 2003
+Updated: 18 October 2026
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -13,10 +13,15 @@ mdatopbm - convert a Microdesign .mda or .mdp file into a PBM image
 <h2 id="synopsis">SYNOPSIS</h2>
 
 <b>mdatopbm</b>
-[<b>-d</b>]
-[<b>-i</b>]
-[<b>--</b>]
+[<b>-doubleheight</b>]
+[<b>-invert</b>]
 [<i>mdafile</i>]
+
+<p>All options can be abbreviated to their shortest unique prefix.
+You may use two hyphens instead of one to designate an option.  You
+may use either white space or an equals sign between an option name
+and its value.
+
 
 <h2 id="description">DESCRIPTION</h2>
 
@@ -37,23 +42,28 @@ command line options:
 
 <dl compact>
 
-<dt><b>-d</b>
+<dt><b>-doubleheight</b>
 
 <dd>Double the height of the output file, to compensate for the aspect
 ratio used in MicroDesign files.
 
-<dt><b>-i</b>
+<p>Before Netpbm 11.17 (December 2026), only the abbreviation <b>-d</b>
+works.
+  
+<dt><b>-invert</b>
 
 <dd>Invert the colors used.
 
-<dt><b>--</b>
-
-<dd>End of options (use this if the filename starts with "-")
+<p>Before Netpbm 11.17 (December 2026), only the abbreviation <b>-i</b>
+works.
 
 </dl>
 
-<p>The program also accepts option <b>-a</b> for historical reasons, for
-  the same meaning as the Netpbm common option <b>-plain</b>.
+<p>The program also accepts option <b>-a</b> for historical reasons, for the
+same meaning as the Netpbm common option <b>-plain</b>.
+
+<p>Also, for backward compatibility, it accepts <b>-D</b>, <b>-I</b>, and
+<b>-A</b>.
   
 
 <h2 id="seealso">SEE ALSO</h2>

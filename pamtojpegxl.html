@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Pamtojpegxl User Manual</title></head>
+<body>
+<h1>pamtojpegxl</h1>
+Updated: 22 October 2026
+<br>
+<a href="#index">Table Of Contents</a>
+
+<h2>NAME</h2>
+pamtojpegxl - convert Netpbm image to a JPEG XL image
+
+<h2 id="synopsis">SYNOPSIS</h2>
+
+<b>pamtojpegxl</b>
+<i>filename</i>
+
+<p>Minimum unique abbreviation of option is acceptable.  You may use double
+hyphens instead of single hyphen to denote options.  You may use white
+space in place of the equals sign to separate an option name from its value.
+
+
+<h2 id="description">DESCRIPTION</h2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pamtojpegxl</b> converts the named PBM, PGM, PPM, or PAM file, or
+Standard Input if no file is named, to a JPEG XL image (JXL) file on Standard
+Output.
+
+<p>There is a subtle corruption of the image that happens in the conversion
+  because the samples from the Netpbm input are passed to the JPEG XL encoder
+  library as being in the sRGB color space, whereas in Netpbm images, samples
+  are in the ITU-R Recommendation BT.709 color space.  But the two color
+  spaces are quite similar and both ostensible Netpbm images often are
+  actually sRGB variations of the format and whatever the JPEG XL image gets
+  used for may assume the samples in it are BT.709, so this is not necessarily
+  a problem.  If it is, you can use <b>pnmgamma</b> to create the sRGB
+  variant from the true Netpbm input image.
+  
+<h2 id="examples">EXAMPLES</h2>
+
+<pre>
+  pamtojpegxl testimg.ppm &gt;testimg.jxl
+</pre>
+
+
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>pamtojpegxl</b> recognizes the following
+command line options:
+
+<dl compact>
+</dl>
+
+     
+<h2 id="seealso">SEE ALSO</h2>
+
+<b><a href="jpegxltopam.html">jpegxltopam</a></b>,
+<b><a href="pnmtojpeg.html">pnmtojpeg</a></b>,
+<b><a href="pnmtojpeg2k.html">pnmtojpeg2k</a></b>,
+<b><a href="pam.html">pam</a></b>,
+<b><a href="ppm.html">ppm</a></b>,
+<b><a href="pgm.html">pgm</a></b>,
+<b><a href="pbm.html">pbm</a></b>,
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>pamtojpegxl</b> was added to Netpbm in Release 11.17 (December 2026).
+
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#examples">EXAMPLES</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>

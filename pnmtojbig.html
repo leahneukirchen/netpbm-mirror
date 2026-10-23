@@ -79,17 +79,17 @@ The default is 480 pixels.
 
 <dd>Select the lowest resolution layer that will be written to the
 BIE.  It is possible to store the various resolution layers of a JBIG
-image in progressive mode into different BIEs.  Options <b>-l</b> and
-<b>-h</b> allow you to select the resolution-layer interval that will
-appear in the created BIE.  The lowest resolution layer has number 0
-and this is also the default value.  By default, <b>pnmtojbig</b>
-writes all layers.
+image in progressive mode into different BIEs.  Options <b>--lowestlayer</b> and
+<b>--highestlayer</b> allow you to select the resolution-layer interval that
+will appear in the created BIE.  The lowest resolution layer has number 0 and
+this is also the default value.  By default, <b>pnmtojbig</b> writes all
+layers.
 
 <dt><b>--highestlayer</b>,<b>-h</b> <i>number</i>
 
 <dd>Select the highest resolution layer that will be written to the
 BIE.  By default, <b>pnmtojbig</b> writes all layers.  See also option
-<b>-l</b>.
+<b>--lowestlayer</b>.
 
 <dt><b>--binary</b>,<b>-b</b>
 
@@ -102,11 +102,11 @@ used by the encoder.
 
 <dt><b>--differential</b>,<b>-d</b> <i>number</i>
 
-<dd>Specify the total number of differential resolution layers into
-which the input image will be split in addition to the lowest layer.
-Each additional layer reduces the size of layer 0 by 50 %.  This
-option overrides options <b>-x</b> and <b>-y</b>, which are usually a
-more comfortable way of selecting the number of resolution layers.
+<dd>Specify the total number of differential resolution layers into which the
+input image will be split in addition to the lowest layer.  Each additional
+layer reduces the size of layer 0 by 50 %.  This option overrides
+options <b>--width</b> and <b>--height</b>, which are usually a more
+comfortable way of selecting the number of resolution layers.
 
 <dt><b>--stripes</b>,<b>-s</b> <i>number</i>
 

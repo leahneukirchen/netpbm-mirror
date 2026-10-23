@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.3//EN">
+<html><head><title>Jpegxltopam User Manual</title></head>
+<body>
+<h1>pamtojpegxl</h1>
+Updated: 22 October 2026
+<br>
+<a href="#index">Table Of Contents</a>
+
+<h2>NAME</h2>
+jpegxltopam - convert JPEG XL image to PAM
+
+<h2 id="synopsis">SYNOPSIS</h2>
+
+<b>jpegxltopam</b>
+<i>filename</i>
+[<b>-verbose</b>]
+
+<p>Minimum unique abbreviation of option is acceptable.  You may use double
+hyphens instead of single hyphen to denote options.  You may use white
+space in place of the equals sign to separate an option name from its value.
+
+
+<h2 id="description">DESCRIPTION</h2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>jpegxltopam</b> converts the named JPEG XL image (JXL) file to a PAM
+image on Standard Output.
+
+<p>If the JPEG XL input is true JPEG XL, the PAM output is not true PAM, but
+  instead a variant with samples in the sRGB color space.  True PAM uses the
+  ITU-R Recommendation BT.709 color space.  The two color spaces are similar
+  enough that people will not normally notice the difference.  Furthermore,
+  there are probably many ostensible JPEG XL images that are actually a
+  variant that decodes as BT.709 pixels, and if you start with one of those
+  JPEG XL images, your output will in fact be true PAM.  For example, if you
+  create a JPEG XL image with <b>pamtojpegxl</b>, you will get such an
+  approximate JPEG XL, and if you convert it back to PAM with
+  <b>jpegxltopam</b>, you get valid PAM.  So this is not necessarily a
+  problem.  If it is, you can use <b>pnmgamma</b> to create true PAM from the
+  sRGB variant produced by this program.
+
+<p>This program generates a 4-plane PAM of tuple type <b>RGB_ALPHA</b>, i.e. a
+  color image with transparency.  You can convert that to PPM if you like,
+  discarding any transparency information, with <b>pamtopnm</b>.
+  
+<h2 id="examples">EXAMPLES</h2>
+
+<pre>
+  jpegxltopam testimg.jxl &gt;testimg.pam
+</pre>
+
+
+<h2 id="options">OPTIONS</h2>
+
+<p>In addition to the options common to all programs based on libnetpbm
+(most notably <b>-quiet</b>, see <a href="index.html#commonoptions">
+Common Options</a>), <b>jpegxltopam</b> recognizes the following
+command line options:
+
+<dl compact>
+
+<dt><b>-verbose</b>
+<dd>This causes <b>jpegxltopam</b> to issue messages about the input and
+the processing of it.
+</dl>
+
+     
+<h2 id="seealso">SEE ALSO</h2>
+
+<b><a href="pamtojpegxl.html">pamtojpegxl</a></b>,
+<b><a href="jpegtopnm.html">jpegtopnm</a></b>,
+<b><a href="jpeg2ktopnm.html">jpeg2ktopnm</a></b>,
+<b><a href="pam.html">pam</a></b>,
+<b><a href="ppm.html">ppm</a></b>,
+<b><a href="pgm.html">pgm</a></b>,
+<b><a href="pbm.html">pbm</a></b>,
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>jpegxltopam</b> was added to Netpbm in Release 11.17 (December 2026).
+
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#examples">EXAMPLES</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+</ul>
+</body>
+</html>

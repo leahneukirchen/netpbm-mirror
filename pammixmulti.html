@@ -2,7 +2,7 @@
 <html><head><title>Pammixmulti User Manual</title></head>
 <body>
 <h1>pammixmulti</h1>
-Updated: 18 December 2024
+Updated: 22 October 2026
 <br>
 <a href="#index">Table Of Contents</a>
   
@@ -43,30 +43,48 @@ command line options:
 <dt><b>-blend</b>=average|alpha-weighted|random|mask</dt>
 <dd>
 <p>This option specifies how the input images should be mixed to
-produce the output image.  With <b>-blend</b>=<code>average</code>
-(the default), each pixel in the output is produced by averaging the
-corresponding pixels from all the input images.  With
-<b>-blend</b>=<code>alpha-weighted</code>, each pixel in the output
+produce the output image.
+
+<p>With <b>-blend</b>=<code>average</code> (the default), each pixel in the
+output is produced by averaging the corresponding pixels from all the input
+images.
+
+<p>With <b>-blend</b>=<code>alpha-weighted</code>, each pixel in the output
 is produced by taking a weighted average of the corresponding pixels
 from all the input images, using each pixel's alpha (opaqueness) level
-as its weight.  With <b>-blend</b>=<code>random</code>, each pixel in
-the output is produced by selecting the corresponding pixel from one
-of the input images, chosen at random on a per-pixel basis.
-With <b>-blend</b>=<code>mask</code>, each pixel in the output is
-produced by a weighted average of the corresponding pixels from all
-the input images based on the grayscale level of an additional mask
-image.
+as its weight.
+
+<p>With <b>-blend</b>=<code>random</code>, each pixel in the output is
+produced by selecting the corresponding pixel from one of the input images,
+chosen at random on a per-pixel basis.
+
+<p>With <b>-blend</b>=<code>mask</code>, each pixel in the output is a linear
+combination of the corresponding pixel from all the input images, with the
+distribution being Gaussian.  The mean of that Gaussian distribution, for any
+given pixel, is given by the value at the corresponding location in the mask
+image identified by the <b>-maskfile</b> option.  For example, consider the
+output pixel at Row 5, Column 2, with 10 input images.  It is a mix of the
+pixels at Row 5, Column 2 of all 10 input images, in the following amounts.
+Assume <b>-maskfile</b> identifies a single-plane PAM image with maxval 9 and
+the value 3 at Row 5, Column 2.  Because the maxval is the same as the maximum
+input file number, the sample values in the mask image directly identify an
+input file.  The mask value 3 means input file 3 contributes the most to the
+output pixel, with input files 2 and 4 contributing next most, 1 and 5 next
+most, etc. in Gaussian distribution.  However, the Gaussian distribution is
+computed by random sampling so that the precise weighting can vary randomly
+from this ideal.  The distribution is identical for each mask value, though.
+The weights for every pixel with a corresponding mask value of 3 are the same.
+
 <p><b>-alpha-weighted</b> was new in Netpbm 11.09 (December 2024).
 </dd>
 
 <dt><b>-maskfile</b>=<i>filename</i></dt>
 <dd>
 <p>In conjunction with <b>-blend</b>=<code>mask</code>, this option names a
-grayscale mask file to control the blending of each pixel.  (If the file is
-not grayscale, the first channel is treated as gray).  Where the mask file is
-black, the first image is selected. Where the mask file is white, the last
-image is selected.  Intermediate levels of gray select intermediate
-images.
+PAM mask file to control the blending of each pixel.  The first plane of this
+PAM image is the mask; other planes are ignored.  The mask value at each
+location is the fraction that the sample there is of the mask image&apos;s
+maxval (so it&apos;s range is 0..1).
 </dd>
 
 <dt><b>-stdev</b>=<i>number</i></dt>
@@ -89,7 +107,7 @@ like <b>-blend</b>=average. <i>number</i> defaults to 0.25.
 <dt><b>-randomseed</b> <i>integer</i>
 
 <dd>This is the seed for the random number generator used with
-<b>-blend=random</b>
+  <b>-blend=random</b> and <b>-blend=mask</b>
 
 <p>Use this to ensure you get the same image on separate invocations.
 

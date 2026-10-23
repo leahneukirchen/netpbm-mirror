@@ -2,7 +2,7 @@
 <html><head><title>Pamchannel User Manual</title></head>
 <body>
 <h1>pamchannel</h1>
-Updated: 10 January 2006
+Updated: 22 October 2026
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -40,9 +40,19 @@ is a null string unless you specify the <b>-tupletype</b> option.
 corresponding output stream.  But before Netpbm 10.32 (February 2006),
 it ignored every image after the first.
 
-<p><b>pamstack</b> does the opposite of <b>pamchannel</b>:  It takes multiple
-PAM or PNM images as input and stacks their planes (channels) on top of
-one another to yield a single PAM.
+<p><b>pamstack</b> does the opposite of <b>pamchannel</b>: It takes multiple
+PAM or PNM images as input and stacks their planes (channels) on top of one
+another to yield a single PAM.
+
+<h2 id="examples">EXAMPLES</h2>
+
+<p>To strip the alpha channel from a PAM image:
+<p>
+<pre><kbd>
+    $ pamchannel myalphaimage.pam 0 1 2 -tupletype=RGB &gt;myimage.pam
+</kbd></pre>
+
+<p>(But also see <b>pamtopnm</b> for this case).
 
 <h2 id="options">OPTIONS</h2>
 
@@ -73,6 +83,7 @@ If you omit this option, the default tuple type name is null.
 
 <b><a href="pam.html">pam</a></b>
 <b><a href="pamstack.html">pamstack</a></b>
+<b><a href="pamtopnm.html">pamstack</a></b>
 
 <h2 id="history">HISTORY</h2>
 
@@ -84,6 +95,7 @@ If you omit this option, the default tuple type name is null.
 <ul>
 <li><a href="#synopsis">SYNOPSIS</a>
 <li><a href="#description">DESCRIPTION</a>
+<li><a href="#examples">EXAMPLES</a>
 <li><a href="#options">OPTIONS</a>
 <li><a href="#seealso">SEE ALSO</a>
 <li><a href="#history">HISTORY</a>
