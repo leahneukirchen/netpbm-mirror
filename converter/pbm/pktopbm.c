@@ -378,6 +378,7 @@ readCharacterHeader(int *          const carP,
     if (flagByte == 7) {            /* long form preamble */
         packetLength  = get32();
         *carP         = get32();         /* character number */
+        *endOfPacketP = packetLength + pkLoc;
 
         dprintf0("flagByte7\n");
         dprintf("car: %d\n", *carP);
@@ -402,8 +403,8 @@ readCharacterHeader(int *          const carP,
         }
     } else if (flagByte > 3) {      /* extended short form */
         packetLength = ((flagByte - 4)<<16) + get16() ;
-
         *carP = pkByte() ;            /* char number */
+        *endOfPacketP = packetLength + pkLoc;
 
         *mustIgnoreP = false;
 
@@ -427,6 +428,7 @@ readCharacterHeader(int *          const carP,
     } else {                    /* short form preamble */
         packetLength  = (flagByte << 8) + pkByte();
         *carP         = pkByte();            /* char number */
+        *endOfPacketP = packetLength + pkLoc;
 
         *mustIgnoreP = false;
 
@@ -453,8 +455,6 @@ readCharacterHeader(int *          const carP,
         pm_error("Invalid character header - negative packet length");
     if (packetLength > UINT_MAX - pkLoc)
         pm_error("Invalid character header - excessive packet length");
-
-    *endOfPacketP = packetLength + pkLoc;
 
     *cheightP = cheight;
     *cwidthP  = cwidth;

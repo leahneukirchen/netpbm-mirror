@@ -22,6 +22,9 @@ not yet  BJH  Release 11.17.00
               maxval.  Always broken (pnmnorm was new in Netpbm 9.25 (March
               2002).  Its predecessors were in primordial Netpbm).
 
+              pktopbm: fix bug: always fails with invalid packet length
+              message.  Broken in Netpbm 11.04 (September 2023).
+
               rawtoppm: reject conflicting command line options.
 
               xwdtopnm: fix arbitrary memory access with invalid XWD input.
