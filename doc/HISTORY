@@ -25,6 +25,9 @@ not yet  BJH  Release 11.17.00
               pktopbm: fix bug: always fails with invalid packet length
               message.  Broken in Netpbm 11.04 (September 2023).
 
+              pktopbm: fix memory corruption with characters > 3200 columns.
+              Always broken (pktopbm was in primordial Netpbm ca 1991).
+
               rawtoppm: reject conflicting command line options.
 
               xwdtopnm: fix arbitrary memory access with invalid XWD input.

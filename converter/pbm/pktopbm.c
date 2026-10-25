@@ -13,6 +13,7 @@
 
 #include <stdbool.h>
 #include <stdio.h>
+#include <assert.h>
 #include <string.h>
 
 #include "pm_c_util.h"
@@ -22,7 +23,6 @@
 #include "pbm.h"
 
 #define NAMELENGTH 80
-#define MAXROWWIDTH 3200
 #define MAXPKCHAR 256
 
 struct CmdlineInfo {
@@ -191,17 +191,17 @@ getNybble(FILE * const ifP) {
 /*----------------------------------------------------------------------------
   Get a nibble from current input byte, or new byte if no current byte
 -----------------------------------------------------------------------------*/
-    eightbits temp;
+    eightbits retval;
 
     if (bitWeight == 0) {
-        inputByte = pkByte(ifP) ;
-        bitWeight = 16 ;
+        inputByte = pkByte(ifP);
+        bitWeight = 16;
     }
-    temp = inputByte / bitWeight ;
-    inputByte -= temp * bitWeight ;
-    bitWeight >>= 4 ;
+    retval = inputByte / bitWeight;
+    inputByte -= retval * bitWeight;
+    bitWeight >>= 4;
 
-    return temp;
+    return retval;
 }
 
 
@@ -238,30 +238,35 @@ pkPackedNum(FILE * const ifP) {
 
   Update global variable 'repeatCount'.
 -----------------------------------------------------------------------------*/
-    int i, j ;
+    int retval;
+    int i;
 
-    i = getNybble(ifP) ;
+    i = getNybble(ifP);
 
     if (i == 0) {           /* large run count, >= 3 nibbles */
+        int j;
         do {
-            j = getNybble(ifP) ;          /* count extra nibbles */
-            i++ ;
-        } while (j == 0) ;
+            j = getNybble(ifP);          /* count extra nibbles */
+            ++i;
+        } while (j == 0);
         while (i > 0) {
-            j = (j<<4) + getNybble(ifP) ; /* add extra nibbles */
-            i-- ;
+            j = (j<<4) + getNybble(ifP); /* add extra nibbles */
+            --i;
         }
-        return (j - 15 +((13 - dynf)<<4) + dynf) ;
-    } else if (i <= dynf) return (i) ;  /* number > 0 and <= dynf */
-    else if (i < 14) return (((i - dynf - 1)<<4) + getNybble(ifP) + dynf + 1) ;
+        retval = j - 15 +((13 - dynf)<<4) + dynf;
+    } else if (i <= dynf)
+        retval = i;  /* number > 0 and <= dynf */
+    else if (i < 14)
+        retval = (((i - dynf - 1)<<4) + getNybble(ifP) + dynf + 1);
     else {
-        if (i == 14)
-            repeatCount = pkPackedNum(ifP) ;  /* get repeat count */
-        else
-            repeatCount = 1 ;      /* value 15 indicates repeat count 1 */
+        if (i == 14) {
+            repeatCount = pkPackedNum(ifP);  /* get repeat count */
+        } else
+            repeatCount = 1;      /* value 15 indicates repeat count 1 */
 
-        return pkPackedNum(ifP);
+        retval = pkPackedNum(ifP);
     }
+    return retval;
 }
 
 
@@ -661,44 +666,68 @@ doDynamicallyPackedChar(FILE *       const ifP,
                         bool         const verbose,
                         bit **       const bitmap) {
 
-    bit          row[MAXROWWIDTH+1];
-    unsigned int rowsleft;
-    unsigned int hbit;
+    bit *        row;  /* malloced */
+        /* Buffer in which we accumulate a full row of the character from
+           the file.
+        */
+    unsigned int rowsLeft;
+    unsigned int colsLeft;
+        /* Number of pixels left (not yet set) in the current row */
     unsigned int rp;
     bool         turnon;
 
+    MALLOCARRAY(row, cwidth);
+    if (!row) {
+        pm_error("Failed to allocate a row buffer for %u columns of one "
+                 "character", cwidth);
+    }
     repeatCount = 0;
 
     dprintf("bmy: %d\n ", bmy);
 
-    for (rowsleft = cheight, hbit = cwidth, rp = 0, turnon = initTurnon;
-         rowsleft > 0; ) {
+    for (rowsLeft = cheight, colsLeft = cwidth, rp = 0, turnon = initTurnon;
+         rowsLeft > 0; ) {
 
         unsigned int count;
+            /* Number of pixels in the current run */
 
         for (count = pkPackedNum(ifP); count > 0; ) {
-            if (count < hbit) {     /* doesn't extend past row */
-                hbit -= count;
-                while (count--)
+            if (count < colsLeft) {
+                /* This run does not fill the row, so just set the pixels
+                   in the row buffer.
+                */
+                for (; count > 0; --count) {
+                    assert(rp < cwidth);
                     row[rp++] = turnon ? PBM_BLACK : PBM_WHITE;
-            } else {                /* reaches end of row */
-                count -= hbit;
-                while (hbit--)
+                    --colsLeft;
+                }
+            } else {
+                /* This run goes at least through the end of the row, so fill
+                   out the row buffer, move the row (along with any
+                   repetitions of it) to 'bitmap[][]', and set up to start the
+                   next row and finish the run there.
+                */
+                for (; colsLeft > 0; --colsLeft) {
+                    assert(rp < cwidth);
                     row[rp++] = turnon ? PBM_BLACK : PBM_WHITE;
+                    --count;
+                }
 
                 fillRow(row, repeatCount, cwidth,
-                        cheight - rowsleft - 1, bmx, bmy, xoffs,
+                        cheight - rowsLeft - 1, bmx, bmy, xoffs,
                         bitmap);
 
-                rowsleft -= repeatCount + 1;
+                rowsLeft -= repeatCount + 1;
                 repeatCount = rp = 0;
-                hbit = cwidth;
+                colsLeft = cwidth;
             }
         }
         turnon = !turnon;
     }
-    if (rowsleft != 0 || hbit != cwidth)
+    if (rowsLeft != 0 || colsLeft != cwidth)
         pm_error("bad pk file (more bits than required)") ;
+
+    free(row);
 }
 
 
