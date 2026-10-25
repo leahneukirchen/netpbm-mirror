@@ -409,31 +409,31 @@ static void
 precomputeImageWeights(struct ProgramState * const stateP,
                        double                const sigma) {
 /*----------------------------------------------------------------------------
-  Precompute the weight to give to each image as a function of grayscale
-  level.
+  Precompute the weight to give to each image as a function of mixing mask
+  value.
 -----------------------------------------------------------------------------*/
-    unsigned int const maxGray = (unsigned int) stateP->maskPam.maxval;
+    unsigned int const maxMask = (unsigned int) stateP->maskPam.maxval;
 
-    unsigned int i;
+    unsigned int maskVal;
 
-    MALLOCARRAY(stateP->imageWeights, maxGray + 1);
+    MALLOCARRAY(stateP->imageWeights, maxMask + 1);
     if (!stateP->imageWeights)
         pm_error("Unable to allocate memory for image weights for %u "
-                 "gray levels", maxGray);
+                 "mask values", maxMask);
 
-    for (i = 0; i <= maxGray; ++i) {
-        unsigned int j;
-        MALLOCARRAY(stateP->imageWeights[i], stateP->inFileCt);
-        if (!stateP->imageWeights[i])
+    for (maskVal = 0; maskVal <= maxMask; ++maskVal) {
+        unsigned int fileNum;
+        MALLOCARRAY(stateP->imageWeights[maskVal], stateP->inFileCt);
+        if (!stateP->imageWeights[maskVal])
             pm_error("Unable to allocate memory for image weights for %u "
-                     "images for gray level %u", stateP->inFileCt, i);
-        for (j = 0; j < stateP->inFileCt; ++j)
-            stateP->imageWeights[i][j] = 0;
+                     "images for mask value %u", stateP->inFileCt, maskVal);
+        for (fileNum = 0; fileNum < stateP->inFileCt; ++fileNum)
+            stateP->imageWeights[maskVal][fileNum] = 0;
     }
 
     /* Populate the image-weight arrays. */
-    for (grayLevel = 0; grayLevel <= maxGray; ++i) {
-        double const pctGray = grayLevel / (double)maxGray;
+    for (maskVal = 0; maskVal <= maxMask; ++maskVal) {
+        double const maskPct = maskVal / (double)maxMask;
 
         unsigned int j;
 
@@ -445,10 +445,10 @@ precomputeImageWeights(struct ProgramState * const stateP,
 
             for (k = 0; k < 2; ++k) {
                 int const img =
-                    r[k] * sigma + pctGray * stateP->inFileCt * 0.999999;
+                    r[k] * sigma + maskPct * stateP->inFileCt * 0.999999;
                     /* Scale [0, 1] to [0, 1) (sort of). */
                 if (img >= 0 && img < (int)stateP->inFileCt) {
-                    ++stateP->imageWeights[grayLevel][img];
+                    ++stateP->imageWeights[maskVal][img];
                     ++j;
                 }
             }
@@ -467,7 +467,7 @@ blendTuplesMask(struct ProgramState * const stateP,
   levels specified in a mask file.
 -----------------------------------------------------------------------------*/
     unsigned int const depth = stateP->inPam[0].depth;
-    sample const grayLevel = ((sample *)stateP->maskTupleRow[col])[0];
+    sample const maskVal = ((sample *)stateP->maskTupleRow[col])[0];
 
     unsigned int img;
 
@@ -481,7 +481,7 @@ blendTuplesMask(struct ProgramState * const stateP,
 
     /* Accumulate to outTuple[] */
     for (img = 0; img < stateP->inFileCt; ++img) {
-        unsigned long weight = stateP->imageWeights[grayLevel][img];
+        unsigned long weight = stateP->imageWeights[maskVal][img];
 
         if (weight != 0) {
             unsigned int plane;
