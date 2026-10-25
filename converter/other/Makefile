@@ -176,7 +176,7 @@ endif
 ifneq ($(JPEGLIB),NONE)
   PORTBINARIES += jpegtopnm pnmtojpeg
 endif
-ifneq ($(JPEGXLLIB),NONE)
+ifneq ($(JPEGXL_LIBS),NONE)
   PORTBINARIES += pamtojpegxl jpegxltopam
 endif
 ifneq ($(TIFF_PREREQ_MISSING),Y)
