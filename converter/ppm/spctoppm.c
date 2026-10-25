@@ -172,6 +172,9 @@ DoChar( int n, char c )
 
     /* Compute screen index. */
     i = 160 + 2 * ( n / 7960 ) + 8 * ( ( n % 7960 ) / 2 ) + ( n & 1 );
+    if (i > sizeof(screen))
+        pm_error("Invalid input; raster is larger than the screen "
+                 "(%u x %u)", ROWS, COLS);
     screen[i] = c;
     }
 

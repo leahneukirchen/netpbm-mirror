@@ -15,6 +15,7 @@
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
 #include <string.h>
+#include <limits.h>
 
 #include "pm_c_util.h"
 #include "ppm.h"
@@ -143,10 +144,17 @@ ReadXimHeader(FILE *     const in_fp,
             (header->bits_channel == 1 && header->nchannels == 1) ?
                 (header->width + 7) / 8 :
                 header->width;
+    if (header->height > UINT_MAX/header->bytes_per_line)
+        pm_error("Image is too large for computation "
+                 "(%u lines of %u bytes each)",
+                 header->height, header->bytes_per_line);
     header->datasize =(unsigned int)header->bytes_per_line * header->height;
     if (header->nchannels == 3 && header->bits_channel == 8)
         header->ncolors = 0;
     else if (header->nchannels == 1 && header->bits_channel == 8) {
+        if (header->ncolors > 256)
+            pm_error("colormap declares %u entries, but the header stores "
+                     "at most 256", header->ncolors);
         header->colors = (Color *)calloc((unsigned int)header->ncolors,
                 sizeof(Color));
         if (header->colors == NULL) {

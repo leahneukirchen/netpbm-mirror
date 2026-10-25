@@ -2600,9 +2600,6 @@ int jbg_dec_in(struct jbg_dec_state *s, unsigned char *data, size_t len,
 	 ((long) s->buffer[ 6] <<  8) | (long) s->buffer[ 7]);
     y = (((long) s->buffer[ 8] << 24) | ((long) s->buffer[ 9] << 16) |
 	 ((long) s->buffer[10] <<  8) | (long) s->buffer[11]);
-    if (s->dl != 0 && ((s->xd << (s->d - s->dl + 1)) != x &&
-		       (s->yd << (s->d - s->dl + 1)) != y))
-      return JBG_ENOCONT | 3;
     s->xd = x;
     s->yd = y;
     s->l0 = (((long) s->buffer[12] << 24) | ((long) s->buffer[13] << 16) |

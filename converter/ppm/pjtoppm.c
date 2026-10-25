@@ -257,21 +257,26 @@ main(int argc, const char ** argv) {
 
         for (row = 0, cols = 0; row < rows; ++row) {
             unsigned int plane;
-            if (image[row * planes] == NULL)
-                continue;
             for (plane = 0; plane < planes; ++plane) {
                 unsigned int i;
                 unsigned int col;
+                if (image[plane + row * planes] == NULL)
+                    break;
                 MALLOCARRAY(buf, newcols);
                 if (buf == NULL)
                     pm_error("out of memory");
                 for (i = 0, col = 0;
                      col < imlen[plane + row * planes];
-                     col += 2)
+                     col += 2) {
+                    if (col + 1 >= imlen[plane + row * planes])
+                        pm_error("Invalid input.  Mode 1 compressed row %u, "
+                                 "plane %u ends in the middle of the run "
+                                 "descriptor at index %u", row, plane, col);
                     for (cmd = image[plane + row * planes][col],
                              val = image[plane + row * planes][col+1];
                          cmd >= 0 && i < newcols; cmd--, i++)
                         buf[i] = val;
+                }
                 cols = MAX(cols, i);
                 free(image[plane + row * planes]);
                 /*
@@ -279,7 +284,9 @@ main(int argc, const char ** argv) {
                  * not return null. Even if it does, tough! We will
                  * lose a line, and probably die on the next line anyway
                  */
-                image[plane + row * planes] = realloc(buf, i);
+                image[plane + row * planes] = realloc(buf, MAX(1, i));
+                if (!image[plane + row * planes])
+                    pm_error("out of memory");
                 imlen[plane + row * planes] = i;
             }
         }

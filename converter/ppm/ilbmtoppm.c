@@ -101,12 +101,13 @@ static bool debug = FALSE;
 static char *
 ID2string(IFF_ID const id) {
 
-    static char str[4];
+    static char str[4+1];
 
     str[0] = (char)(id >> 24 & 0xff);
     str[1] = (char)(id >> 16 & 0xff);
     str[2] = (char)(id >>  8 & 0xff);
     str[3] = (char)(id >>  0 & 0xff);
+    str[4] = '\0';
 
     return str;
 }

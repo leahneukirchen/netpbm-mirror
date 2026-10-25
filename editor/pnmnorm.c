@@ -223,6 +223,9 @@ buildHistogram(FILE *   const ifp,
    'rows' rows high.
 
    Leave the file positioned arbitrarily.
+
+   The total number of pixels in the image must be small enough to be
+   representable as an unsigned integer (type of hist[x]).
 -----------------------------------------------------------------------------*/
     int row;
     xel * xelrow;
@@ -605,6 +608,11 @@ resolvePercentParams(FILE *             const ifP,
     if (hist == NULL)
         pm_error("Unable to allocate storage for intensity histogram.");
     else {
+        if (UINT_MAX / cols < rows) {
+            pm_error("Image is too large (%u x %u pixels) "
+                     "for computation", cols, rows);
+        }
+
         buildHistogram(ifP, cols, rows, maxval, format, hist,
                        cmdline.brightMethod);
 
@@ -874,6 +882,12 @@ computeTransferFunction(bool      const quadratic,
 -----------------------------------------------------------------------------*/
     xelval * newBrightness;
     xelval i;
+
+    if (wvalue > maxval) {
+        pm_error("Selected value to stretch to white (%u) "
+                 "is greater than the maxval of the image (%u)",
+                 wvalue, maxval);
+    }
 
     MALLOCARRAY(newBrightness, maxval+1);
 

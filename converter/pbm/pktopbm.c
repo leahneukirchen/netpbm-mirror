@@ -15,6 +15,7 @@
 #include <string.h>
 
 #include "pm_c_util.h"
+#include "mallocvar.h"
 #include "nstring.h"
 #include "pbm.h"
 
@@ -59,8 +60,16 @@ pktopbm_add_suffix(char *       const name,
 /* get a byte from the PK file */
 static eightbits 
 pktopbm_pkbyte(void) {
+   int c;
+
    pktopbm_pkloc++ ;
-   return(getc(pkfile)) ;
+
+   c = getc(pkfile);
+
+   if (c == EOF)
+       pm_error("Input file ends prematurely or error reading file");
+
+   return c;
 }
 
 
@@ -203,7 +212,6 @@ main(int argc, char *argv[]) {
     integer car ;
     integer bmx=0, bmy=0;
     integer set_bmx=0, set_bmy=0;
-    bit row[MAXROWWIDTH+1] ;
     const char * const usage = 
         "pkfile[.pk] [-d] [[-x width] [-y height] [-c num] pbmfile]...";
    
@@ -391,6 +399,10 @@ main(int argc, char *argv[]) {
             integer rowsleft = cheight ;
             integer hbit = cwidth ;
             integer rp = 0;
+            bit * row; /* malloced */
+
+            MALLOCARRAY(row, cwidth);
+
             repeatcount = 0 ;
             dprintf ("bmy: %d\n ", bmy);
             dprintf ("y: %d\n", cheight-rowsleft+(bmy-2*yoffs-1));
@@ -423,6 +435,7 @@ main(int argc, char *argv[]) {
             }
             if (rowsleft != 0 || hbit != cwidth)
                 pm_error("bad pk file (more bits than required)") ;
+            free(row);
         }
         if (endofpacket != pktopbm_pkloc)
             pm_error("bad pk file (bad packet length)") ;

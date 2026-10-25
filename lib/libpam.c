@@ -1193,7 +1193,7 @@ pnm_checkpam(const struct pam *   const pamP,
     }
         break;
     case PPM_TYPE:
-        pgm_check(pamP->file, checkType, pamP->format,
+        ppm_check(pamP->file, checkType, pamP->format,
                   pamP->width, pamP->height, pamP->maxval, retvalP);
         break;
     case PGM_TYPE:

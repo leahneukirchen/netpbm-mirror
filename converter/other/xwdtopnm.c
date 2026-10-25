@@ -141,6 +141,7 @@ processX10Header(X10WDFileHeader *  const h10P,
                  enum visualclass * const visualclassP,
                  int *              const formatP,
                  xel **             const colorsP,
+                 unsigned int *     const colorCtP,
                  int *              const bits_per_pixelP,
                  int *              const bits_per_itemP,
                  struct compMask *  const compMaskP,
@@ -151,6 +152,8 @@ processX10Header(X10WDFileHeader *  const h10P,
     X10Color* x10colors;
     bool grayscale;
     bool byte_swap;
+    xelval maxval;
+    xel * colors;
 
     if (h10P->file_version != X10WD_FILE_VERSION) {
         byte_swap = TRUE;
@@ -206,10 +209,11 @@ processX10Header(X10WDFileHeader *  const h10P,
     if (h10P->display_planes == 1) {
         *formatP = PBM_TYPE;
         *visualclassP = StaticGray;
-        *maxvalP = 1;
-        *colorsP = pnm_allocrow(2);
-        PNM_ASSIGN1((*colorsP)[0], 0);
-        PNM_ASSIGN1((*colorsP)[1], *maxvalP);
+        maxval = 1;
+        *colorCtP = 2;
+        colors = pnm_allocrow(2);
+        PNM_ASSIGN1(colors[0], 0);
+        PNM_ASSIGN1(colors[1], maxval);
         *padrightP =
             (((h10P->pixmap_width + 15) / 16) * 16 - h10P->pixmap_width) * 8;
         *bits_per_itemP = 16;
@@ -219,38 +223,40 @@ processX10Header(X10WDFileHeader *  const h10P,
         unsigned int i;
         *formatP = PGM_TYPE;
         *visualclassP = StaticGray;
-        if (h10P->display_planes > sizeof(*maxvalP) * 8 - 1)
+        if (h10P->display_planes > sizeof(maxval) * 8 - 1)
             pm_error("XWD header says display_planes = %u, which is "
                      "too large for this program to compute",
                      h10P->display_planes);
-        *maxvalP = ((xelval)1 << h10P->display_planes) - 1;
-        if (*maxvalP > PNM_OVERALLMAXVAL)
+        maxval = ((xelval)1 << h10P->display_planes) - 1;
+        if (maxval > PNM_OVERALLMAXVAL)
             pm_error("XWD header says display_planes = %u, which is too "
                      "large for maximum maxval of %u",
                      h10P->display_planes, PNM_OVERALLMAXVAL);
-        *colorsP = pnm_allocrow(*maxvalP + 1);
-        for (i = 0; i <= *maxvalP; ++i)
-            PNM_ASSIGN1((*colorsP)[i], i);
+        *colorCtP = maxval + 1;
+        colors = pnm_allocrow(maxval + 1);
+        for (i = 0; i <= maxval; ++i)
+            PNM_ASSIGN1(colors[i], i);
         *padrightP =
             (((h10P->pixmap_width + 15) / 16) * 16 - h10P->pixmap_width) * 8;
         *bits_per_itemP = 16;
         *bits_per_pixelP = 1;
     } else {
-        *maxvalP = 65535;
+        maxval = 65535;
 
-        *colorsP = pnm_allocrow(h10P->window_ncolors);
+        *colorCtP = h10P->window_ncolors;
+        colors = pnm_allocrow(h10P->window_ncolors);
         *visualclassP = PseudoColor;
         if (grayscale) {
             unsigned int i;
             *formatP = PGM_TYPE;
             for (i = 0; i < h10P->window_ncolors; ++i)
-                PNM_ASSIGN1((*colorsP)[i], x10colors[i].red);
+                PNM_ASSIGN1(colors[i], x10colors[i].red);
         } else {
             unsigned int i;
             *formatP = PPM_TYPE;
             for (i = 0; i < h10P->window_ncolors; ++i)
                 PPM_ASSIGN(
-                    (*colorsP)[i], x10colors[i].red, x10colors[i].green,
+                    colors[i], x10colors[i].red, x10colors[i].green,
                     x10colors[i].blue);
         }
 
@@ -262,6 +268,8 @@ processX10Header(X10WDFileHeader *  const h10P,
     *rowsP = h10P->pixmap_height;
     *byte_orderP = MSBFirst;
     *bit_orderP = LSBFirst;
+    *maxvalP = maxval;
+    *colorsP = colors;
 }
 
 
@@ -309,11 +317,12 @@ fixH11ByteOrder(X11WDFileHeader *  const h11P,
 
 
 static void
-dumpX11Cmap(unsigned int       const nColors,
+dumpX11Cmap(unsigned int       const colorCt,
             const X11XColor *  const x11colors) {
 
     unsigned int i;
-    for (i = 0; i < nColors; ++i)
+
+    for (i = 0; i < colorCt; ++i)
         pm_message("Color %u r/g/b = %u/%u/%u", i,
                    x11colors[i].red, x11colors[i].green,
                    x11colors[i].blue);
@@ -323,7 +332,7 @@ dumpX11Cmap(unsigned int       const nColors,
 
 static void
 readX11Colormap(FILE *       const file,
-                unsigned int const nColors,
+                unsigned int const colorCt,
                 bool         const byteSwap,
                 bool         const cmapDump,
                 X11XColor**  const x11colorsP) {
@@ -332,22 +341,22 @@ readX11Colormap(FILE *       const file,
     int rc;
 
     /* Read X11 colormap. */
-    MALLOCARRAY(x11colors, nColors);
+    MALLOCARRAY(x11colors, colorCt);
     if (x11colors == NULL)
         pm_error("out of memory");
-    rc = fread(x11colors, sizeof(x11colors[0]), nColors, file);
-    if (rc != nColors)
+    rc = fread(x11colors, sizeof(x11colors[0]), colorCt, file);
+    if (rc != colorCt)
         pm_error("couldn't read X11 XWD colormap");
     if (byteSwap) {
         unsigned int i;
-        for (i = 0; i < nColors; ++i) {
+        for (i = 0; i < colorCt; ++i) {
             x11colors[i].red   = pm_bs_short(x11colors[i].red);
             x11colors[i].green = pm_bs_short(x11colors[i].green);
             x11colors[i].blue  = pm_bs_short(x11colors[i].blue);
         }
     }
     if (cmapDump)
-        dumpX11Cmap(nColors, x11colors);
+        dumpX11Cmap(colorCt, x11colors);
 
     *x11colorsP = x11colors;
 }
@@ -527,6 +536,7 @@ processX11Header(X11WDFileHeader *  const h11P,
                  enum visualclass * const visualclassP,
                  int *              const formatP,
                  xel **             const colorsP,
+                 unsigned int *     const colorCtP,
                  int *              const bits_per_pixelP,
                  int *              const bits_per_itemP,
                  struct compMask *  const compMaskP,
@@ -537,7 +547,9 @@ processX11Header(X11WDFileHeader *  const h11P,
     X11XColor* x11colors;
     bool grayscale;
     bool const byte_swap = (h11P->file_version != X11WD_FILE_VERSION);
+    xelval maxval;
     X11WDFileHeader * h11FixedP;
+    xel * colors;
 
     fixH11ByteOrder(h11P, &h11FixedP);
 
@@ -576,18 +588,20 @@ processX11Header(X11WDFileHeader *  const h11P,
     *visualclassP = (enum visualclass) h11FixedP->visual_class;
     if (*visualclassP == DirectColor) {
         unsigned int i;
+
         *formatP = PPM_TYPE;
-        *maxvalP = 65535;
+        maxval = 65535;
         /*
           DirectColor is like PseudoColor except that there are essentially
           3 colormaps (shade maps) -- one for each color component.  Each pixel
           is composed of 3 separate indices.
         */
 
-        *colorsP = pnm_allocrow(h11FixedP->ncolors);
+        *colorCtP = h11FixedP->ncolors;
+        colors = pnm_allocrow(h11FixedP->ncolors);
         for (i = 0; i < h11FixedP->ncolors; ++i)
             PPM_ASSIGN(
-                (*colorsP)[i], x11colors[i].red, x11colors[i].green,
+                colors[i], x11colors[i].red, x11colors[i].green,
                 x11colors[i].blue);
     } else if (*visualclassP == TrueColor) {
         *formatP = PPM_TYPE;
@@ -596,44 +610,47 @@ processX11Header(X11WDFileHeader *  const h11P,
         if (h11FixedP->bits_per_rgb > 16)
             pm_error("Invalid bits_per_rgb for TrueColor image: %u. "
                      "Maximum possible is 16", h11FixedP->bits_per_rgb);
-        *maxvalP = pm_bitstomaxval(h11FixedP->bits_per_rgb);
+        maxval = pm_bitstomaxval(h11FixedP->bits_per_rgb);
     } else if (*visualclassP == StaticGray && h11FixedP->bits_per_pixel == 1) {
         *formatP = PBM_TYPE;
-        *maxvalP = 1;
-        *colorsP = pnm_allocrow( 2 );
-        PNM_ASSIGN1((*colorsP)[0], *maxvalP);
-        PNM_ASSIGN1((*colorsP)[1], 0);
+        maxval = 1;
+        *colorCtP = 2;
+        colors = pnm_allocrow( 2 );
+        PNM_ASSIGN1(colors[0], maxval);
+        PNM_ASSIGN1(colors[1], 0);
     } else if (*visualclassP == StaticGray) {
         unsigned int i;
         *formatP = PGM_TYPE;
-        if (h11FixedP->bits_per_pixel > sizeof(*maxvalP) * 8 - 1)
+        if (h11FixedP->bits_per_pixel > sizeof(maxval) * 8 - 1)
             pm_error("XWD header says bits_per_pixel = %u, which is "
                      "too large for this program to compute",
                      h11FixedP->bits_per_pixel);
-        *maxvalP = ((xelval)1 << h11FixedP->bits_per_pixel) - 1;
-        if (*maxvalP > PNM_OVERALLMAXVAL)
+        maxval = ((xelval)1 << h11FixedP->bits_per_pixel) - 1;
+        if (maxval > PNM_OVERALLMAXVAL)
             pm_error("XWD header says bits_per_pixel = %u, which is too "
                      "large for maximum maxval of %u",
                      h11FixedP->bits_per_pixel, PNM_OVERALLMAXVAL);
-        *colorsP = pnm_allocrow(*maxvalP + 1);
-        for (i = 0; i <= *maxvalP; ++i)
-            PNM_ASSIGN1((*colorsP)[i], i);
+        *colorCtP = maxval + 1;
+        colors = pnm_allocrow(maxval + 1);
+        for (i = 0; i <= maxval; ++i)
+            PNM_ASSIGN1(colors[i], i);
     } else {
-        *colorsP = pnm_allocrow(h11FixedP->ncolors);
+        *colorCtP = h11FixedP->ncolors;
+        colors = pnm_allocrow(h11FixedP->ncolors);
         if (grayscale) {
             unsigned int i;
             *formatP = PGM_TYPE;
             for (i = 0; i < h11FixedP->ncolors; ++i)
-                PNM_ASSIGN1((*colorsP)[i], x11colors[i].red);
+                PNM_ASSIGN1(colors[i], x11colors[i].red);
         } else {
             unsigned int i;
             *formatP = PPM_TYPE;
             for (i = 0; i < h11FixedP->ncolors; ++i)
                 PPM_ASSIGN(
-                    (*colorsP)[i], x11colors[i].red, x11colors[i].green,
+                    colors[i], x11colors[i].red, x11colors[i].green,
                     x11colors[i].blue);
         }
-        *maxvalP = 65535;
+        maxval = 65535;
     }
 
     *colsP = h11FixedP->pixmap_width;
@@ -689,6 +706,9 @@ processX11Header(X11WDFileHeader *  const h11P,
     }
     computeComponentMasks(h11FixedP, compMaskP);
 
+    *colorsP = colors;
+    *maxvalP = maxval;
+
     free(h11FixedP);
 }
 
@@ -703,6 +723,7 @@ getinit(FILE *             const ifP,
         enum visualclass * const visualclassP,
         int *              const formatP,
         xel **             const colorsP,
+        unsigned int *     const colorCtP,
         int *              const bits_per_pixelP,
         int *              const bits_per_itemP,
         struct compMask *  const compMaskP,
@@ -752,7 +773,7 @@ getinit(FILE *             const ifP,
             pm_message("Input is X10");
         processX10Header(h10P, ifP, colsP, rowsP, padrightP, maxvalP,
                          visualclassP, formatP,
-                         colorsP, bits_per_pixelP, bits_per_itemP,
+                         colorsP, colorCtP, bits_per_pixelP, bits_per_itemP,
                          compMaskP, byte_orderP, bit_orderP);
     } else if (h11P->file_version == X11WD_FILE_VERSION ||
                pm_bs_long(h11P->file_version) == X11WD_FILE_VERSION) {
@@ -774,7 +795,7 @@ getinit(FILE *             const ifP,
         processX11Header(h11P, ifP, cmapDump,
                          colsP, rowsP, padrightP, maxvalP,
                          visualclassP, formatP,
-                         colorsP, bits_per_pixelP, bits_per_itemP,
+                         colorsP, colorCtP, bits_per_pixelP, bits_per_itemP,
                          compMaskP, byte_orderP, bit_orderP);
     } else
         pm_error("unknown XWD file version: %u", h11P->file_version);
@@ -1181,11 +1202,33 @@ static void
 convertRowSimpleIndex(pixelReader *  const pixelReaderP,
                       int            const cols,
                       const xel *    const colors,
+                      unsigned int   const colorCt,
                       xel *          const xelrow) {
 
     unsigned int col;
-    for (col = 0; col < cols; ++col)
-        xelrow[col] = colors[pixelReader_getpix(pixelReaderP)];
+
+    for (col = 0; col < cols; ++col) {
+        unsigned long const index = pixelReader_getpix(pixelReaderP);
+
+        if (index >= colorCt) {
+            pm_error("Invalid input - raster contains index %lu, "
+                     "but header says there are only %u colors",
+                     index, colorCt);
+        } else
+            xelrow[col] = colors[index];
+    }
+}
+
+
+
+static void
+validateDirectColorIndex(unsigned int const index,
+                         unsigned int const colorCt,
+                         const char * const componentDesc) {
+
+    if (index >= colorCt)
+        pm_error("Invalid input - %s index is %u, but header says there are "
+                 "only %u colors", componentDesc, index, colorCt);
 }
 
 
@@ -1194,6 +1237,7 @@ static void
 convertRowDirect(pixelReader *   const pixelReaderP,
                  int             const cols,
                  const xel *     const colors,
+                 unsigned int    const colorCt,
                  struct compMask const compMask,
                  xel *           const xelrow) {
 
@@ -1214,6 +1258,10 @@ convertRowDirect(pixelReader *   const pixelReaderP,
         grn_index = (pixel & compMask.grn) >> zero_bits(compMask.grn);
         blu_index = (pixel & compMask.blu) >> zero_bits(compMask.blu);
 
+        validateDirectColorIndex(red_index, colorCt, "red");
+        validateDirectColorIndex(grn_index, colorCt, "green");
+        validateDirectColorIndex(blu_index, colorCt, "blue");
+
         PPM_ASSIGN(xelrow[col],
                    PPM_GETR(colors[red_index]),
                    PPM_GETG(colors[grn_index]),
@@ -1228,7 +1276,6 @@ static void
 convertRowTrueColor(pixelReader *   const pixelReaderP,
                     int             const cols,
                     pixval          const maxval,
-                    const xel *     const colors,
                     struct compMask const compMask,
                     xel *           const xelrow) {
 
@@ -1272,6 +1319,7 @@ convertRow(pixelReader *    const pixelReaderP,
            int              const format,
            struct compMask  const compMask,
            const xel*       const colors,
+           unsigned int     const colorCt,
            enum visualclass const visualclass) {
 /*----------------------------------------------------------------------------
    Read a row from the XWD pixel input stream 'pixelReaderP' and write
@@ -1291,15 +1339,15 @@ convertRow(pixelReader *    const pixelReaderP,
     case GrayScale:
     case StaticColor:
     case PseudoColor:
-        convertRowSimpleIndex(pixelReaderP, cols, colors, xelrow);
+        convertRowSimpleIndex(pixelReaderP, cols, colors, colorCt, xelrow);
         break;
     case DirectColor:
-        convertRowDirect(pixelReaderP, cols, colors, compMask, xelrow);
+        convertRowDirect(pixelReaderP, cols, colors, colorCt, compMask,
+                         xelrow);
 
         break;
     case TrueColor:
-        convertRowTrueColor(pixelReaderP, cols, maxval, colors,
-                            compMask, xelrow);
+        convertRowTrueColor(pixelReaderP, cols, maxval, compMask, xelrow);
         break;
 
     default:
@@ -1352,6 +1400,7 @@ main(int argc, char *argv[]) {
     enum visualclass visualclass;
     enum byteorder byteOrder, bitOrder;
     xel * colors;  /* the color map */
+    unsigned int colorCt;  /* size of 'colors' */
     pixelReader pixelReader;
 
     pnm_init(&argc, argv);
@@ -1367,7 +1416,7 @@ main(int argc, char *argv[]) {
         ifP = stdin;
 
     getinit(ifP, &cols, &rows, &padright, &maxval, &visualclass, &format,
-            &colors, &bitsPerPixel, &bitsPerItem,
+            &colors, &colorCt, &bitsPerPixel, &bitsPerItem,
             &compMask, &byteOrder, &bitOrder,
             cmdline.headerdump, cmdline.cmapdump);
 
@@ -1388,7 +1437,7 @@ main(int argc, char *argv[]) {
     for (row = 0; row < rows; ++row) {
         convertRow(&pixelReader, stdout,
                    padright, cols, maxval, format, compMask,
-                   colors, visualclass);
+                   colors, colorCt, visualclass);
     }
 
     pixelReader_term(&pixelReader);

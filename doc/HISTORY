@@ -4,6 +4,73 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+26.10.25 BJH  Release 11.02.31
+
+              jbigtopnm: fix bug: fails with bogus error message about
+              incremental BIE not continuing previous one when multi-BIE image
+              is of certain dimension.  Always broken (jbigtopnm was new in
+              Netpbm 9.2 (May 2000)).
+
+              pnmnorm: fix incorrect output when image contains more pixels
+              than can be represented in 32 bits.  Always broken (pnmnorm was
+              new in Netpbm 9.25 (March 2002).  Its predecessors were in
+              primordial Netpbm).
+
+              pnmnorm: fix memory corruption when -wvalue is greater than
+              maxval.  Always broken (pnmnorm was new in Netpbm 9.25 (March
+              2002).  Its predecessors were in primordial Netpbm).
+
+              xwdtopnm: fix arbitrary memory access with invalid XWD input.
+              Always broken (xwdtopnm ancestors were in primordial Netpbm in
+              1988).
+
+              ilbmtoppm: fix arbitrary memory access when issuing error
+              message.  Broken in Netpbm 10.83 (June 2018).
+
+              pjtoppm: fix arbitrary memory access with invalid input that uses
+              mode 1 compression but a plane has an odd number of bytes.
+              Always broken (pjtoppm was in primordial Netpbm in 1991).
+
+              pjtoppm: fix crash when input image has absent rowplanes other
+              than Plane 0.  Always broken (pjtoppm was in primordial Netpbm
+              in 1991).
+
+              pjtoppm: fix crash when input image has zero-length rowplane.
+              Always broken (pjtoppm was in primordial Netpbm in 1991).
+              
+              picttoppm: fix arbitrary memory access with invalid input that
+              contains undefined color indices.  Always broken (picttoppm was
+              in primordial Netpbm in 1989).
+
+              spctoppm: fix arbitrary memory access with invalid input that
+              contains too much raster data.  Always broken (spctoppm was
+              in primordial Netpbm in 1989).
+
+              ddbugtopbm: add various checks of invalid input; fix arbitrary
+              memory access with invalid input.  Always broken (ddbugtopbm
+              was new in Netpbm 20.18 (September 2003).
+
+              ximtoppm: fix arbitrary memory access with invalid input.
+              Always broken (ximtoppm was in primordial Netpbm, ca 1989).
+
+              ximtoppm: fix arbitrary memory access with ridiculously large
+              image.  Always broken (ximtoppm was in primordial Netpbm in
+              1989).
+
+              gouldtoppm: fix divide-by-zero crash when head contains invalid
+              value for bits per pixel.  Always broken (gouldtoppm was in
+              primordial Netpbm in 198).
+
+              pktopbm: fix memory corruption with characters > 3200 columns.
+              Always broken (pktopbm was in primordial Netpbm ca 1991).
+
+              pktopbm: fix infinite loop or memory corruption with truncated
+              input file or I/O error.  Always broken (pktopbm was in
+              primordial Netpbm ca 1991).
+
+              ppmglobe: fix bug: accepts only color names for the background
+              color specification.  Thanks Scott Pakin.
+
 26.09.18 BJH  Release 11.02.30
 
               pnmtojbig: fix incorrect output with PGM input with maxval >
