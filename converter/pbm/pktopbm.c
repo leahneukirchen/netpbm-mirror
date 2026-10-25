@@ -40,6 +40,7 @@ struct CmdlineInfo {
     unsigned int ySpec;
     unsigned int y;
     unsigned int debug;
+    unsigned int verbose;
 };
 
 
@@ -61,17 +62,19 @@ parseCommandLine(int argc, const char ** argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENT3(0, "character",   OPT_UINT, &cmdlineP->character,
+    OPTENT3(0, "character", OPT_UINT, &cmdlineP->character,
             &characterSpec, 0);
-    OPTENT3(0, "x",   OPT_UINT, &cmdlineP->x,
+    OPTENT3(0, "x",         OPT_UINT, &cmdlineP->x,
             &cmdlineP->xSpec, 0);
-    OPTENT3(0, "X",   OPT_UINT, &cmdlineP->x,
+    OPTENT3(0, "X",         OPT_UINT, &cmdlineP->x,
             &cmdlineP->xSpec, 0);
-    OPTENT3(0, "y",   OPT_UINT, &cmdlineP->y,
+    OPTENT3(0, "y",         OPT_UINT, &cmdlineP->y,
             &cmdlineP->ySpec, 0);
-    OPTENT3(0, "Y",   OPT_UINT, &cmdlineP->y,
+    OPTENT3(0, "Y",         OPT_UINT, &cmdlineP->y,
             &cmdlineP->ySpec, 0);
-    OPTENT3(0, "debug",   OPT_UINT, NULL,
+    OPTENT3(0, "verbose",   OPT_FLAG, NULL,
+            &cmdlineP->verbose, 0);
+    OPTENT3(0, "debug",     OPT_FLAG, NULL,
             &cmdlineP->debug, 0);
 
     opt.opt_table = option_def;
@@ -129,21 +132,21 @@ parseCommandLine(int argc, const char ** argv,
 
 typedef unsigned char eightbits ;
 
-static FILE * ifP;
 static unsigned int pkLoc;
+    /* Number of bytes of input that have been read so far from input file */
 static const char * fileName[MAXPKCHAR];
-static int dynf ;
-static eightbits inputByte ;
-static eightbits bitWeight ;
-static int repeatCount ;
-static int flagByte ;
+static unsigned int dynf;  /* dynamic packing value */
+static eightbits inputByte;
+static eightbits bitWeight;
+static int repeatCount;
+static int flagByte;
 static int debug = 0;
 
 #define dprintf(s,d) if (debug) printf(s,d)
 #define dprintf0(s) if (debug) printf(s)
 
 static eightbits
-pkByte() {
+pkByte(FILE * const ifP) {
 /*----------------------------------------------------------------------------
   Get a byte from the PK file
 -----------------------------------------------------------------------------*/
@@ -155,43 +158,43 @@ pkByte() {
 
 
 static int
-get16() {
+get16(FILE * const ifP) {
 /*----------------------------------------------------------------------------
   Get a 16-bit half word from the PK file
 -----------------------------------------------------------------------------*/
-    int const a = pkByte() ;
+    int const a = pkByte(ifP) ;
 
-    return (a<<8) + pkByte();
+    return (a<<8) + pkByte(ifP);
 }
 
 
 
 static int
-get32() {
+get32(FILE * const ifP) {
 /*----------------------------------------------------------------------------
   Get a 32-bit word from the PK file
 -----------------------------------------------------------------------------*/
     int a;
 
-    a = get16();  /* initial value */
+    a = get16(ifP);  /* initial value */
 
     if (a > 32767)
         a -= 65536;
 
-    return (a << 16) + get16();
+    return (a << 16) + get16(ifP);
 }
 
 
 
 static int
-getNybble() {
+getNybble(FILE * const ifP) {
 /*----------------------------------------------------------------------------
   Get a nibble from current input byte, or new byte if no current byte
 -----------------------------------------------------------------------------*/
     eightbits temp;
 
     if (bitWeight == 0) {
-        inputByte = pkByte() ;
+        inputByte = pkByte(ifP) ;
         bitWeight = 16 ;
     }
     temp = inputByte / bitWeight ;
@@ -204,85 +207,90 @@ getNybble() {
 
 
 static bool
-getBit() {
+getBit(FILE * const ifP) {
 /*----------------------------------------------------------------------------
   Get a bit from the current input byte, or a new byte if no current byte
 -----------------------------------------------------------------------------*/
-    bool temp ;
+    bool retval;
 
     bitWeight >>= 1 ;
+
     if (bitWeight == 0) {
-        inputByte = pkByte();
+        inputByte = pkByte(ifP);
         bitWeight = 128 ;
     }
-    temp = (inputByte >= bitWeight);
-    if (temp)
+    if (inputByte >= bitWeight) {
+        retval = true;
         inputByte -= bitWeight;
-
-    return temp;
+    } else
+        retval = false;
+    return retval;
 }
 
 
 
 static int
-pkPackedNum() {
+pkPackedNum(FILE * const ifP) {
 /*----------------------------------------------------------------------------
   Unpack a dynamically packed number. dynf is dynamic packing threshold
+
+  Read from file *ifP.
+
+  Update global variable 'repeatCount'.
 -----------------------------------------------------------------------------*/
     int i, j ;
 
-    i = getNybble() ;
+    i = getNybble(ifP) ;
 
     if (i == 0) {           /* large run count, >= 3 nibbles */
         do {
-            j = getNybble() ;          /* count extra nibbles */
+            j = getNybble(ifP) ;          /* count extra nibbles */
             i++ ;
         } while (j == 0) ;
         while (i > 0) {
-            j = (j<<4) + getNybble() ; /* add extra nibbles */
+            j = (j<<4) + getNybble(ifP) ; /* add extra nibbles */
             i-- ;
         }
         return (j - 15 +((13 - dynf)<<4) + dynf) ;
     } else if (i <= dynf) return (i) ;  /* number > 0 and <= dynf */
-    else if (i < 14) return (((i - dynf - 1)<<4) + getNybble() + dynf + 1) ;
+    else if (i < 14) return (((i - dynf - 1)<<4) + getNybble(ifP) + dynf + 1) ;
     else {
         if (i == 14)
-            repeatCount = pkPackedNum() ;  /* get repeat count */
+            repeatCount = pkPackedNum(ifP) ;  /* get repeat count */
         else
             repeatCount = 1 ;      /* value 15 indicates repeat count 1 */
 
-        return pkPackedNum();
+        return pkPackedNum(ifP);
     }
 }
 
 
 
 static void
-skipSpecials() {
+skipSpecials(FILE * const ifP) {
 /*----------------------------------------------------------------------------
   Skip specials in PK files, inserted by Metafont or some other program
 -----------------------------------------------------------------------------*/
     do {
-        flagByte = pkByte() ;
+        flagByte = pkByte(ifP);
         if (flagByte >= 240)
             switch(flagByte) {
             case 240:           /* specials of size 1-4 bytes */
             case 241:
             case 242:
             case 243: {
-                int i, j;
+                unsigned int i, j;
 
-                i = 0 ;
-                for (j = 240 ; j <= flagByte ; ++j)
-                    i = (i<<8) + pkByte() ;
+                for (j = 240, i = 0; j <= flagByte ; ++j)
+                    i = (i<<8) + pkByte(ifP);
                 for (j = 1 ; j <= i ; ++j)
-                    pkByte() ;  /* ignore special */
+                    pkByte(ifP) ;  /* ignore special */
             } break ;
             case 244:           /* no-op, parameters to specials */
-                get32() ;
+                get32(ifP);
             case 245:           /* start of postamble */
             case 246:           /* no-op */
-                break ;
+                break;
             case 247:           /* pre-amble in wrong place */
             case 248:
             case 249:
@@ -292,7 +300,7 @@ skipSpecials() {
             case 253:
             case 254:
             case 255:
-                pm_error("unexpected flag byte %d", flagByte) ;
+                pm_error("unexpected flag byte %d", flagByte);
             }
     } while (!(flagByte < 240 || flagByte == 245)) ;
 }
@@ -300,24 +308,30 @@ skipSpecials() {
 
 
 static void
-ignoreChar(int          const car,
+ignoreChar(FILE *       const ifP,
+           int          const car,
            unsigned int const endOfPacket) {
 /*----------------------------------------------------------------------------
-   ignore character packet
+   Ignore character packet.
+
+   'endOfPacket' is the input file offset of the byte after the packet to
+   ignore.
+
+   'car' is the code point for the character we're ignoring.
 -----------------------------------------------------------------------------*/
    while (pkLoc != endOfPacket)
-       pkByte();
+       pkByte(ifP);
 
    if (car < 0 || car >= MAXPKCHAR)
-      pm_message("Character %d out of range", car) ;
+      pm_message("Skipping character %d out of range", car);
 
-   skipSpecials() ;
+   skipSpecials(ifP) ;
 }
 
 
 
 static void
-readHeader() {
+readHeader(FILE * const ifP) {
 /*----------------------------------------------------------------------------
    Read the header of the input file.
 
@@ -328,243 +342,438 @@ readHeader() {
    'flagByte'.
 -----------------------------------------------------------------------------*/
     unsigned int commentSz;
+        /* header comment size */
     unsigned int i;
 
-    if (pkByte() != 247)
-        pm_error("bad PK file (pre command missing)") ;
+    if (pkByte(ifP) != 247)
+        pm_error("bad PK file (pre command missing)");
 
-    if (pkByte() != 89)
-        pm_error("wrong version of packed file") ;
+    if (pkByte(ifP) != 89)
+        pm_error("wrong version of packed file");
 
-    commentSz = pkByte() ;              /* get header comment size */
+    commentSz = pkByte(ifP);
 
     for (i = 1 ; i <= commentSz ; ++i)
-        pkByte() ;  /* ignore header comment */
+        pkByte(ifP);  /* ignore header comment */
 
-    get32() ;                   /* ignore designsize */
-    get32() ;                   /* ignore checksum */
-    if (get32() != get32())         /* h & v pixels per point */
-        pm_message("Warning: aspect ratio not 1:1") ;
+    get32(ifP);                   /* ignore designsize */
+    get32(ifP);                   /* ignore checksum */
+    if (get32(ifP) != get32(ifP))         /* h & v pixels per point */
+        pm_message("Warning: aspect ratio not 1:1");
 
-    skipSpecials();
+    skipSpecials(ifP);
 }
 
 
 
 static void
-readCharacterHeader(int *          const carP,
-                    unsigned int * const endOfPacketP,
+readCharacterHeaderLong(FILE *         const ifP,
+                        int *          const carP,
+                        unsigned int * const packetLenP,
+                        bool *         const mustIgnoreP,
+                        int *          const cheightP,
+                        int *          const cwidthP,
+                        int *          const xoffsP,
+                        int *          const yoffsP) {
+/*----------------------------------------------------------------------------
+  Read the rest of the character header, after the flag byte, in long format.
+-----------------------------------------------------------------------------*/
+    unsigned int packetLengthFld;
+    int x;
+
+    packetLengthFld  = get32(ifP);
+    *carP            = get32(ifP);         /* character number */
+
+    *packetLenP = 1 + 4 + 4 + packetLengthFld;
+
+    dprintf0("flagByte7\n");
+    dprintf("car: %d\n", *carP);
+    get32(ifP);               /* ignore tfmwidth */
+    x=get32(ifP);             /* ignore horiz escapement */
+    dprintf("horiz esc %d\n", x);
+    x=get32(ifP);             /* ignore vert escapement */
+    dprintf("vert esc %d\n", x);
+    *cwidthP = get32(ifP);          /* bounding box width */
+    *cheightP = get32(ifP);         /* bounding box height */
+    dprintf("cwidth %d\n", *cwidthP);
+    dprintf("cheight %d\n", *cheightP);
+    if (*cwidthP < 0 || *cheightP < 0 ||
+        *cwidthP > 65535 || *cheightP > 65535) {
+        *mustIgnoreP = true;
+    } else {
+        *mustIgnoreP = false;
+        *xoffsP = get32(ifP);              /* horiz offset */
+        *yoffsP = get32(ifP);              /* vert offset */
+        dprintf ("xoffs %d\n", *xoffsP);
+        dprintf ("yoffs %d\n", *yoffsP);
+    }
+}
+
+
+
+static void
+readCharacterHeaderExtendedShort(FILE *         const ifP,
+                                 unsigned int   const upperLenBits,
+                                 int *          const carP,
+                                 unsigned int * const packetLenP,
+                                 bool *         const mustIgnoreP,
+                                 int *          const cheightP,
+                                 int *          const cwidthP,
+                                 int *          const xoffsP,
+                                 int *          const yoffsP) {
+/*----------------------------------------------------------------------------
+  Read the rest of the character header, after the flag byte, in
+  extended short format.
+
+  'upperLenBits' is the two upper bits of the 18 bit packet length, from the
+  flag byte.  The lower 16 bits are the next thing in the file.
+-----------------------------------------------------------------------------*/
+    unsigned int packetLengthFld;
+
+    packetLengthFld = (upperLenBits << 16) + get16(ifP);
+    *carP = pkByte(ifP);            /* char number */
+
+    *packetLenP = 1 + 2 + 1 + packetLengthFld;
+
+    *mustIgnoreP = false;
+
+    dprintf0("flagByte>3\n");
+    dprintf("car: %d\n", *carP);
+    pkByte(ifP);              /* ignore tfmwidth */
+    get16(ifP);               /*   (3 bytes) */
+    get16(ifP);               /* ignore horiz escapement */
+    *cwidthP = get16(ifP);          /* bounding box width */
+    *cheightP = get16(ifP);         /* bounding box height */
+    dprintf("cwidth %d\n", *cwidthP);
+    dprintf("cheight %d\n", *cheightP);
+    *xoffsP = get16(ifP);                         /* horiz offset */
+    if (*xoffsP >= 32768)
+        *xoffsP -= 65536;
+    *yoffsP = get16(ifP);                         /* vert offset */
+    if (*yoffsP >= 32768)
+        *yoffsP -= 65536;
+    dprintf("xoffs %d\n", *xoffsP);
+    dprintf("yoffs %d\n", *yoffsP);
+}
+
+
+
+static void
+readCharacterHeaderShort(FILE *         const ifP,
+                         unsigned int   const upperLenBits,
+                         int *          const carP,
+                         unsigned int * const packetLenP,
+                         bool *         const mustIgnoreP,
+                         int *          const cheightP,
+                         int *          const cwidthP,
+                         int *          const xoffsP,
+                         int *          const yoffsP) {
+/*----------------------------------------------------------------------------
+  Read the rest of the character header, after the flag byte, in
+  short format.
+
+  'upperLenBits' is the two upper bits of the 10 bit packet length, from the
+  flag byte.  The lower 8 bits are the next thing in the file.
+-----------------------------------------------------------------------------*/
+    unsigned int packetLengthFld;
+    int x;
+
+    packetLengthFld  = (upperLenBits << 8) + pkByte(ifP);
+    *carP            = pkByte(ifP);            /* char number */
+
+    *packetLenP = 1 + 1 + 1 + packetLengthFld;
+
+    *mustIgnoreP = false;
+
+    dprintf0("flagByte<=3\n");
+    dprintf("car: %d\n", *carP);
+    pkByte(ifP);          /* ignore tfmwidth  */
+    get16(ifP);               /*  (3 bytes) */
+    x = pkByte(ifP);  /* ignore horiz escapement */
+    dprintf("horiz esc %d\n", x);
+    *cwidthP = pkByte(ifP);            /* bounding box width */
+    *cheightP = pkByte(ifP);           /* bounding box height */
+    dprintf("cwidth %d\n", *cwidthP);
+    dprintf("cheight %d\n", *cheightP);
+    *xoffsP = pkByte(ifP);               /* horiz offset */
+    if (*xoffsP >= 128)
+        *xoffsP -=256;
+    *yoffsP = pkByte(ifP);               /* vert offset */
+    if (*yoffsP >= 128)
+        *yoffsP -= 256;
+    dprintf("xoffs %d\n", *xoffsP);
+    dprintf("yoffs %d\n", *yoffsP);
+}
+
+
+
+static void
+readCharacterHeader(FILE *         const ifP,
+                    bool           const verbose,
+                    int *          const carP,
+                    unsigned int * const packetLenP,
                     bool *         const mustIgnoreP,
                     int *          const cheightP,
                     int *          const cwidthP,
                     int *          const xoffsP,
                     int *          const yoffsP,
-                    bool *         const turnonP) {
+                    bool *         const initialTurnonP,
+                    unsigned int * const dynfP) {
+/*----------------------------------------------------------------------------
+   Read the header for a character, after the flag byte.
 
-    int packetLength;
-        /* character packet length field value */
-    int cheight, cwidth;
-        /* bounding box height, width field values */
-    int xoffs=0, yoffs=0;
-    bool turnon ;
-    int x;
+   Return as *packetLenP the length of the whole character packet, including
+   the header.  N.B. this is not the packet length value from the header,
+   which for some odd reason does not include the first 3 fields: flags,
+   packet length, and character number.
 
-    dynf = (flagByte >> 4);          /* get dynamic packing value */
-    flagByte &= 15;
-    turnon = (flagByte >= 8) ;      /* black or white initially? */
-    if (turnon)
-        flagByte &= 7;     /* long or short form */
+   Return as *cwidthP and *cheightP the bounding box width and height field
+   values from the header.
 
-    if (flagByte == 7) {            /* long form preamble */
-        packetLength  = get32();
-        *carP         = get32();         /* character number */
-        *endOfPacketP = packetLength + pkLoc;
+   Return as *turnonP true iff the color should be black instead of white
+   initially.
+-----------------------------------------------------------------------------*/
+    unsigned int const formatCode = flagByte & 0x7;
 
-        dprintf0("flagByte7\n");
-        dprintf("car: %d\n", *carP);
-        get32();               /* ignore tfmwidth */
-        x=get32();             /* ignore horiz escapement */
-        dprintf("horiz esc %d\n", x);
-        x=get32();             /* ignore vert escapement */
-        dprintf("vert esc %d\n", x);
-        cwidth = get32();          /* bounding box width */
-        cheight = get32();         /* bounding box height */
-        dprintf("cwidth %d\n", cwidth);
-        dprintf("cheight %d\n", cheight);
-        if (cwidth < 0 || cheight < 0 ||
-            cwidth > 65535 || cheight > 65535) {
-            *mustIgnoreP = true;
-        } else {
-            *mustIgnoreP = false;
-            xoffs = get32() ;              /* horiz offset */
-            yoffs = get32() ;              /* vert offset */
-            dprintf ("xoffs %d\n", xoffs);
-            dprintf ("yoffs %d\n", yoffs);
-        }
-    } else if (flagByte > 3) {      /* extended short form */
-        packetLength = ((flagByte - 4)<<16) + get16() ;
-        *carP = pkByte() ;            /* char number */
-        *endOfPacketP = packetLength + pkLoc;
+    *dynfP = (flagByte >> 4);
 
-        *mustIgnoreP = false;
+    *initialTurnonP = (flagByte & 0x08) != 0;
 
-        dprintf0("flagByte>3\n");
-        dprintf("car: %d\n", *carP);
-        pkByte();              /* ignore tfmwidth (3 bytes) */
-        get16();               /* ignore tfmwidth (3 bytes) */
-        get16();               /* ignore horiz escapement */
-        cwidth = get16();          /* bounding box width */
-        cheight = get16();         /* bounding box height */
-        dprintf("cwidth %d\n", cwidth);
-        dprintf("cheight %d\n", cheight);
-        xoffs = get16();                         /* horiz offset */
-        if (xoffs >= 32768)
-            xoffs -= 65536;
-        yoffs = get16();                         /* vert offset */
-        if (yoffs >= 32768)
-            yoffs -= 65536;
-        dprintf("xoffs %d\n", xoffs);
-        dprintf("yoffs %d\n", yoffs);
-    } else {                    /* short form preamble */
-        packetLength  = (flagByte << 8) + pkByte();
-        *carP         = pkByte();            /* char number */
-        *endOfPacketP = packetLength + pkLoc;
-
-        *mustIgnoreP = false;
-
-        dprintf0("flagByte<=3\n");
-        dprintf("car: %d\n", *carP);
-        pkByte();          /* ignore tfmwidth (3 bytes) */
-        get16();               /* ignore tfmwidth (3 bytes) */
-        x = pkByte() ;  /* ignore horiz escapement */
-        dprintf("horiz esc %d\n", x);
-        cwidth = pkByte();            /* bounding box width */
-        cheight = pkByte() ;           /* bounding box height */
-        dprintf("cwidth %d\n", cwidth);
-        dprintf("cheight %d\n", cheight);
-        xoffs = pkByte();               /* horiz offset */
-        if (xoffs >= 128)
-            xoffs -=256;
-        yoffs = pkByte();               /* vert offset */
-        if (yoffs >= 128)
-            yoffs -= 256;
-        dprintf("xoffs %d\n", xoffs);
-        dprintf("yoffs %d\n", yoffs);
+    if (formatCode == 0x7) {
+        if (verbose)
+            pm_message("Long-form preamble");
+        readCharacterHeaderLong(
+            ifP, carP, packetLenP, mustIgnoreP,
+            cheightP, cwidthP, xoffsP, yoffsP);
+    } else if (formatCode & 0x4) {
+        if (verbose)
+            pm_message("Extended short-form preamble");
+        readCharacterHeaderExtendedShort(
+            ifP, formatCode & 0x3, carP, packetLenP, mustIgnoreP,
+            cheightP, cwidthP, xoffsP, yoffsP);
+    } else {
+        if (verbose)
+            pm_message("Short-form preamble");
+        readCharacterHeaderShort(
+            ifP, formatCode & 0x3, carP, packetLenP, mustIgnoreP,
+            cheightP, cwidthP, xoffsP, yoffsP);
     }
-    if (packetLength < 0)
-        pm_error("Invalid character header - negative packet length");
-    if (packetLength > UINT_MAX - pkLoc)
-        pm_error("Invalid character header - excessive packet length");
-
-    *cheightP = cheight;
-    *cwidthP  = cwidth;
-    *xoffsP   = xoffs;
-    *yoffsP   = yoffs;
-    *turnonP  = turnon;
+    if (verbose) {
+        pm_message(
+            "Character number %u: packet length %u, width %u, height %u, "
+            "X offset %u, Y offset %u, dynf %u, initial color %s",
+            *carP, *packetLenP, *cwidthP, *cheightP, *xoffsP, *yoffsP, dynf,
+            *initialTurnonP ? "BLACK" : "WHITE");
+    }
 }
 
 
 
 static void
-readOneCharacter(bool           const bmxOverrideSpec,
+makeWhite(unsigned int const width,
+          unsigned int const height,
+          bit **       const bitmap) {
+
+    unsigned int i;
+
+    for (i = 0 ; i < height; ++i) {
+        unsigned int j;
+
+        for (j = 0 ; j < width; ++j)
+            bitmap[i][j] = PBM_WHITE;
+    }
+}
+
+
+
+static void
+doBitmappedCharacter(FILE *       const ifP,
+                     unsigned int const cwidth,
+                     unsigned int const cheight,
+                     unsigned int const bmx,
+                     unsigned int const bmy,
+                     int          const xoffs,
+                     int          const yoffs,
+                     bool         const verbose,
+                     bit **       const bitmap) {
+
+    unsigned int row;
+    unsigned int bitCount = 0;
+
+    dprintf("bmy: %d\n ", bmy);
+    dprintf("y: %d\n ", bmy - yoffs - 1);
+
+    for (row = 0 ; row < cheight; ++row) {
+        unsigned int const yi = (bmy - yoffs - 1) + row;
+
+        unsigned int col;
+
+        for (col = 0 ; col < cwidth ; ++col) {
+            unsigned int const xj = col - xoffs;
+            bool const isBlack = getBit(ifP);
+
+            ++bitCount;
+            if (isBlack && 0 <= xj && xj < bmx && 0 <= yi && yi < bmy)
+                bitmap[yi][xj] = PBM_BLACK ;
+        }
+    }
+}
+
+
+
+static void
+fillRow(bit *        const bitrow,
+        unsigned int const repeatCount,
+        unsigned int const cwidth,
+        unsigned int const firstRow,
+        unsigned int const bmx,
+        unsigned int const bmy,
+        int          const xoffs,
+        bit **       const bitmap) {
+
+    unsigned int i;
+
+    for (i = 0; i <= repeatCount; ++i) {
+        unsigned int const yi = firstRow + i;
+
+        if (0 <= yi && yi < bmy) {
+            unsigned int j;
+            for (j = 0; j < cwidth; ++j) {
+                unsigned int const xj= j - xoffs;
+                if (0 <= xj && xj < bmx)
+                    bitmap[yi][xj] = bitrow[j];
+            }
+        }
+    }
+}
+
+
+
+static void
+doDynamicallyPackedChar(FILE *       const ifP,
+                        unsigned int const cwidth,
+                        unsigned int const cheight,
+                        unsigned int const bmx,
+                        unsigned int const bmy,
+                        int          const xoffs,
+                        int          const yoffs,
+                        bool         const initTurnon,
+                        bool         const verbose,
+                        bit **       const bitmap) {
+
+    bit          row[MAXROWWIDTH+1];
+    unsigned int rowsleft;
+    unsigned int hbit;
+    unsigned int rp;
+    bool         turnon;
+
+    repeatCount = 0;
+
+    dprintf("bmy: %d\n ", bmy);
+
+    for (rowsleft = cheight, hbit = cwidth, rp = 0, turnon = initTurnon;
+         rowsleft > 0; ) {
+
+        unsigned int count;
+
+        for (count = pkPackedNum(ifP); count > 0; ) {
+            if (count < hbit) {     /* doesn't extend past row */
+                hbit -= count;
+                while (count--)
+                    row[rp++] = turnon ? PBM_BLACK : PBM_WHITE;
+            } else {                /* reaches end of row */
+                count -= hbit;
+                while (hbit--)
+                    row[rp++] = turnon ? PBM_BLACK : PBM_WHITE;
+
+                fillRow(row, repeatCount, cwidth,
+                        cheight - rowsleft - 1, bmx, bmy, xoffs,
+                        bitmap);
+
+                rowsleft -= repeatCount + 1;
+                repeatCount = rp = 0;
+                hbit = cwidth;
+            }
+        }
+        turnon = !turnon;
+    }
+    if (rowsleft != 0 || hbit != cwidth)
+        pm_error("bad pk file (more bits than required)") ;
+}
+
+
+
+static void
+readOneCharacter(FILE *         const ifP,
+                 bool           const bmxOverrideSpec,
                  int            const bmxOverride,
                  bool           const bmyOverrideSpec,
                  int            const bmyOverride,
+                 bool           const verbose,
                  unsigned int * const carP,
                  bool *         const mustIgnoreP,
                  bit ***        const bitmapP,
                  unsigned int * const bmxP,
                  unsigned int * const bmyP) {
-
+/*----------------------------------------------------------------------------
+   Read one character from *ifP, starting with the second byte (i.e. after
+   the flag byte).
+-----------------------------------------------------------------------------*/
     int car;
+    unsigned int thisCharacterLocInFile;
+    unsigned int packetLength;
     unsigned int endOfPacket;
     bool mustIgnore;
     int cheight, cwidth;
     int xoffs, yoffs;
-    bool turnon;
-    bit row[MAXROWWIDTH+1];
+    bool initTurnon;
 
-    readCharacterHeader(&car, &endOfPacket, &mustIgnore,
-                        &cheight, &cwidth, &xoffs, &yoffs, &turnon);
+    thisCharacterLocInFile = pkLoc - 1;  /* Back up to flag byte */
+
+    readCharacterHeader(ifP, verbose, &car, &packetLength, &mustIgnore,
+                        &cheight, &cwidth, &xoffs, &yoffs, &initTurnon,
+                        &dynf);
+
+    if (packetLength > UINT_MAX - thisCharacterLocInFile) {
+        pm_error("Packet length in character header is too large "
+                 "for computation");
+    }
+
+    endOfPacket = thisCharacterLocInFile + packetLength;
 
     *carP = car;
 
     if (mustIgnore || !fileName[car]) {
         /* Ignore this character in the font */
-        ignoreChar(car, endOfPacket);
+        ignoreChar(ifP, car, endOfPacket);
         *mustIgnoreP = true;
     } else {
-        bit ** bitmap;
-        unsigned int i;
-
         int const bmx = bmxOverrideSpec ? bmxOverride : cwidth;
         int const bmy = bmyOverrideSpec ? bmyOverride : cheight;
+
+        bit ** bitmap;
 
         *mustIgnoreP = false;
 
         bitmap = pbm_allocarray(bmx, bmy);
 
         bitWeight = 0 ;
-        for (i = 0 ; i < bmy ; ++i) {
-            /* make it blank */
-            unsigned int j;
 
-            for (j = 0 ; j < bmx ; ++j)
-                bitmap[i][j] = PBM_WHITE;
+        makeWhite(bmx, bmy, bitmap);  /* Initial value */
+
+        if (dynf == 14) {
+            doBitmappedCharacter(ifP, cwidth, cheight, bmx, bmy, xoffs, yoffs,
+                                 verbose, bitmap);
+        } else {
+            doDynamicallyPackedChar(ifP, cwidth, cheight, bmx, bmy,
+                                    xoffs, yoffs, initTurnon, verbose, bitmap);
         }
-        if (dynf == 14) {               /* bitmapped character */
-            dprintf("bmy: %d\n ", bmy);
-            dprintf("y: %d\n ", bmy - yoffs - 1);
-            for (i = 0 ; i < cheight ; ++i) {
-                unsigned int const yi = i + (bmy - yoffs - 1);
-                unsigned int j;
-                for (j = 0 ; j < cwidth ; ++j) {
-                    unsigned int const xj = j - xoffs;
-                    if (getBit() && 0 <= xj && xj < bmx && 0 <= yi && yi < bmy)
-                        bitmap[yi][xj] = PBM_BLACK ;
-                }
-            }
-        } else {                    /* dynamically packed char */
-            int rowsleft = cheight ;
-            int hbit = cwidth ;
-            int rp = 0;
-            repeatCount = 0 ;
-            dprintf("bmy: %d\n ", bmy);
-            dprintf("y: %d\n", cheight-rowsleft+(bmy-2*yoffs-1));
-            while (rowsleft > 0) {
-                int count = pkPackedNum() ; /* get current color count */
-                while (count > 0) {
-                    if (count < hbit) {     /* doesn't extend past row */
-                        hbit -= count ;
-                        while (count--)
-                            row[rp++] = turnon ? PBM_BLACK : PBM_WHITE;
-                    } else {                /* reaches end of row */
-                        count -= hbit;
-                        while (hbit--)
-                            row[rp++] = turnon ? PBM_BLACK : PBM_WHITE;
-                        for (i = 0; i <= repeatCount; i++) {  /* fill row */
-                            unsigned int const yi = i + cheight - rowsleft - 1;
-                            if (0 <= yi && yi < bmy) {
-                                unsigned int j;
-                                for (j = 0; j < cwidth; j++) {
-                                    unsigned int const xj= j - xoffs;
-                                    if (0 <= xj && xj < bmx)
-                                        bitmap[yi][xj] = row[j] ;
-                                }
-                            }
-                        }
-                        rowsleft -= repeatCount + 1;
-                        repeatCount = rp = 0;
-                        hbit = cwidth;
-                    }
-                }
-                turnon = !turnon;
-            }
-            if (rowsleft != 0 || hbit != cwidth)
-                pm_error("bad pk file (more bits than required)") ;
+        if (pkLoc != endOfPacket) {
+            pm_error("Invalid PK input: "
+                     "Character header says packet length %u bytes, "
+                     "but the character raster ends %u bytes short of that",
+                     packetLength, endOfPacket - pkLoc);
         }
-        if (endOfPacket != pkLoc)
-            pm_error("bad pk file (bad packet length)") ;
         *bitmapP = bitmap;
         *bmxP    = bmx;
         *bmyP    = bmy;
@@ -608,6 +817,7 @@ int
 main(int argc, const char ** argv) {
 
     struct CmdlineInfo cmdline;
+    FILE * ifP;
     unsigned int i;
 
     pm_proginit(&argc, argv);
@@ -629,7 +839,7 @@ main(int argc, const char ** argv) {
 
     pkLoc = 0;
 
-    readHeader();
+    readHeader(ifP);
 
     while (flagByte != 245) {  /* not at postamble */
 
@@ -638,23 +848,25 @@ main(int argc, const char ** argv) {
         bit ** bitmap;
         unsigned int cols, rows;
 
-        readOneCharacter(!!cmdline.xSpec, cmdline.x,
+        readOneCharacter(ifP,
+                         !!cmdline.xSpec, cmdline.x,
                          !!cmdline.ySpec, cmdline.y,
+                         !!cmdline.verbose,
                          &car, &mustIgnore, &bitmap, &cols, &rows);
 
         if (!mustIgnore) {
             generatePbmFile(fileName[car], bitmap, cols, rows);
 
-            pbm_freearray(bitmap, rows) ;
+            pbm_freearray(bitmap, rows);
         }
 
         fileName[car] = NULL;
 
-        skipSpecials();
+        skipSpecials(ifP);
     }
 
     while (!feof(ifP))
-        pkByte() ;       /* skip trailing junk */
+        pkByte(ifP);       /* skip trailing junk */
 
     pm_close(ifP);
 
