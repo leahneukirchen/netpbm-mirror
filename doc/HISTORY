@@ -29,7 +29,8 @@ not yet  BJH  Release 11.17.00
               message.  Broken in Netpbm 11.04 (September 2023).
 
               pktopbm: fix memory corruption with characters > 3200 columns.
-              Always broken (pktopbm was in primordial Netpbm ca 1991).
+              Always broken (pktopbm was in primordial Netpbm ca 1991).  Found
+              and diagnosed by Jing Hao Hu.
 
               pktopbm: fix infinite loop or memory corruption with truncated
               input file or I/O error.  Always broken (pktopbm was in
@@ -39,39 +40,45 @@ not yet  BJH  Release 11.17.00
 
               xwdtopnm: fix arbitrary memory access with invalid XWD input.
               Always broken (xwdtopnm ancestors were in primordial Netpbm in
-              1988).
+              1988).  Found and diagnosed by Jing Hao Hu.
 
               ilbmtoppm: fix arbitrary memory access when issuing error
-              message.  Broken in Netpbm 10.83 (June 2018).
+              message.  Broken in Netpbm 10.83 (June 2018).  Found and
+              diagnosed by Jing Hao Hu.
 
-              pjtoppm: fix arbitrary memory access with invalid input that uses
-              mode 1 compression but a plane has an odd number of bytes.
-              Always broken (pjtoppm was in primordial Netpbm in 1991).
+              pjtoppm: fix arbitrary memory access with invalid input that
+              uses mode 1 compression but a plane has an odd number of bytes.
+              Always broken (pjtoppm was in primordial Netpbm in 1991).  Found
+              and diagnosed by Jing Hao Hu.
 
               pjtoppm: fix crash when input image has absent rowplanes other
               than Plane 0.  Always broken (pjtoppm was in primordial Netpbm
               in 1991).
 
               pjtoppm: fix crash when input image has zero-length rowplane.
-              Always broken (pjtoppm was in primordial Netpbm in 1991).
+              Always broken (pjtoppm was in primordial Netpbm in 1991).  Found
+              and diagnosed by Jing Hao Hu.
               
               picttoppm: fix arbitrary memory access with invalid input that
               contains undefined color indices.  Always broken (picttoppm was
-              in primordial Netpbm in 1989).
+              in primordial Netpbm in 1989).  Found and diagnosed by Jing Hao
+              Hu.
 
               spctoppm: fix arbitrary memory access with invalid input that
-              contains too much raster data.  Always broken (spctoppm was
-              in primordial Netpbm in 1989).
+              contains too much raster data.  Always broken (spctoppm was in
+              primordial Netpbm in 1989).  Found and diagnosed by Jing Hao Hu.
 
               ddbugtopbm: add various checks of invalid input; fix arbitrary
-              memory access with invalid input.  Always broken (ddbugtopbm
-              was new in Netpbm 20.18 (September 2003).
+              memory access with invalid input.  Always broken (ddbugtopbm was
+              new in Netpbm 20.18 (September 2003).  Found and diagnosed by
+              Jing Hao Hu.
 
               ximtotppm: improve handling of invalid header with missing
               ASCIIZ string terminators.
 
               ximtoppm: fix arbitrary memory access with invalid input.
               Always broken (ximtoppm was in primordial Netpbm in 1989).
+              Found and diagnosed by Jing Hao Hu.
 
               ximtoppm: fix arbitrary memory access with ridiculously large
               image.  Always broken (ximtoppm was in primordial Netpbm in
@@ -79,7 +86,7 @@ not yet  BJH  Release 11.17.00
 
               gouldtoppm: fix divide-by-zero crash when head contains invalid
               value for bits per pixel.  Always broken (gouldtoppm was in
-              primordial Netpbm in 1989).
+              primordial Netpbm in 1989).  Found and diagnosed by Jing Hao Hu.
 
               ppmglobe: fix bug: accepts only color names for the background
               color specification.  Thanks Scott Pakin.
@@ -185,7 +192,8 @@ not yet  BJH  Release 11.17.00
               pbmtomda: add warning if padding or truncating.
 
               mdatopbm: fix failure when height or width of MDA is 2^15 or
-              more.  Always broken (mdatopbm was new in Netpbm 9.1 (May 2000)).
+              more.  Always broken (mdatopbm was new in Netpbm 9.1 (May
+              2000)).  Found and diagnosed by Jing Hao Hu.
 
               mdatopbm: improve error message when input has zero width.
 
