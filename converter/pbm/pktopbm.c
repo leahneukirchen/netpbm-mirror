@@ -150,9 +150,16 @@ pkByte(FILE * const ifP) {
 /*----------------------------------------------------------------------------
   Get a byte from the PK file
 -----------------------------------------------------------------------------*/
+    int c;
+
     ++pkLoc;
 
-    return getc(ifP);
+    c = getc(ifP);
+
+    if (c == EOF)
+        pm_error("Input file ends prematurely or error reading file");
+
+    return c;
 }
 
 

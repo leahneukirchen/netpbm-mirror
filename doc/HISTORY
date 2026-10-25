@@ -28,6 +28,10 @@ not yet  BJH  Release 11.17.00
               pktopbm: fix memory corruption with characters > 3200 columns.
               Always broken (pktopbm was in primordial Netpbm ca 1991).
 
+              pktopbm: fix infinite loop or memory corruption with truncated
+              input file or I/O error.  Always broken (pktopbm was in
+              primordial Netpbm ca 1991).
+
               rawtoppm: reject conflicting command line options.
 
               xwdtopnm: fix arbitrary memory access with invalid XWD input.
