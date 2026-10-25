@@ -41,6 +41,8 @@ static void
 uncompress_sketch(unsigned char * const cPtr,
                   unsigned char * const uPtr,
                   int             const size) {
+
+    unsigned char * const obufEnd = uPtr + 64*1024;
     int i, j;
     unsigned char num_bytes;
 
@@ -49,6 +51,9 @@ uncompress_sketch(unsigned char * const cPtr,
         if (cPtr[i]&0x80) {
             num_bytes = cPtr[i]&0x3f;  /* ~(0x40|0x80) */
             ++num_bytes;
+            if (uPtr + j + num_bytes >= obufEnd)
+                pm_error("Uncompressed data too large for us to process "
+                         "(max is 64K)");
             if (cPtr[i]&0x40) {
                 /* Mixed */
                 memmove(uPtr+j, cPtr+i+1, num_bytes);
@@ -61,6 +66,9 @@ uncompress_sketch(unsigned char * const cPtr,
             /* White */
             num_bytes = cPtr[i]&0x7f; /* ~0x80 */
             ++num_bytes;
+            if (uPtr + j + num_bytes >= obufEnd)
+                pm_error("Uncompressed data too large for us to process "
+                         "(max is 64K)");
             memset(uPtr+j, 0x00, num_bytes);
         }
         j += num_bytes;
@@ -140,6 +148,9 @@ main(int argc, char ** argv) {
         } else {
             /* DiddleBug */
             int const sketchlen = buf[8]*256+buf[9];
+            if (sketchlen > 16*1024 - 26 || sketchlen - 80 - 1 < 0)
+                pm_error("sketch length %d too large for input buffer",
+                         sketchlen);
             uncompress_sketch(buf+26+80+1, obuf, sketchlen-80-1);
             nameptr = (char*)(buf+26+sketchlen);
         }

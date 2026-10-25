@@ -15,6 +15,7 @@
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
 #include <string.h>
+#include <limits.h>
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
@@ -146,6 +147,10 @@ readXimHeader(FILE *     const ifP,
             (headerP->bits_channel == 1 && headerP->nchannels == 1) ?
                 (headerP->width + 7) / 8 :
                 headerP->width;
+    if (headerP->height > UINT_MAX/headerP->bytes_per_line)
+        pm_error("Image is too large for computation "
+                 "(%u lines of %u bytes each)",
+                 headerP->height, headerP->bytes_per_line);
     headerP->datasize =
         (unsigned int)headerP->bytes_per_line * headerP->height;
     if (headerP->nchannels == 3 && headerP->bits_channel == 8)
@@ -153,6 +158,9 @@ readXimHeader(FILE *     const ifP,
     else if (headerP->nchannels == 1 && headerP->bits_channel == 8) {
         unsigned int i;
 
+        if (headerP->ncolors > 256)
+            pm_error("colormap declares %u entries, but the header stores "
+                     "at most 256", headerP->ncolors);
         MALLOCARRAY_NOFAIL(headerP->colors, headerP->ncolors);
 
         for (i=0; i < headerP->ncolors; ++i) {

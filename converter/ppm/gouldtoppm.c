@@ -131,6 +131,9 @@ getgouldheader(FILE * infile,
     if (*nlines==0) *nlines=nlines_new;
     if (*bytesperline==0) *bytesperline=bytesperline_new;
 
+    if (*bitsperpixel == 0)
+        pm_error("header declares zero bits per pixel");
+
     *cols = (*bytesperline)*8 / (*bitsperpixel);
 }
 

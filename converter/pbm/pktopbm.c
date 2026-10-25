@@ -147,9 +147,16 @@ pkByte() {
 /*----------------------------------------------------------------------------
   Get a byte from the PK file
 -----------------------------------------------------------------------------*/
+    int c;
+
     ++pkLoc;
 
-    return getc(ifP);
+    c = getc(ifP);
+
+    if (c == EOF)
+        pm_error("Input file ends prematurely or error reading file");
+
+    return c;
 }
 
 
@@ -378,6 +385,7 @@ readCharacterHeader(int *          const carP,
     if (flagByte == 7) {            /* long form preamble */
         packetLength  = get32();
         *carP         = get32();         /* character number */
+        *endOfPacketP = packetLength + pkLoc;
 
         dprintf0("flagByte7\n");
         dprintf("car: %d\n", *carP);
@@ -402,8 +410,8 @@ readCharacterHeader(int *          const carP,
         }
     } else if (flagByte > 3) {      /* extended short form */
         packetLength = ((flagByte - 4)<<16) + get16() ;
-
         *carP = pkByte() ;            /* char number */
+        *endOfPacketP = packetLength + pkLoc;
 
         *mustIgnoreP = false;
 
@@ -427,6 +435,7 @@ readCharacterHeader(int *          const carP,
     } else {                    /* short form preamble */
         packetLength  = (flagByte << 8) + pkByte();
         *carP         = pkByte();            /* char number */
+        *endOfPacketP = packetLength + pkLoc;
 
         *mustIgnoreP = false;
 
@@ -454,8 +463,6 @@ readCharacterHeader(int *          const carP,
     if (packetLength > UINT_MAX - pkLoc)
         pm_error("Invalid character header - excessive packet length");
 
-    *endOfPacketP = packetLength + pkLoc;
-
     *cheightP = cheight;
     *cwidthP  = cwidth;
     *xoffsP   = xoffs;
@@ -482,7 +489,6 @@ readOneCharacter(bool           const bmxOverrideSpec,
     int cheight, cwidth;
     int xoffs, yoffs;
     bool turnon;
-    bit row[MAXROWWIDTH+1];
 
     readCharacterHeader(&car, &endOfPacket, &mustIgnore,
                         &cheight, &cwidth, &xoffs, &yoffs, &turnon);
@@ -528,6 +534,10 @@ readOneCharacter(bool           const bmxOverrideSpec,
             int rowsleft = cheight ;
             int hbit = cwidth ;
             int rp = 0;
+            bit * row; /* malloced */
+
+            MALLOCARRAY(row, cwidth);
+
             repeatCount = 0 ;
             dprintf("bmy: %d\n ", bmy);
             dprintf("y: %d\n", cheight-rowsleft+(bmy-2*yoffs-1));
@@ -562,6 +572,7 @@ readOneCharacter(bool           const bmxOverrideSpec,
             }
             if (rowsleft != 0 || hbit != cwidth)
                 pm_error("bad pk file (more bits than required)") ;
+            free(row);
         }
         if (endOfPacket != pkLoc)
             pm_error("bad pk file (bad packet length)") ;

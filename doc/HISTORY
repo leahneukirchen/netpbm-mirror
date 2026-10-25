@@ -4,7 +4,63 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 11.16.01
+26.10.25 BJH  Release 11.16.02
+
+              pktopbm: fix bug: always fails with invalid packet length
+              message.  Broken in Netpbm 11.04 (September 2023).
+
+              pktopbm: fix memory corruption with characters > 3200 columns.
+              Always broken (pktopbm was in primordial Netpbm ca 1991).
+
+              pktopbm: fix infinite loop or memory corruption with truncated
+              input file or I/O error.  Always broken (pktopbm was in
+              primordial Netpbm ca 1991).
+
+              xwdtopnm: fix arbitrary memory access with invalid XWD input.
+              Always broken (xwdtopnm ancestors were in primordial Netpbm in
+              1988).
+
+              ilbmtoppm: fix arbitrary memory access when issuing error
+              message.  Broken in Netpbm 10.83 (June 2018).
+
+              pjtoppm: fix arbitrary memory access with invalid input that uses
+              mode 1 compression but a plane has an odd number of bytes.
+              Always broken (pjtoppm was in primordial Netpbm in 1991).
+
+              pjtoppm: fix crash when input image has absent rowplanes other
+              than Plane 0.  Always broken (pjtoppm was in primordial Netpbm
+              in 1991).
+
+              pjtoppm: fix crash when input image has zero-length rowplane.
+              Always broken (pjtoppm was in primordial Netpbm in 1991).
+              
+              picttoppm: fix arbitrary memory access with invalid input that
+              contains undefined color indices.  Always broken (picttoppm was
+              in primordial Netpbm in 1989).
+
+              spctoppm: fix arbitrary memory access with invalid input that
+              contains too much raster data.  Always broken (spctoppm was
+              in primordial Netpbm in 1989).
+
+              ddbugtopbm: add various checks of invalid input; fix arbitrary
+              memory access with invalid input.  Always broken (ddbugtopbm
+              was new in Netpbm 20.18 (September 2003).
+
+              ximtoppm: fix arbitrary memory access with invalid input.
+              Always broken (ximtoppm was in primordial Netpbm, ca 1989).
+
+              ximtoppm: fix arbitrary memory access with invalid input.
+              Always broken (ximtoppm was in primordial Netpbm, ca 1989).
+
+              ximtoppm: fix arbitrary memory access with ridiculously large
+              image.  Always broken (ximtoppm was in primordial Netpbm in
+              1989).
+
+              gouldtoppm: fix divide-by-zero crash when head contains invalid
+              value for bits per pixel.  Always broken (gouldtoppm was in
+              primordial Netpbm in 198).
+
+26.10.08 BJH  Release 11.16.01
 
               jbigtopnm: fix bug: fails with bogus error message about
               incremental BIE not continuing previous one when multi-BIE image

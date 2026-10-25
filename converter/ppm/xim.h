@@ -47,11 +47,11 @@ typedef struct Color {
 
 typedef struct XimImage {
     int width;             /* width of the image in pixels */
-    int height;            /* height of the image in pixels */
+    unsigned height;            /* height of the image in pixels */
     unsigned datasize;     /* size of one channel of data */
     short nchannels;     /* number data channels in image */
     short bits_channel;  /* usually 1 or 8 */
-    short bytes_per_line; /* bytes to hold one scanline */
+    unsigned short bytes_per_line; /* bytes to hold one scanline */
     byte* data;            /* pixmap or red channel data */
     byte* grn_data;        /* green channel data */
     byte* blu_data;        /* blue  channel data */
