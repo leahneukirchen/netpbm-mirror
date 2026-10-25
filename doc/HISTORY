@@ -8,6 +8,9 @@ not yet  BJH  Release 11.17.00
 
               Add pamtojpegxl, jpegxltopam.
 
+              pammixmulti: reject nonpositive standard deviation with
+              -stdev.
+
               jbigtopnm: fix bug: fails with bogus error message about
               incremental BIE not continuing previous one when multi-BIE image
               is of certain dimension.  Always broken (jbigtopnm was new in

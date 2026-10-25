@@ -126,7 +126,12 @@ parseCommandLine(int argc, const char ** argv,
             pm_message("Ignoring -stdev because -blend=mask "
                        "is not specified");
     }
-    if (!stdevSpec)
+    if (stdevSpec) {
+        if (cmdlineP->stdev <= 0) {
+            pm_error("-stdev must be positive.  You specified %f",
+                     cmdlineP->stdev);
+        }
+    }else
         cmdlineP->stdev = 0.25;
 
     if (argc-1 < 1)
