@@ -298,7 +298,7 @@ writePam(const float * const pixels,
                     pixels[(row * width + col) * depth + plane];
 
                 tuplerow[col][plane] =
-                    MIN(maxval, normalizedSample * maxval);
+                    MIN(maxval, (sample)(normalizedSample * maxval + 0.5));
             }
         }
         pnm_writepamrow(&outPam, tuplerow);
