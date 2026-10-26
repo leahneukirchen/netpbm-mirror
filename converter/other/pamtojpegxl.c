@@ -122,9 +122,16 @@ readRaster(struct pam             const inpam,
 
    Return that array as *samplesP and its size in bytes as *samplesSzP.
 -----------------------------------------------------------------------------*/
-    float * samples;  /* malloced */
     size_t const samplesSz = inpam.width * inpam.height * inpam.depth;
     struct PamPlaneDesc const planeDesc = planeDescFmDepth(inpam.depth);
+
+    float * samples;  /* malloced */
+
+    if (inpam.width > SIZE_MAX / inpam.height / inpam.depth) {
+        pm_error("Image dimensions (%u w x %u h x %u d) "
+                 "too great for computations.",
+                 inpam.width, inpam.height, inpam.depth);
+    }
 
     MALLOCARRAY(samples, samplesSz);
     if (!samples)
@@ -260,6 +267,7 @@ writeJpegXlFmRawSamples(JxlEncoder * const encoderP,
                         FILE *       const ofP) {
 
     size_t const bufferSz = 4096;
+
     uint8_t * iobuffer;  /* malloced */
 
     MALLOCARRAY(iobuffer, bufferSz);
