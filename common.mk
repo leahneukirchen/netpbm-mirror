@@ -520,7 +520,6 @@ $(DATAFILES:%=%_installdata): $(PKGDIR)/misc
 	$(INSTALL) -c -m $(INSTALL_PERM_DATA) \
 	  $(SRCDIR)/$(SUBDIR)/$(@:%_installdata=%) $<
 
-
 .PHONY: clean
 
 ifneq ($(EXE)x,x)
@@ -534,7 +533,7 @@ clean: $(SUBDIRS:%=%/clean) thisdirclean
 thisdirclean:
 	-rm -f *.o *.o2 *.a *.so *.so.* *.dll *.dylib *.cat *~ *.i *.s \
 	  $(EXEPATTERN) *.def *.lnk \
-	  core *.core mergelist mergetrylist *.c1 empty.c \
+	  core *.core mergelist mergetrylist checkable-list *.c1 empty.c \
 	  $(BINARIES) pm_types.h
 	-rm -rf importinc
 
@@ -581,6 +580,9 @@ $(SUBDIRS:%=%/mergelist): %/mergelist: $(CURDIR)/% FORCE
 $(SUBDIRS:%=%/merge.o): %/merge.o: $(CURDIR)/% FORCE
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/$(SUBDIR)/$(dir $@)Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
+$(SUBDIRS:%=%/checkable-list): %/checkable-list: $(CURDIR)/% FORCE
+	$(MAKE) -C $(dir $@) -f $(SRCDIR)/$(SUBDIR)/$(dir $@)Makefile \
+	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
 $(SUBDIRS:%=%/clean): %/clean: $(CURDIR)/%
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/$(SUBDIR)/$(dir $@)Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
@@ -590,6 +592,20 @@ $(SUBDIRS:%=%/distclean): %/distclean: $(CURDIR)/%
 $(SUBDIRS:%=%/dep): %/dep: $(CURDIR)/%
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/$(SUBDIR)/$(dir $@)Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
+
+
+# The "checkable-list" file is a list of all the programs from this directory
+# and any subdirectories that can be checked by 'make check'.  To wit, a list
+# of programs that go into the install package.  It takes into account that
+# some programs don't get built because of limitations of the build
+# environment such as missing libraries.  They are just program names, such as
+# "pamcut", not file names.  NB just because 'make check' _can_ test a program
+# doesn't mean that it does.
+
+checkable-list: $(SUBDIRS:%=%/checkable-list)
+	cat /dev/null $(SUBDIRS:%=%/checkable-list) >$@
+	@for prog in $(BINARIES) $(SCRIPTS); do echo $$prog >> $@; done
+
 
 #Here is the rule to create the subdirectories.  If you're building in the
 #source tree, they already exist, but in a separate build directory, they may

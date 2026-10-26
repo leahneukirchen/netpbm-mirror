@@ -560,7 +560,7 @@ resultdir-backup: FORCE
 testdir:
 	$(MAKE) -C test
 
-check-tree: testdir resultdir-backup
+check-tree: testdir checkable-list resultdir-backup
 	cd $(RESULTDIR); \
 	  $(CHECK_VARS) \
 	  CHECK_TYPE=tree \
@@ -581,7 +581,7 @@ check-package : RGBDEF ?= $(PKGDIR)/misc/rgb.txt
 check-package : PALMMAPDIR ?= $(PKGDIR)/misc/
 check: check-package
 
-check-package: testdir resultdir-backup
+check-package: testdir  checkable-list resultdir-backup
 	cd $(RESULTDIR); \
 	  $(CHECK_VARS) \
 	  CHECK_TYPE=package \
@@ -592,7 +592,7 @@ check-package: testdir resultdir-backup
 
 # Check after install
 check-install: PALMMAPDIR ?= ""
-check-install: testdir resultdir-backup
+check-install: testdir checkable-list resultdir-backup
 	cd $(RESULTDIR); \
 	  $(CHECK_VARS) \
 	  CHECK_TYPE=install \
