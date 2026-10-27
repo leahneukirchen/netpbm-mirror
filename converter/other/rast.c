@@ -11,141 +11,118 @@
 ** implied warranty.
 */
 
-#include "pnm.h"
-#include "rast.h"
+#include <assert.h>
+
 #include "mallocvar.h"
+#include "pnm.h"
+
+#include "rast.h"
 
 /*
 ** Semi-work-alike versions of some Sun pixrect routines.  Just enough
 ** for rasterfile reading and writing to work.
 */
 
-struct pixrect*
-mem_create(int const w,
-	   int const h,
-	   int const depth) {
+struct pixrect *
+mem_create(int const width,
+           int const height,
+           int const depth) {
 
-    struct pixrect* p;
-    struct mpr_data* m;
+    struct pixrect *  retval;
+    struct pixrect *  pixRectP;
+    struct mpr_data * mprDataP;
 
-    MALLOCVAR(p);
-    if ( p == NULL )
-        return NULL;
-    p->pr_ops = NULL;
-    p->pr_size.x = w;
-    p->pr_size.y = h;
-    p->pr_depth = depth;
-    MALLOCVAR(m);
-    if ( m == NULL )
-    {
-        free( p );
-        return NULL;
+    MALLOCVAR(pixRectP);
+
+    if (pixRectP) {
+        pixRectP->pr_ops    = NULL;
+        pixRectP->pr_size.x = width;
+        pixRectP->pr_size.y = height;
+        pixRectP->pr_depth  = depth;
+
+        MALLOCVAR(mprDataP);
+
+        if (mprDataP) {
+            pixRectP->pr_data = mprDataP;
+
+            /* According to the documentation, linebytes is supposed to be
+               rounded up to a longword (except on 386 boxes).  However, this
+               turns out not to be the case.  In reality, all of Sun's code
+               rounds up to a short, not a long.
+            */
+            mprDataP->md_linebytes = (width * depth + 15) / 16 * 2;
+            mprDataP->md_offset.x  = 0;
+            mprDataP->md_offset.y  = 0;
+            mprDataP->md_flags     = 0;
+
+            MALLOCARRAY(mprDataP->md_image, mprDataP->md_linebytes * height);
+
+            if (mprDataP->md_image)
+                retval = pixRectP;
+            else
+                retval = NULL;
+
+            if (retval == NULL)
+                free(mprDataP);
+        }
+        if (retval == NULL)
+            free(pixRectP);
     }
-    p->pr_data = m;
-
-    /* According to the documentation, linebytes is supposed to be rounded
-    ** up to a longword (except on 386 boxes).  However, this turns out
-    ** not to be the case.  In reality, all of Sun's code rounds up to
-    ** a short, not a long.
-    */
-    m->md_linebytes = ( w * depth + 15 ) / 16 * 2;
-    m->md_offset.x = 0;
-    m->md_offset.y = 0;
-    m->md_flags = 0;
-    MALLOCARRAY(m->md_image, m->md_linebytes * h );
-    if ( m->md_image == NULL )
-    {
-        free( m );
-        free( p );
-        return NULL;
-    }
-
-    return p;
+    return retval;
 }
 
 
 
 void
-mem_free(struct pixrect* const p) {
-    free( p->pr_data->md_image );
-    free( p->pr_data );
-    free( p );
+mem_free(struct pixrect * const pixRectP) {
+
+    free(pixRectP->pr_data->md_image);
+    free(pixRectP->pr_data);
+    free(pixRectP);
 }
 
 
 
-int
-pr_dump(struct pixrect* const p,
-        FILE*           const out,
-        colormap_t*     const colormap,
-        int             const type,
-	int             const copy_flag) {
+static void
+setupDumpRtByteEncoded(struct pixrect *    const pixRectP,
+                       struct rasterfile * const rasterFileP,
+                       unsigned char **    const beimageP,
+                       unsigned int *      const besizeP) {
 
-    struct rasterfile h;
-    int size, besize, count;
-    unsigned char* beimage;
-    unsigned char* bp;
-    unsigned char c, pc;
-    int i, j;
+    unsigned int const size =
+        pixRectP->pr_size.y * pixRectP->pr_data->md_linebytes;
 
-    h.ras_magic = RAS_MAGIC;
-    h.ras_width = p->pr_size.x;
-    h.ras_height = p->pr_size.y;
-    h.ras_depth = p->pr_depth;
+    unsigned char * beimage;
+    unsigned int    besize;
 
-    h.ras_type = type;
-    switch ( type )
-    {
-    case RT_OLD:
-        pm_error( "This program does not know the Old rasterfile type" );
+    MALLOCARRAY(beimage, size * 3 / 2);  /* worst case */
+    if (beimage) {
+        unsigned int    count;
+        unsigned char   c;
+        unsigned char   pc;
+        unsigned char * bp;
 
-    case RT_FORMAT_TIFF:
-        pm_error( "This program does not know the TIFF rasterfile type" );
+        unsigned int i;
+        for (i = 0, besize = 0, count =0, bp = pixRectP->pr_data->md_image;
+             i < size;
+             ++i) {
 
-    case RT_FORMAT_IFF:
-        pm_error( "This program does not know the IFF rasterfile type" );
-
-    case RT_EXPERIMENTAL:
-        pm_error( "This program does not know the Experimental "
-                  "rasterfile type" );
-
-    case RT_STANDARD:
-    case RT_FORMAT_RGB:
-        /* Ignore hP->ras_length. */
-        h.ras_length = p->pr_size.y * p->pr_data->md_linebytes;
-        break;
-
-    case RT_BYTE_ENCODED:
-        size = p->pr_size.y * p->pr_data->md_linebytes;
-        bp = p->pr_data->md_image;
-        MALLOCARRAY(beimage, size * 3 / 2);  /* worst case */
-        if ( beimage == NULL )
-            return PIX_ERR;
-        besize = 0;
-        count = 0;
-        for ( i = 0; i < size; ++i )
-        {
             c = *bp++;
-            if ( count > 0 )
-            {
-                if ( pc != c )
-                {
-                    if ( count == 1 && pc == 128 )
-                    {
+
+            if (count > 0) {
+                if (pc != c) {
+                    if (count == 1 && pc == 128) {
                         beimage[besize++] = 128;
                         beimage[besize++] = 0;
                         count = 0;
-                    }
-                    else if ( count > 2 || pc == 128 )
-                    {
+                    } else if (count > 2 || pc == 128) {
                         beimage[besize++] = 128;
                         beimage[besize++] = count - 1;
                         beimage[besize++] = pc;
                         count = 0;
-                    }
-                    else
-                    {
-                        for ( j = 0; j < count; ++j )
+                    } else {
+                        unsigned int j;
+                        for (j = 0; j < count; ++j)
                             beimage[besize++] = pc;
                         count = 0;
                     }
@@ -153,122 +130,201 @@ pr_dump(struct pixrect* const p,
             }
             pc = c;
             ++count;
-            if ( count == 256 )
-            {
+            if (count == 256) {
                 beimage[besize++] = 128;
                 beimage[besize++] = count - 1;
                 beimage[besize++] = c;
                 count = 0;
             }
         }
-        if ( count > 0 )
-        {
-            if ( count == 1 && c == 128 )
-            {
+        if (count > 0) {
+            if (count == 1 && c == 128) {
                 beimage[besize++] = 128;
                 beimage[besize++] = 0;
             }
-            if ( count > 2 || c == 128 )
-            {
+            if (count > 2 || c == 128) {
                 beimage[besize++] = 128;
                 beimage[besize++] = count - 1;
                 beimage[besize++] = c;
-            }
-            else
-            {
-                for ( j = 0; j < count; ++j )
+            } else {
+                unsigned int j;
+                for (j = 0; j < count; ++j)
                     beimage[besize++] = c;
             }
         }
-        h.ras_length = besize;
-        break;
-
-    default:
-        pm_error( "unknown rasterfile type" );
     }
+    *beimageP = beimage;
+    *besizeP  = besize;
+}
 
-    if ( colormap == NULL )
-    {
-        h.ras_maptype = RMT_NONE;
-        h.ras_maplength = 0;
-    }
-    else
-    {
-        h.ras_maptype = colormap->type;
-        switch ( colormap->type )
-        {
+
+
+static void
+setUpColormapDump(colormap_t *        const colormapP,
+                  struct rasterfile * const rasterFileP) {
+
+    if (!colormapP) {
+        rasterFileP->ras_maptype   = RMT_NONE;
+        rasterFileP->ras_maplength = 0;
+    } else {
+        rasterFileP->ras_maptype = colormapP->type;
+        switch (colormapP->type) {
         case RMT_EQUAL_RGB:
-            h.ras_maplength = colormap->length * 3;
+            rasterFileP->ras_maplength = colormapP->length * 3;
             break;
 
         case RMT_RAW:
-            h.ras_maplength = colormap->length;
+            rasterFileP->ras_maplength = colormapP->length;
             break;
 
         default:
-            pm_error( "unknown colormap type" );
+            pm_error("unknown colormap type");
+        }
+    }
+}
+
+
+
+static int
+writeDump(struct rasterfile     const rasterFile,
+          const colormap_t *    const colormapP,
+          int                   const type,
+          const unsigned char * const beimage,
+          unsigned int          const besize,
+          const unsigned char * const mdImage,
+          FILE *                const ofP) {
+
+    pm_writebiglong(ofP, rasterFile.ras_magic    );
+    pm_writebiglong(ofP, rasterFile.ras_width    );
+    pm_writebiglong(ofP, rasterFile.ras_height   );
+    pm_writebiglong(ofP, rasterFile.ras_depth    );
+    pm_writebiglong(ofP, rasterFile.ras_length   );
+    pm_writebiglong(ofP, rasterFile.ras_type     );
+    pm_writebiglong(ofP, rasterFile.ras_maptype  );
+    pm_writebiglong(ofP, rasterFile.ras_maplength);
+
+    if (colormapP) {
+        switch (colormapP->type) {
+        case RMT_EQUAL_RGB: {
+            size_t bytesWrittenCt;
+
+            bytesWrittenCt =
+                fwrite(colormapP->map[0], 1, colormapP->length,
+                       ofP);
+            if (bytesWrittenCt != colormapP->length)
+                return PIX_ERR;
+            bytesWrittenCt =
+                fwrite(colormapP->map[1], 1, colormapP->length,
+                       ofP);
+            if (bytesWrittenCt != colormapP->length)
+                return PIX_ERR;
+            bytesWrittenCt =
+                fwrite(colormapP->map[2], 1, colormapP->length,
+                       ofP);
+            if (bytesWrittenCt != colormapP->length)
+                return PIX_ERR;
+        } break;
+
+        case RMT_RAW: {
+            size_t bytesWrittenCt;
+
+            bytesWrittenCt =
+                fwrite( colormapP->map[0], 1, colormapP->length,
+                        ofP);
+            if (bytesWrittenCt != colormapP->length)
+                return PIX_ERR;
+        } break;
         }
     }
 
-    if ( pm_writebiglong( out, h.ras_magic ) == -1 )
-        return PIX_ERR;
-    if ( pm_writebiglong( out, h.ras_width ) == -1 )
-        return PIX_ERR;
-    if ( pm_writebiglong( out, h.ras_height ) == -1 )
-        return PIX_ERR;
-    if ( pm_writebiglong( out, h.ras_depth ) == -1 )
-        return PIX_ERR;
-    if ( pm_writebiglong( out, h.ras_length ) == -1 )
-        return PIX_ERR;
-    if ( pm_writebiglong( out, h.ras_type ) == -1 )
-        return PIX_ERR;
-    if ( pm_writebiglong( out, h.ras_maptype ) == -1 )
-        return PIX_ERR;
-    if ( pm_writebiglong( out, h.ras_maplength ) == -1 )
-        return PIX_ERR;
+    switch (type) {
+    case RT_STANDARD:
+    case RT_FORMAT_RGB: {
+        size_t bytesWrittenCt;
 
-    if ( colormap != NULL )
-    {
-        switch ( colormap->type )
-        {
-        case RMT_EQUAL_RGB:
-            if ( fwrite( colormap->map[0], 1, colormap->length, out ) !=
-                 colormap->length )
-                return PIX_ERR;
-            if ( fwrite( colormap->map[1], 1, colormap->length, out ) !=
-                 colormap->length )
-                return PIX_ERR;
-            if ( fwrite( colormap->map[2], 1, colormap->length, out ) !=
-                 colormap->length )
-                return PIX_ERR;
-            break;
+        bytesWrittenCt = fwrite(mdImage, 1, rasterFile.ras_length, ofP);
+        if (bytesWrittenCt != rasterFile.ras_length)
+            return PIX_ERR;
+    } break;
 
-        case RMT_RAW:
-            if ( fwrite( colormap->map[0], 1, colormap->length, out ) !=
-                 colormap->length )
-                return PIX_ERR;
-            break;
-        }
+    case RT_BYTE_ENCODED: {
+        size_t bytesWrittenCt;
+
+        bytesWrittenCt =  fwrite(beimage, 1, besize, ofP);
+        if (bytesWrittenCt != besize)
+            return PIX_ERR;
+    } break;
     }
+    return 0;
+}
 
-    switch ( type )
-    {
+
+
+int
+pr_dump(struct pixrect * const pixRectP,
+        FILE *           const ofP,
+        colormap_t *     const colormapP,
+        int              const type,
+        int              const copyFlag) {
+
+    struct rasterfile rasterFile;
+    unsigned char * beimage;
+    unsigned int besize;
+    int rc;
+
+    rasterFile.ras_magic  = RAS_MAGIC;
+    rasterFile.ras_width  = pixRectP->pr_size.x;
+    rasterFile.ras_height = pixRectP->pr_size.y;
+    rasterFile.ras_depth  = pixRectP->pr_depth;
+
+    rasterFile.ras_type = type;
+
+    switch (type) {
+    case RT_OLD:
+        pm_error("This program does not know the Old rasterfile type");
+        break;
+
+    case RT_FORMAT_TIFF:
+        pm_error("This program does not know the TIFF rasterfile type");
+        break;
+
+    case RT_FORMAT_IFF:
+        pm_error("This program does not know the IFF rasterfile type");
+        break;
+
+    case RT_EXPERIMENTAL:
+        pm_error("This program does not know the Experimental "
+                 "rasterfile type");
+        break;
+
     case RT_STANDARD:
     case RT_FORMAT_RGB:
-        if ( fwrite( p->pr_data->md_image, 1, h.ras_length, out ) !=
-             h.ras_length )
-            return PIX_ERR;
+        /* Ignore rasterFile.ras_length. */
+        rasterFile.ras_length =
+            pixRectP->pr_size.y * pixRectP->pr_data->md_linebytes;
         break;
 
     case RT_BYTE_ENCODED:
-        if ( fwrite( beimage, 1, besize, out ) != besize )
-        {
-            free( beimage );
-            return PIX_ERR;
-        }
-        free( beimage );
+        setupDumpRtByteEncoded(pixRectP, &rasterFile, &beimage, &besize);
+        if (!beimage)
+            pm_error("Failed to allocate memory for beimage");
+        rasterFile.ras_length = besize;
         break;
+
+    default:
+        pm_error("unknown rasterfile type");
     }
+
+    setUpColormapDump(colormapP, &rasterFile);
+
+    rc = writeDump(rasterFile, colormapP, type, beimage, besize,
+                   pixRectP->pr_data->md_image, ofP);
+
+    if (rc == PIX_ERR)
+        pm_error("Failed to write dump to file");
+
+    if (type == RT_BYTE_ENCODED)
+        free(beimage);
 
     return 0;
 }
@@ -277,7 +333,7 @@ pr_dump(struct pixrect* const p,
 
 int
 pr_load_header(FILE *              const ifP,
-	       struct rasterfile * const headerP) {
+               struct rasterfile * const rasterFileP) {
 
     {
         long int magic;
@@ -293,7 +349,7 @@ pr_load_header(FILE *              const ifP,
         if (width < 0)
             pm_error("Negative width in RAST header");
         else
-            headerP->ras_width = width;
+            rasterFileP->ras_width = width;
     }
     {
         long int height;
@@ -302,7 +358,7 @@ pr_load_header(FILE *              const ifP,
         if (height < 0)
             pm_error("Negative height in RAST header");
         else
-            headerP->ras_height = height;
+            rasterFileP->ras_height = height;
     }
     {
         long int depth;
@@ -311,7 +367,7 @@ pr_load_header(FILE *              const ifP,
         if (depth < 0)
             pm_error("Negative depth in RAST header");
         else
-            headerP->ras_depth = depth;
+            rasterFileP->ras_depth = depth;
     }
     {
         long int length;
@@ -320,11 +376,11 @@ pr_load_header(FILE *              const ifP,
         if (length < 0)
             pm_error("Negative length in RAST header");
         else
-            headerP->ras_length = length;
+            rasterFileP->ras_length = length;
     }
-    pm_readbiglong(ifP, &headerP->ras_type);
+    pm_readbiglong(ifP, &rasterFileP->ras_type);
 
-    pm_readbiglong(ifP, &headerP->ras_maptype);
+    pm_readbiglong(ifP, &rasterFileP->ras_maptype);
     {
         long int mapLength;
         pm_readbiglong(ifP, &mapLength);
@@ -332,7 +388,7 @@ pr_load_header(FILE *              const ifP,
         if (mapLength < 0)
             pm_error("Negative map length in RAST header");
         else
-            headerP->ras_maplength = mapLength;
+            rasterFileP->ras_maplength = mapLength;
     }
     return 0;
 }
@@ -340,74 +396,83 @@ pr_load_header(FILE *              const ifP,
 
 
 int
-pr_load_colormap(FILE*              const in,
-                 struct rasterfile* const hP,
-                 colormap_t*        const colormap) {
+pr_load_colormap(FILE *              const ifP,
+                 struct rasterfile * const rasterFileP,
+                 colormap_t *        const colormapP) {
 
-    if ( colormap == NULL || hP->ras_maptype == RMT_NONE )
-    {
-        int i;
+    int retval;
 
-        for ( i = 0; i < hP->ras_maplength; ++i )
-            if ( getc( in ) == EOF )
-                return PIX_ERR;
-    }
-    else
-    {
-        colormap->type = hP->ras_maptype;
-        switch ( hP->ras_maptype )
-        {
-        case RMT_EQUAL_RGB:
-            colormap->length = hP->ras_maplength / 3;
-            MALLOCARRAY( colormap->map[0], colormap->length );
-            if ( colormap->map[0] == NULL )
-                return PIX_ERR;
-            MALLOCARRAY( colormap->map[1], colormap->length );
-            if ( colormap->map[1] == NULL )
-            {
-                free( colormap->map[0] );
-                return PIX_ERR;
+    if (!colormapP || rasterFileP->ras_maptype == RMT_NONE) {
+        unsigned int i;
+
+        for (i = 0, retval = 0;
+             i < rasterFileP->ras_maplength && retval == 0;
+             ++i) {
+
+            int c;
+            c = getc(ifP);
+            if (c == EOF)
+                retval = PIX_ERR;
+        }
+    } else {
+        colormapP->type = rasterFileP->ras_maptype;
+        switch (rasterFileP->ras_maptype) {
+        case RMT_EQUAL_RGB: {
+            colormapP->length = rasterFileP->ras_maplength / 3;
+            MALLOCARRAY(colormapP->map[0], colormapP->length);
+            if (!colormapP->map[0])
+                retval = PIX_ERR;
+            else {
+                MALLOCARRAY(colormapP->map[1], colormapP->length);
+                if (!colormapP->map[1])
+                    retval = PIX_ERR;
+                else {
+                    MALLOCARRAY(colormapP->map[2], colormapP->length);
+                    if (!colormapP->map[2])
+                        retval = PIX_ERR;
+                    else {
+                        if (fread(colormapP->map[0], 1, colormapP->length,
+                                  ifP) != colormapP->length ||
+                            fread(colormapP->map[1], 1, colormapP->length,
+                                  ifP) != colormapP->length ||
+                            fread(colormapP->map[2], 1, colormapP->length,
+                                  ifP) != colormapP->length)
+                            retval = PIX_ERR;
+                        else
+                            retval = 0;
+
+                        if (retval == PIX_ERR)
+                            free(colormapP->map[2]);
+                    }
+                    if (retval == PIX_ERR)
+                        free(colormapP->map[1]);
+                }
+                if (retval == PIX_ERR)
+                    free(colormapP->map[0]);
             }
-            MALLOCARRAY( colormap->map[2], colormap->length );
-            if ( colormap->map[2] == NULL )
-            {
-                free( colormap->map[0] );
-                free( colormap->map[1] );
-                return PIX_ERR;
-            }
-            if ( fread( colormap->map[0], 1, colormap->length, in ) !=
-                 colormap->length ||
-                 fread( colormap->map[1], 1, colormap->length, in ) !=
-                 colormap->length ||
-                 fread( colormap->map[2], 1, colormap->length, in ) !=
-                 colormap->length )
-            {
-                free( colormap->map[0] );
-                free( colormap->map[1] );
-                free( colormap->map[2] );
-                return PIX_ERR;
-            }
-            break;
+        } break;
 
         case RMT_RAW: {
-            size_t bytesRead;
+            colormapP->length = rasterFileP->ras_maplength;
+            MALLOCARRAY(colormapP->map[0], colormapP->length);
+            if (!colormapP->map[0])
+                retval = PIX_ERR;
+            else {
+                size_t bytesRead;
 
-            colormap->length = hP->ras_maplength;
-            MALLOCARRAY( colormap->map[0], colormap->length );
-            if ( colormap->map[0] == NULL )
-                return PIX_ERR;
-            colormap->map[2] = colormap->map[1] = colormap->map[0];
-            bytesRead = fread( colormap->map[0], 1, hP->ras_maplength, in );
-            if ( bytesRead != hP->ras_maplength )
-            {
-                free( colormap->map[0] );
-                return PIX_ERR;
+                colormapP->map[2] = colormapP->map[1] = colormapP->map[0];
+                bytesRead = fread(colormapP->map[0], 1,
+                                  rasterFileP->ras_maplength, ifP);
+                if (bytesRead != rasterFileP->ras_maplength)
+                    retval = PIX_ERR;
+
+                if (retval == PIX_ERR)
+                    free(colormapP->map[0]);
             }
-        }
-            break;
+            } break;
 
         default:
-            pm_error( "unknown colormap type" );
+            pm_error("unknown colormap type");
         }
     }
     return 0;
@@ -415,97 +480,98 @@ pr_load_colormap(FILE*              const in,
 
 
 
-struct pixrect*
-pr_load_image(FILE*              const in,
-              struct rasterfile* const hP,
-              colormap_t*        const colormap) {
+struct pixrect *
+pr_load_image(FILE *              const ifP,
+              struct rasterfile * const rasterFileP,
+              colormap_t *        const colormapP) {
 
-    struct pixrect* p;
-    unsigned char* beimage;
-    unsigned char* bep;
-    unsigned char* bp;
-    unsigned char c;
-    int i;
-    int j, count;
+    struct pixrect * retval;
+    struct pixrect * pixRectP;
 
-    p = mem_create( hP->ras_width, hP->ras_height, hP->ras_depth );
-    if ( p == NULL )
+    pixRectP =
+        mem_create(rasterFileP->ras_width,
+                   rasterFileP->ras_height,
+                   rasterFileP->ras_depth);
+    if (!pixRectP)
         return NULL;
 
-    switch ( hP->ras_type )
-    {
+    switch (rasterFileP->ras_type) {
     case RT_OLD:
-        pm_error( "This program does not know the Old rasterfile type" );
+        pm_error("This program does not know the Old rasterfile type");
 
     case RT_FORMAT_TIFF:
-        pm_error( "This program does not know the TIFF rasterfile type" );
+        pm_error("This program does not know the TIFF rasterfile type");
 
     case RT_FORMAT_IFF:
-        pm_error( "This program does not know the IFF rasterfile type" );
+        pm_error("This program does not know the IFF rasterfile type");
 
     case RT_EXPERIMENTAL:
-        pm_error( "This program does not know the Experimental "
-                  "rasterfile type" );
+        pm_error("This program does not know the Experimental "
+                 "rasterfile type");
 
     case RT_STANDARD:
-    case RT_FORMAT_RGB:
-        /* Ignore hP->ras_length. */
-        i = p->pr_size.y * p->pr_data->md_linebytes;
-        if ( fread( p->pr_data->md_image, 1, i, in ) != i )
-        {
-            mem_free( p );
-            return NULL;
-        }
-        break;
+    case RT_FORMAT_RGB: {
+        size_t bytesReadCt;
+        /* Ignore rasterFileP->ras_length. */
+        unsigned int const mdImageSz =
+            pixRectP->pr_size.y * pixRectP->pr_data->md_linebytes;
+        bytesReadCt = fread(pixRectP->pr_data->md_image, 1, mdImageSz, ifP);
+        if (bytesReadCt != mdImageSz)
+            retval = NULL;
+    } break;
 
-    case RT_BYTE_ENCODED:
-        MALLOCARRAY( beimage, hP->ras_length );
-        if ( beimage == NULL )
-        {
-            mem_free( p );
-            return NULL;
-        }
-        if ( fread( beimage, 1, hP->ras_length, in ) != hP->ras_length )
-        {
-            mem_free( p );
-            free( beimage );
-            return NULL;
-        }
-        bep = beimage;
-        bp = p->pr_data->md_image;
-        for ( i = 0; i < hP->ras_length; )
-        {
-            c = *bep++;
-            if ( c == 128 )
-            {
-                count = ( *bep++ ) + 1;
-                if ( count == 1 )
-                {
-                    *bp++ = 128;
-                    i += 2;
+    case RT_BYTE_ENCODED: {
+        unsigned char * beimage;
+
+        MALLOCARRAY(beimage, rasterFileP->ras_length);
+        if (!beimage)
+            retval = NULL;
+        else {
+            size_t bytesReadCt;
+
+            bytesReadCt = fread(beimage, 1, rasterFileP->ras_length, ifP);
+            if (bytesReadCt != rasterFileP->ras_length)
+                retval = NULL;
+            else {
+                unsigned char * const mdImage = pixRectP->pr_data->md_image;
+
+                unsigned int inCursor, outCursor;
+
+                for (inCursor = 0, inCursor = 0, outCursor = 0;
+                     inCursor < rasterFileP->ras_length; ) {
+
+                    unsigned char const c = beimage[inCursor++];
+
+                    if (c == 128) {
+                        unsigned int const count = beimage[inCursor++] + 1;
+                        if (count == 1) {
+                            mdImage[outCursor++] = 128;
+                        } else {
+                            unsigned char const c = beimage[inCursor++];
+                            unsigned int j;
+                            for (j = 0; j < count; ++j)
+                                mdImage[outCursor++] = c;
+                        }
+                    } else
+                        mdImage[outCursor++] = c;
                 }
-                else
-                {
-                    c = *bep++;
-                    for ( j = 0; j < count; ++j )
-                        *bp++ = c;
-                    i += 3;
-                }
+                retval = pixRectP;
+                assert(inCursor == rasterFileP->ras_length);
+                assert(outCursor ==
+                       pixRectP->pr_size.y * pixRectP->pr_data->md_linebytes);
             }
-            else
-            {
-                *bp++ = c;
-                ++i;
-            }
+            free(beimage);
         }
-        free( beimage );
-        break;
+    } break;
 
     default:
-        pm_error( "unknown rasterfile type" );
+        pm_error("unknown rasterfile type");
     }
 
-    return p;
+    if (retval == NULL)
+        mem_free(pixRectP);
+
+    return retval;
 }
 
 
