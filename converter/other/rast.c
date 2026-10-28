@@ -11,6 +11,7 @@
 ** implied warranty.
 */
 
+#include <limits.h>
 #include <assert.h>
 
 #include "mallocvar.h"
