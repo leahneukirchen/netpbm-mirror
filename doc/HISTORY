@@ -11,6 +11,11 @@ not yet  BJH  Release 11.17.00
               pammixmulti: reject nonpositive standard deviation with
               -stdev.
 
+              rasttopnm, pnmtorast: fix incorrect output and arbitrary
+              memory access with ridiculously large images.  Always
+              broken (rasttopnm and pbmtorast were in primordial Netpbm in
+              1989).
+
               jbigtopnm: fix bug: fails with bogus error message about
               incremental BIE not continuing previous one when multi-BIE image
               is of certain dimension.  Always broken (jbigtopnm was new in

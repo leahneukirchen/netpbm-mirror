@@ -30,6 +30,13 @@
 #define PIX_ERR         -1
 
 struct rasterfile {
+/*----------------------------------------------------------------------------
+   Information from the header of a Sun rasterfile.
+
+   Structure is valid only for images with dimensions small enough that the
+   number of pixels in the image is representable as a signed integer, with 15
+   to spare.  I.e. a user of this structure can expect that to be the case.
+-----------------------------------------------------------------------------*/
     long ras_magic;
 #define RAS_MAGIC       0x59a66a95
     long ras_width;
@@ -123,8 +130,8 @@ pr_load_colormap(FILE *              const in,
                  colormap_t *        const colormap);
 
 struct pixrect *
-pr_load_image(FILE *              const in,
-              struct rasterfile * const hP,
-              colormap_t *        const colormap);
+pr_load_image(FILE *                    const in,
+              const struct rasterfile * const hP,
+              colormap_t *              const colormap);
 
 #endif

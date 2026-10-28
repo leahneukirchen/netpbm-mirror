@@ -27,7 +27,10 @@ struct pixrect *
 mem_create(int const width,
            int const height,
            int const depth) {
-
+/*----------------------------------------------------------------------------
+   Caller must ensure dimensions are such that the size of the raster array
+   in the image can be represented by a signed integer.
+-----------------------------------------------------------------------------*/
     struct pixrect *  retval;
     struct pixrect *  pixRectP;
     struct mpr_data * mprDataP;
@@ -50,6 +53,9 @@ mem_create(int const width,
                turns out not to be the case.  In reality, all of Sun's code
                rounds up to a short, not a long.
             */
+            assert(width <= ((INT_MAX-15)/depth/height));
+                /* Per calling requirements */
+
             mprDataP->md_linebytes = (width * depth + 15) / 16 * 2;
             mprDataP->md_offset.x  = 0;
             mprDataP->md_offset.y  = 0;
@@ -91,23 +97,27 @@ setupDumpRtByteEncoded(struct pixrect *    const pixRectP,
 
     unsigned int const size =
         pixRectP->pr_size.y * pixRectP->pr_data->md_linebytes;
+    unsigned int const beimageAllocSz = size * 3 / 2 + 1;  /* worst case */
 
     unsigned char * beimage;
     unsigned int    besize;
 
-    MALLOCARRAY(beimage, size * 3 / 2);  /* worst case */
+    assert(pixRectP->pr_size.y <= UINT_MAX / pixRectP->pr_data->md_linebytes);
+    assert(size <= UINT_MAX / 3);
+        /* Because of definition of struct rasterfile */
+
+    MALLOCARRAY(beimage, beimageAllocSz);
     if (beimage) {
-        unsigned int    count;
-        unsigned char   c;
-        unsigned char   pc;
-        unsigned char * bp;
+        unsigned int  count;
+        unsigned char c;
+        unsigned char pc;
+        unsigned int  inCursor;
 
-        unsigned int i;
-        for (i = 0, besize = 0, count =0, bp = pixRectP->pr_data->md_image;
-             i < size;
-             ++i) {
+        for (inCursor = 0, besize = 0, count = 0;
+             inCursor < size;
+             ++inCursor) {
 
-            c = *bp++;
+            c = pixRectP->pr_data->md_image[inCursor];
 
             if (count > 0) {
                 if (pc != c) {
@@ -153,6 +163,7 @@ setupDumpRtByteEncoded(struct pixrect *    const pixRectP,
             }
         }
     }
+    assert(besize <= beimageAllocSz);
     *beimageP = beimage;
     *besizeP  = besize;
 }
@@ -369,6 +380,19 @@ pr_load_header(FILE *              const ifP,
         else
             rasterFileP->ras_depth = depth;
     }
+    /* Definition of struct rasterfile says dimensions have to allow the
+       number of bytes in the entire raster in the image to be representable
+       as a signed integer.
+    */
+    if (rasterFileP->ras_width >
+        ((INT_MAX-15)/rasterFileP->ras_depth/rasterFileP->ras_height)) {
+        pm_error("Image is too large (%lu wide x %lu high x %lu deep) "
+                 "for computations",
+                 rasterFileP->ras_width,
+                 rasterFileP->ras_height,
+                 rasterFileP->ras_depth);
+    }
+
     {
         long int length;
         pm_readbiglong(ifP, &length);
@@ -481,12 +505,16 @@ pr_load_colormap(FILE *              const ifP,
 
 
 struct pixrect *
-pr_load_image(FILE *              const ifP,
-              struct rasterfile * const rasterFileP,
-              colormap_t *        const colormapP) {
+pr_load_image(FILE *                    const ifP,
+              const struct rasterfile * const rasterFileP,
+              colormap_t *              const colormapP) {
 
     struct pixrect * retval;
     struct pixrect * pixRectP;
+
+    assert(rasterFileP->ras_width <=
+           ((INT_MAX-15)/rasterFileP->ras_depth/rasterFileP->ras_height));
+        /* Definition of struct rasterfile */
 
     pixRectP =
         mem_create(rasterFileP->ras_width,
