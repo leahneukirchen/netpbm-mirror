@@ -385,8 +385,6 @@ main(int argc, const char ** argv) {
                   depth,
                   cols, rows, format, maxval, xels, cht);
 
-    pnm_freearray(xels, rows);
-
     {
         int rc;
 
@@ -394,6 +392,21 @@ main(int argc, const char ** argv) {
         if (rc == PIX_ERR )
             pm_error("error writing rasterfile");
     }
+    mem_free(prP);
+
+    if (prColormapP) {
+        if (prColormapP->map[0])
+            free(prColormapP->map[0]);
+        if (prColormapP->map[1])
+            free(prColormapP->map[1]);
+        if (prColormapP->map[2])
+            free(prColormapP->map[2]);
+
+        free(prColormapP);
+    }
+
+    pnm_freearray(xels, rows);
+
     return 0;
 }
 
