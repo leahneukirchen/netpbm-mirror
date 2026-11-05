@@ -67,6 +67,8 @@ parseCommandLine(int argc, const char ** argv,
                  "specified %d", argc-1);
     else
         cmdlineP->inputFileName = argv[1];
+
+    free(option_def);
 }
 
 
@@ -351,6 +353,8 @@ writePnm(FILE *                 const ofP,
         }
         pnm_writepnmrow(ofP, xelrow, cols, maxval, format, 0);
     }
+
+    pnm_freerow(xelrow);
 }
 
 
@@ -470,7 +474,8 @@ main(int argc, const char ** const argv) {
 
         if (cmdline.dumpcolormap)
             dumpColorMap(colorMap);
-    }
+    } else
+        colorMap.map[0] = colorMap.map[1] = colorMap.map[2] = NULL;
 
     analyzeImage(header, colorMap, &format, &maxval, &grayscale, &zero, &one);
 
@@ -488,6 +493,15 @@ main(int argc, const char ** const argv) {
     writePnm(stdout, pr, header.ras_width, header.ras_height, maxval, format,
              header.ras_depth, header.ras_type, grayscale,
              header.ras_maplength > 0, colorMap, zero, one, cmdline.index);
+
+    mem_free(pr);
+
+    if (colorMap.map[0])
+        free (colorMap.map[0]);
+    if (colorMap.map[1])
+        free (colorMap.map[1]);
+    if (colorMap.map[2])
+        free (colorMap.map[2]);
 
     pm_close(ifP);
     pm_close(stdout);
