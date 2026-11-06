@@ -85,13 +85,13 @@ makeGrayPrColormap(void) {
 
 
 static void
-doRowDepth1(const xel *     const xelrow,
-            unsigned char * const rastRow,
-            unsigned int    const cols,
-            int             const format,
-            xelval          const maxval,
-            colorhash_table const cht,
-            unsigned int *  const lenP) {
+doRowDepthBits1(const xel *     const xelrow,
+                unsigned char * const rastRow,
+                unsigned int    const cols,
+                int             const format,
+                xelval          const maxval,
+                colorhash_table const cht,
+                unsigned int *  const lenP) {
 
     unsigned int col;
     int bitcount;
@@ -141,13 +141,13 @@ doRowDepth1(const xel *     const xelrow,
 
 
 static void
-doRowDepth8(const xel *     const xelrow,
-            unsigned char * const rastRow,
-            unsigned int    const cols,
-            int             const format,
-            xelval          const maxval,
-            colorhash_table const cht,
-            unsigned int *  const lenP) {
+doRowDepthBits8(const xel *     const xelrow,
+                unsigned char * const rastRow,
+                unsigned int    const cols,
+                int             const format,
+                xelval          const maxval,
+                colorhash_table const cht,
+                unsigned int *  const lenP) {
 
     unsigned int col;
     unsigned int cursor;
@@ -192,14 +192,14 @@ doRowDepth8(const xel *     const xelrow,
 
 
 static void
-doRowDepth24(const xel *     const xelrow,
-             unsigned char * const rastRow,
-             unsigned int    const cols,
-             int             const format,
-             xelval          const maxval,
-             unsigned int *  const lenP) {
+doRowDepthBits24(const xel *     const xelrow,
+                 unsigned char * const rastRow,
+                 unsigned int    const cols,
+                 int             const format,
+                 xelval          const maxval,
+                 unsigned int *  const lenP) {
 
-    /* Since depth is 24, we do NOT have a valid cht. */
+    /* Since depthBits is 24, we do NOT have a valid cht. */
 
     unsigned int col;
     unsigned int cursor;
@@ -224,7 +224,7 @@ doRowDepth24(const xel *     const xelrow,
 static void
 computeRaster(unsigned char * const rastRaster,
               unsigned int    const lineSize,
-              unsigned int    const depth,
+              unsigned int    const depthBits,
               unsigned int    const cols,
               unsigned int    const rows,
               int             const format,
@@ -240,18 +240,18 @@ computeRaster(unsigned char * const rastRaster,
 
         unsigned int len; /* Number of bytes of rast data added to rastRow[] */
 
-        switch (depth) {
+        switch (depthBits) {
         case 1:
-            doRowDepth1(xelrow, rastRow, cols, format, maxval, cht, &len);
+            doRowDepthBits1(xelrow, rastRow, cols, format, maxval, cht, &len);
             break;
         case 8:
-            doRowDepth8(xelrow, rastRow, cols, format, maxval, cht, &len);
+            doRowDepthBits8(xelrow, rastRow, cols, format, maxval, cht, &len);
             break;
         case 24:
-            doRowDepth24(xelrow, rastRow, cols, format, maxval, &len);
+            doRowDepthBits24(xelrow, rastRow, cols, format, maxval, &len);
             break;
         default:
-            pm_error("INTERNAL ERROR: impossible depth %u", depth);
+            pm_error("INTERNAL ERROR: impossible depth %u", depthBits);
         }
         {
             /* Pad out the line (which has a rounded size) with zeroes so
@@ -280,7 +280,7 @@ main(int argc, const char ** argv) {
     int prType;
     int rows, cols;
     int format;
-    unsigned int depth;
+    unsigned int depthBits;
     int colorCt;
     xelval maxval;
     struct pixrect * prP;
@@ -328,7 +328,7 @@ main(int argc, const char ** argv) {
             pm_message(
                 "rasterfile.  If you want 8 bits, try doing a 'pnmquant %d'.",
                 MAXCOLORS);
-            depth = 24;
+            depthBits = 24;
             prType = RT_STANDARD;
             prColormapP = NULL;
         } else {
@@ -347,11 +347,11 @@ main(int argc, const char ** argv) {
 
             if (colorCt == 2) {
                 /* Monochrome */
-                depth = 1;
+                depthBits = 1;
                 prColormapP = NULL;
             } else {
                 /* Turn the ppm colormap into the appropriate Sun colormap. */
-                depth = 8;
+                depthBits = 8;
                 prColormapP = makePrColormap(chv, colorCt);
             }
             cht = ppm_colorhisttocolorhash(chv, colorCt);
@@ -361,28 +361,28 @@ main(int argc, const char ** argv) {
         break;
 
     case PGM_TYPE:
-        depth = 8;
+        depthBits = 8;
         prColormapP = makeGrayPrColormap();
         break;
 
     default:
-        depth = 1;
+        depthBits = 1;
         prColormapP = NULL;
         break;
     }
 
-    if (maxval > 255 && depth != 1)
+    if (maxval > 255 && depthBits != 1)
         pm_message(
             "maxval is not 255 - automatically rescaling colors");
 
     /* Allocate space for the Sun-format image. */
-    prP = mem_create(cols, rows, depth);
+    prP = mem_create(cols, rows, depthBits);
     if (!prP)
         pm_error("unable to create new pixrect");
 
     computeRaster(prP->pr_data->md_image,
                   prP->pr_data->md_linebytes,
-                  depth,
+                  depthBits,
                   cols, rows, format, maxval, xels, cht);
 
     {
