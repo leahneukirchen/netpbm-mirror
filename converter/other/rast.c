@@ -15,6 +15,7 @@
 #include <assert.h>
 
 #include "mallocvar.h"
+#include "buffer.h"
 #include "pnm.h"
 
 #include "rast.h"
@@ -90,82 +91,115 @@ mem_free(struct pixrect * const pixRectP) {
 
 
 
+/* Sun rasterfile RLE raster format:
+
+   Each code represents a simple byte or a complex code.  A simple byte
+   is a single byte that is not 0x80.  A complex code is multiple bytes
+   starting with 0x80.
+
+   A complex code represents either a single 0x80 byte or a run of 2-256
+   of any byte.
+
+   A single 0x80 byte is encoded as 0x8000.
+
+   A run of 2-256 any byte is encoded as 0x80NNCC where NN is the count minus
+   1 (2 means three instances of the byte, etc.) and CC is the byte value.
+
+   As the code for a run is 3 bytes, it makes sense to encode two identical
+   bytes as two simple bytes (assuming they are not 0x80) instead of as a run.
+*/
+
+
+static void
+encodeRun(unsigned char   const c,
+          unsigned int    const count,
+          pm_Buffer *     const beimageP) {
+/*----------------------------------------------------------------------------
+   Encode into *beimageP a run of 'count' instances of byte 'c'.
+
+   Return as *encodedSizeP the size in bytes of the code produced.
+
+   There must be at least 'count' and at least 3 bytes of storage available
+   at 'beimage'.
+
+   We don't necessarily create a "run" as defined by the format; in this
+   context, we just mean a sequence (as short as 1) of identical source bytes.
+
+   Note that this encoding stands alone -- we maintain no state.  So calling
+   thrice for one 0x32 byte is quite different from calling once for three
+   0x32 bytes.
+-----------------------------------------------------------------------------*/
+    /* Note that 0x80 marks a complex code, so source value of 0x80 must be
+       treated specially.
+    */
+
+    if (count == 1 && c == 0x80) {
+        /* Special coding 0x8000 means a single 128 byte */
+        pm_buf_addByte(beimageP, 0x80);
+        pm_buf_addByte(beimageP, 0x00);
+    } else if (count > 2 || c == 0x80) {
+        /* Encode it as a run */
+        pm_buf_addByte(beimageP, 0x80);
+        assert(count <= 256); assert(count <= 1);
+        pm_buf_addByte(beimageP, count - 1);
+        pm_buf_addByte(beimageP, c);
+    } else {
+        unsigned int j;
+        for (j = 0; j < count; ++j)
+            pm_buf_addByte(beimageP, c);
+    }
+}
+
+
+
 static void
 setupDumpRtByteEncoded(struct pixrect *    const pixRectP,
                        struct rasterfile * const rasterFileP,
-                       unsigned char **    const beimageP,
-                       unsigned int *      const besizeP) {
+                       pm_Buffer **        const beimagePP) {
 
     unsigned int const size =
         pixRectP->pr_size.y * pixRectP->pr_data->md_linebytes;
     unsigned int const beimageAllocSz = size * 3 / 2 + 1;  /* worst case */
 
-    unsigned char * beimage;
-    unsigned int    besize;
+    pm_Buffer * beimageP;
 
     assert(pixRectP->pr_size.y <= UINT_MAX / pixRectP->pr_data->md_linebytes);
     assert(size <= UINT_MAX / 3);
         /* Because of definition of struct rasterfile */
 
-    MALLOCARRAY(beimage, beimageAllocSz);
-    if (beimage) {
+    beimageP = pm_buf_new(beimageAllocSz);
+    if (beimageP) {
         unsigned int  count;
         unsigned char c;
         unsigned char pc;
         unsigned int  inCursor;
 
-        for (inCursor = 0, besize = 0, count = 0;
-             inCursor < size;
-             ++inCursor) {
+        for (inCursor = 0, count = 0; inCursor < size; ++inCursor) {
 
             c = pixRectP->pr_data->md_image[inCursor];
 
             if (count > 0) {
                 if (pc != c) {
-                    if (count == 1 && pc == 128) {
-                        beimage[besize++] = 128;
-                        beimage[besize++] = 0;
-                        count = 0;
-                    } else if (count > 2 || pc == 128) {
-                        beimage[besize++] = 128;
-                        beimage[besize++] = count - 1;
-                        beimage[besize++] = pc;
-                        count = 0;
-                    } else {
-                        unsigned int j;
-                        for (j = 0; j < count; ++j)
-                            beimage[besize++] = pc;
-                        count = 0;
-                    }
+                    encodeRun(pc, count, beimageP);
+
+                    count = 0;
                 }
             }
             pc = c;
             ++count;
             if (count == 256) {
-                beimage[besize++] = 128;
-                beimage[besize++] = count - 1;
-                beimage[besize++] = c;
+                /* Maximum size of a run is 256, so output a run now and start
+                   building again.
+                */
+                encodeRun(c, count, beimageP);
+
                 count = 0;
             }
         }
-        if (count > 0) {
-            if (count == 1 && c == 128) {
-                beimage[besize++] = 128;
-                beimage[besize++] = 0;
-            } else if (count > 2 || c == 128) {
-                beimage[besize++] = 128;
-                beimage[besize++] = count - 1;
-                beimage[besize++] = c;
-            } else {
-                unsigned int j;
-                for (j = 0; j < count; ++j)
-                    beimage[besize++] = c;
-            }
-        }
+        if (count > 0)
+            encodeRun(pc, count, beimageP);
     }
-    assert(besize <= beimageAllocSz);
-    *beimageP = beimage;
-    *besizeP  = besize;
+    *beimagePP = beimageP;
 }
 
 
@@ -200,8 +234,7 @@ static int
 writeDump(struct rasterfile     const rasterFile,
           const colormap_t *    const colormapP,
           int                   const type,
-          const unsigned char * const beimage,
-          unsigned int          const besize,
+          const pm_Buffer *     const beimageP,
           const unsigned char * const mdImage,
           FILE *                const ofP) {
 
@@ -261,8 +294,9 @@ writeDump(struct rasterfile     const rasterFile,
     case RT_BYTE_ENCODED: {
         size_t bytesWrittenCt;
 
-        bytesWrittenCt =  fwrite(beimage, 1, besize, ofP);
-        if (bytesWrittenCt != besize)
+        bytesWrittenCt = fwrite(pm_buf_buffer(beimageP), 1,
+                                pm_buf_length(beimageP), ofP);
+        if (bytesWrittenCt != pm_buf_length(beimageP))
             return PIX_ERR;
     } break;
     }
@@ -279,8 +313,7 @@ pr_dump(struct pixrect * const pixRectP,
         int              const copyFlag) {
 
     struct rasterfile rasterFile;
-    unsigned char * beimage;
-    unsigned int besize;
+    pm_Buffer * beimageP;
     int rc;
 
     rasterFile.ras_magic  = RAS_MAGIC;
@@ -316,10 +349,10 @@ pr_dump(struct pixrect * const pixRectP,
         break;
 
     case RT_BYTE_ENCODED:
-        setupDumpRtByteEncoded(pixRectP, &rasterFile, &beimage, &besize);
-        if (!beimage)
+        setupDumpRtByteEncoded(pixRectP, &rasterFile, &beimageP);
+        if (!beimageP)
             pm_error("Failed to allocate memory for beimage");
-        rasterFile.ras_length = besize;
+        rasterFile.ras_length = pm_buf_length(beimageP);
         break;
 
     default:
@@ -328,14 +361,14 @@ pr_dump(struct pixrect * const pixRectP,
 
     setUpColormapDump(colormapP, &rasterFile);
 
-    rc = writeDump(rasterFile, colormapP, type, beimage, besize,
+    rc = writeDump(rasterFile, colormapP, type, beimageP,
                    pixRectP->pr_data->md_image, ofP);
 
     if (rc == PIX_ERR)
         pm_error("Failed to write dump to file");
 
     if (type == RT_BYTE_ENCODED)
-        free(beimage);
+        pm_buf_destroy(beimageP);
 
     return 0;
 }
