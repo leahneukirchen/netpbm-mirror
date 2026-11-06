@@ -11,6 +11,10 @@ not yet  BJH  Release 11.17.00
               pammixmulti: reject nonpositive standard deviation with
               -stdev.
 
+              pnmtorast: fix incorrect output whenever image ends with a lone
+              128 sample.  Always broken (predecessors to pnmtorast were in
+              primordial Netpbm in 1989)
+
               rasttopnm, pnmtorast: fix incorrect output and arbitrary memory
               access with ridiculously large images.  Always broken
               (predecessors to rasttopnm and pnmtorast were in primordial

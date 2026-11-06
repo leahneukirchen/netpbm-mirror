@@ -152,8 +152,7 @@ setupDumpRtByteEncoded(struct pixrect *    const pixRectP,
             if (count == 1 && c == 128) {
                 beimage[besize++] = 128;
                 beimage[besize++] = 0;
-            }
-            if (count > 2 || c == 128) {
+            } else if (count > 2 || c == 128) {
                 beimage[besize++] = 128;
                 beimage[besize++] = count - 1;
                 beimage[besize++] = c;
