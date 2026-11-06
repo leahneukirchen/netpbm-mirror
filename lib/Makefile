@@ -42,6 +42,7 @@ LIBOBJECTS = libpm.o pmfileio.o fileio.o colorname.o \
 # Library objects to be linked but not built by common.mk:
 LIBOBJECTS_X = \
   util/bitio.o \
+  util/buffer.o \
   util/filename.o \
   util/io.o \
   util/mallocvar.o \

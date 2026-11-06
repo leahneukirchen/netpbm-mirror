@@ -13,6 +13,7 @@ include $(BUILDDIR)/config.mk
 # snprintf(), e.g. Solaris 2.5.1.  2002.03.29.
 UTILOBJECTS = \
   bitio.o \
+  buffer.o \
   filename.o \
   io.o \
   mallocvar.o \
