@@ -2,17 +2,29 @@
 <html><head><title>Pktopbm User Manual</title></head>
 <body>
 <h1>pktopbm</h1>
-Updated: 15 September 2023
+Updated: 25 October 2026
 <br>
 <a href="#index">Table Of Contents</a>
 
 <h2>NAME</h2>
 
-pktopbm - convert packed (PK) format font into PBM
+pktopbm - convert TeX packed (PK) format font into PBM
 
 <h2 id="synopsis">SYNOPSIS</h2>
 
-pktopbm pkfile [ -x width ] [ -y height ] [-c num] pbmfile ...
+<b>pktopbm</b>
+<i>pkfilename</i>
+[<b>-x=</b><i>width</i>]
+[<b>-y=</b><i>height</i>]
+[<b>-character=</b><i>num</i>]
+[<b>-verbose</b>]
+<i>pbmfilename</i> ...
+
+<p>Minimum unique abbreviations of options are acceptable.  You may use
+double hyphens instead of single hyphen to denote options.  You may use
+white space in place of the equals sign to separate an option name
+from its value.
+
 
 <h2 id="description">DESCRIPTION</h2>
 
@@ -44,15 +56,21 @@ command line options:
 
 <dt><b>-x</b> <i>width</i>
 <dd>
-  The width of the image in columns.
-
+  This is the width of the image in columns.
+<p>
   The default is what is specified in the font file.
 
 <dt><b>-y</b> <i>width</i>
 <dd>
-The height of the image in rows.  
-
+This is the height of the image in rows.  
+<p>
 The default is what is specified in the font file.
+
+<dt><b>-verbose</b>
+  <dd>This makes the program issue information messages about the processing,
+    especially information about the input file.
+
+    <p>This option was new in Netpbm 11.17 (December 2026).
 </dl>
 
 <h2 id="history">HISTORY</h2>

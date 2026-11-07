@@ -2,7 +2,7 @@
 <html><head><title>Rasttopnm User Manual</title></head>
 <body>
 <h1>rasttopnm</h1>
-Updated: 16 August 2011
+Updated: 28 October 2026
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -14,6 +14,8 @@ rasttopnm - convert a Sun rasterfile to a PNM image
 <b>rasttopnm</b>
 
 [<b>-index</b>]
+[<b>-dumpheader</b>]
+[<b>-dumpcolormap</b>]
 
 [<i>rastfile</i>]
 
@@ -37,6 +39,22 @@ command line option:
 
 <dl>
   
+<dt><b>-dumpheader</b>
+
+<dd>This option makes <b>rasttopnm</b> write messages to Standard Error 
+describing the content of the Sun rasterfile header (in addition to its
+regular function).
+
+<p>This option was new in Netpbm 10.62 (March 2013).
+  
+<dt><b>-dumpcolormap</b>
+
+<dd>This option makes <b>rasttopnm</b> write messages to Standard Error
+escribing the content of the color map in the Sun rasterfile (in addition to
+its regular function).
+
+<p>This option was new in Netpbm 10.62 (March 2013).
+
 <dt><b>-index</b>
 
 <dd>This odd option tells <b>rasttopnm</b> to use the color map indices in
