@@ -422,7 +422,7 @@ pr_load_header(FILE *              const ifP,
        as a signed integer.
     */
     if (rasterFileP->ras_width >
-        ((INT_MAX-15)/rasterFileP->ras_depth/rasterFileP->ras_height)) {
+        ((INT_MAX-256)/rasterFileP->ras_depth/rasterFileP->ras_height)) {
         pm_error("Image is too large (%lu wide x %lu high x %lu deep) "
                  "for computations",
                  rasterFileP->ras_width,
@@ -561,7 +561,22 @@ loadByteEncoded(FILE *                    const ifP,
                 unsigned int              const beImageSz,
                 const struct mpr_data *   const mprDataP,
                 bool *                    const failedP) {
+/*----------------------------------------------------------------------------
+   Load the raster from file *ifP, assuming it is in byte encoded format.
 
+   The raster is 'beImageSz' bytes long in the file.
+
+   Return the decoded raster in *mprDataP.
+
+   Return *failedP == true iff we fail to load and decode the raster.
+   These are the ways we can fail:
+
+     - We encounter I/O error
+     - File ends before 'beImageSz' bytes
+     - Because of invalid coding at the end of the raster. the raster ends in
+       the middle of a code
+     - *mprDataP does not have enough space allocated for the decoded raster
+-----------------------------------------------------------------------------*/
     unsigned char * beimage;
 
     MALLOCARRAY(beimage, beImageSz);
@@ -574,38 +589,54 @@ loadByteEncoded(FILE *                    const ifP,
         if (bytesReadCt != beImageSz)
             *failedP = true;
         else {
-            unsigned char * const mdImage = mprDataP->md_image;
+            unsigned char * const mdImage   = mprDataP->md_image;
+            unsigned int    const mdImageSz = mprDataP->md_imageSz;
 
             unsigned int inCursor, outCursor;
 
-            for (inCursor = 0, inCursor = 0, outCursor = 0;
-                 inCursor < beImageSz; ) {
+            for (inCursor = 0, inCursor = 0, outCursor = 0, *failedP = false;
+                 inCursor < beImageSz && !*failedP; ) {
 
                 unsigned char const c = beimage[inCursor++];
 
                 if (c == 0x80) {
                     /* It is a complex code */
-                    unsigned int const countFld = beimage[inCursor++];
-                    if (countFld == 0) {
-                        /* It is the complex code for single 0x80 */
-                        mdImage[outCursor++] = 0x80;
-                    } else {
-                        /* It is the complex code for a run */
-                        unsigned int  const count = countFld + 1;
-                        unsigned char const c = beimage[inCursor++];
-                        unsigned int j;
+                    if (inCursor >= beImageSz)
+                        *failedP = true;
+                    else {
+                        unsigned int const countFld = beimage[inCursor++];
+                        if (countFld == 0) {
+                            /* It is the complex code for single 0x80 */
+                            if (outCursor >= mdImageSz)
+                                *failedP = true;
+                            else
+                                mdImage[outCursor++] = 0x80;
+                        } else {
+                            /* It is a complex code for a run */
+                            if (inCursor >= beImageSz)
+                                *failedP = true;
+                            else {
+                                unsigned int  const count = countFld + 1;
+                                unsigned char const c = beimage[inCursor++];
 
-                        for (j = 0; j < count; ++j)
-                            mdImage[outCursor++] = c;
+                                if (outCursor + count > mdImageSz)
+                                    *failedP = true;
+                                else {
+                                    unsigned int j;
+                                    for (j = 0; j < count; ++j)
+                                        mdImage[outCursor++] = c;
+                                }
+                            }
+                        }
                     }
                 } else {
-                    /* It is the simple single-byte code */
-                    mdImage[outCursor++] = c;
+                    /* It is a simple single-byte code */
+                    if (outCursor >= mdImageSz)
+                        *failedP = true;
+                    else
+                        mdImage[outCursor++] = c;
                 }
             }
-            *failedP = false;
-            assert(inCursor == beImageSz);
-            assert(outCursor == mprDataP->md_imageSz);
         }
         free(beimage);
     }
