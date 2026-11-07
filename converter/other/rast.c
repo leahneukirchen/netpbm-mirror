@@ -579,6 +579,8 @@ pr_load_image(FILE *                    const ifP,
         bytesReadCt = fread(pixRectP->pr_data->md_image, 1, mdImageSz, ifP);
         if (bytesReadCt != mdImageSz)
             retval = NULL;
+        else
+            retval = pixRectP;
     } break;
 
     case RT_BYTE_ENCODED: {
