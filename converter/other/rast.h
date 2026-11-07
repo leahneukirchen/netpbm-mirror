@@ -90,7 +90,8 @@ struct pixrect {
 };
 
 struct mpr_data {
-    int md_linebytes;
+    unsigned int md_linebytes;
+    unsigned int md_imageSz;
     unsigned char* md_image;    /* note, byte not short -- avoid pr_flip() */
     struct pr_pos md_offset;
     short md_primary;

@@ -11,6 +11,7 @@
 ** implied warranty.
 */
 
+#include <stdbool.h>
 #include <limits.h>
 #include <assert.h>
 
@@ -48,7 +49,8 @@ mem_create(int const width,
         MALLOCVAR(mprDataP);
 
         if (mprDataP) {
-            pixRectP->pr_data = mprDataP;
+            unsigned int const lineByteCt = (width * depth + 15) / 16 * 2;
+            unsigned int const mdImageSz  = lineByteCt * height;
 
             /* According to the documentation, linebytes is supposed to be
                rounded up to a longword (except on 386 boxes).  However, this
@@ -58,12 +60,15 @@ mem_create(int const width,
             assert(width <= ((INT_MAX-15)/depth/height));
                 /* Per calling requirements */
 
-            mprDataP->md_linebytes = (width * depth + 15) / 16 * 2;
+            pixRectP->pr_data = mprDataP;
+
+            mprDataP->md_linebytes = lineByteCt;
+            mprDataP->md_imageSz   = mdImageSz;
             mprDataP->md_offset.x  = 0;
             mprDataP->md_offset.y  = 0;
             mprDataP->md_flags     = 0;
 
-            MALLOCARRAY(mprDataP->md_image, mprDataP->md_linebytes * height);
+            MALLOCARRAY(mprDataP->md_image, mdImageSz);
 
             if (mprDataP->md_image)
                 retval = pixRectP;
@@ -153,18 +158,16 @@ encodeRun(unsigned char   const c,
 
 
 static void
-setupDumpRtByteEncoded(struct pixrect *    const pixRectP,
+setupDumpRtByteEncoded(struct mpr_data *   const mprDataP,
                        struct rasterfile * const rasterFileP,
                        pm_Buffer **        const beimagePP) {
 
-    unsigned int const size =
-        pixRectP->pr_size.y * pixRectP->pr_data->md_linebytes;
-    unsigned int const beimageAllocSz = size * 3 / 2 + 1;  /* worst case */
+    unsigned int const beimageAllocSz =
+        mprDataP->md_imageSz * 3 / 2 + 1;  /* worst case */
 
     pm_Buffer * beimageP;
 
-    assert(pixRectP->pr_size.y <= UINT_MAX / pixRectP->pr_data->md_linebytes);
-    assert(size <= UINT_MAX / 3);
+    assert(mprDataP->md_imageSz <= UINT_MAX / 3);
         /* Because of definition of struct rasterfile */
 
     beimageP = pm_buf_new(beimageAllocSz);
@@ -174,9 +177,11 @@ setupDumpRtByteEncoded(struct pixrect *    const pixRectP,
         unsigned char pc;
         unsigned int  inCursor;
 
-        for (inCursor = 0, count = 0; inCursor < size; ++inCursor) {
+        for (inCursor = 0, count = 0;
+             inCursor < mprDataP->md_imageSz;
+             ++inCursor) {
 
-            c = pixRectP->pr_data->md_image[inCursor];
+            c = mprDataP->md_image[inCursor];
 
             if (count > 0) {
                 if (pc != c) {
@@ -344,12 +349,11 @@ pr_dump(struct pixrect * const pixRectP,
     case RT_STANDARD:
     case RT_FORMAT_RGB:
         /* Ignore rasterFile.ras_length. */
-        rasterFile.ras_length =
-            pixRectP->pr_size.y * pixRectP->pr_data->md_linebytes;
+        rasterFile.ras_length = pixRectP->pr_data->md_imageSz;
         break;
 
     case RT_BYTE_ENCODED:
-        setupDumpRtByteEncoded(pixRectP, &rasterFile, &beimageP);
+        setupDumpRtByteEncoded(pixRectP->pr_data, &rasterFile, &beimageP);
         if (!beimageP)
             pm_error("Failed to allocate memory for beimage");
         rasterFile.ras_length = pm_buf_length(beimageP);
@@ -537,6 +541,71 @@ pr_load_colormap(FILE *              const ifP,
 
 
 
+static void
+loadRgb(FILE *                  const ifP,
+        const struct mpr_data * const mprDataP,
+        bool *                  const failedP) {
+
+    size_t bytesReadCt;
+
+    bytesReadCt = fread(mprDataP->md_image, 1,
+                        mprDataP->md_imageSz, ifP);
+
+    *failedP = (bytesReadCt != mprDataP->md_imageSz);
+}
+
+
+
+static void
+loadByteEncoded(FILE *                    const ifP,
+                unsigned int              const beImageSz,
+                const struct mpr_data *   const mprDataP,
+                bool *                    const failedP) {
+
+    unsigned char * beimage;
+
+    MALLOCARRAY(beimage, beImageSz);
+    if (!beimage)
+        *failedP = true;
+    else {
+        size_t bytesReadCt;
+
+        bytesReadCt = fread(beimage, 1, beImageSz, ifP);
+        if (bytesReadCt != beImageSz)
+            *failedP = true;
+        else {
+            unsigned char * const mdImage = mprDataP->md_image;
+
+            unsigned int inCursor, outCursor;
+
+            for (inCursor = 0, inCursor = 0, outCursor = 0;
+                 inCursor < beImageSz; ) {
+
+                unsigned char const c = beimage[inCursor++];
+
+                if (c == 128) {
+                    unsigned int const count = beimage[inCursor++] + 1;
+                    if (count == 1) {
+                        mdImage[outCursor++] = 128;
+                    } else {
+                        unsigned char const c = beimage[inCursor++];
+                        unsigned int j;
+                        for (j = 0; j < count; ++j)
+                            mdImage[outCursor++] = c;
+                    }
+                } else
+                    mdImage[outCursor++] = c;
+            }
+            *failedP = false;
+            assert(inCursor == beImageSz);
+            assert(outCursor == mprDataP->md_imageSz);
+        }
+        free(beimage);
+    }
+}
+
+
+
 struct pixrect *
 pr_load_image(FILE *                    const ifP,
               const struct rasterfile * const rasterFileP,
@@ -544,6 +613,7 @@ pr_load_image(FILE *                    const ifP,
 
     struct pixrect * retval;
     struct pixrect * pixRectP;
+    bool failed;
 
     assert(rasterFileP->ras_width <=
            ((INT_MAX-15)/rasterFileP->ras_depth/rasterFileP->ras_height));
@@ -554,86 +624,44 @@ pr_load_image(FILE *                    const ifP,
                    rasterFileP->ras_height,
                    rasterFileP->ras_depth);
     if (!pixRectP)
-        return NULL;
+        retval = NULL;
+    else {
+        switch (rasterFileP->ras_type) {
+        case RT_OLD:
+            pm_error("This program does not know the Old rasterfile type");
 
-    switch (rasterFileP->ras_type) {
-    case RT_OLD:
-        pm_error("This program does not know the Old rasterfile type");
+        case RT_FORMAT_TIFF:
+            pm_error("This program does not know the TIFF rasterfile type");
 
-    case RT_FORMAT_TIFF:
-        pm_error("This program does not know the TIFF rasterfile type");
+        case RT_FORMAT_IFF:
+            pm_error("This program does not know the IFF rasterfile type");
 
-    case RT_FORMAT_IFF:
-        pm_error("This program does not know the IFF rasterfile type");
+        case RT_EXPERIMENTAL:
+            pm_error("This program does not know the Experimental "
+                     "rasterfile type");
 
-    case RT_EXPERIMENTAL:
-        pm_error("This program does not know the Experimental "
-                 "rasterfile type");
+        case RT_STANDARD:
+        case RT_FORMAT_RGB:
+            /* Ignore rasterFileP->ras_length. */
 
-    case RT_STANDARD:
-    case RT_FORMAT_RGB: {
-        size_t bytesReadCt;
-        /* Ignore rasterFileP->ras_length. */
-        unsigned int const mdImageSz =
-            pixRectP->pr_size.y * pixRectP->pr_data->md_linebytes;
-        bytesReadCt = fread(pixRectP->pr_data->md_image, 1, mdImageSz, ifP);
-        if (bytesReadCt != mdImageSz)
-            retval = NULL;
-        else
-            retval = pixRectP;
-    } break;
+            loadRgb(ifP, pixRectP->pr_data, &failed);
+            break;
 
-    case RT_BYTE_ENCODED: {
-        unsigned char * beimage;
+        case RT_BYTE_ENCODED:
+            loadByteEncoded(ifP, rasterFileP->ras_length, pixRectP->pr_data,
+                            &failed);
+            break;
 
-        MALLOCARRAY(beimage, rasterFileP->ras_length);
-        if (!beimage)
-            retval = NULL;
-        else {
-            size_t bytesReadCt;
-
-            bytesReadCt = fread(beimage, 1, rasterFileP->ras_length, ifP);
-            if (bytesReadCt != rasterFileP->ras_length)
-                retval = NULL;
-            else {
-                unsigned char * const mdImage = pixRectP->pr_data->md_image;
-
-                unsigned int inCursor, outCursor;
-
-                for (inCursor = 0, inCursor = 0, outCursor = 0;
-                     inCursor < rasterFileP->ras_length; ) {
-
-                    unsigned char const c = beimage[inCursor++];
-
-                    if (c == 128) {
-                        unsigned int const count = beimage[inCursor++] + 1;
-                        if (count == 1) {
-                            mdImage[outCursor++] = 128;
-                        } else {
-                            unsigned char const c = beimage[inCursor++];
-                            unsigned int j;
-                            for (j = 0; j < count; ++j)
-                                mdImage[outCursor++] = c;
-                        }
-                    } else
-                        mdImage[outCursor++] = c;
-                }
-                retval = pixRectP;
-                assert(inCursor == rasterFileP->ras_length);
-                assert(outCursor ==
-                       pixRectP->pr_size.y * pixRectP->pr_data->md_linebytes);
-            }
-            free(beimage);
+        default:
+            pm_error("unknown rasterfile type");
         }
-    } break;
 
-    default:
-        pm_error("unknown rasterfile type");
+        if (failed) {
+            mem_free(pixRectP);
+            retval = NULL;
+        } else
+            retval = pixRectP;
     }
-
-    if (retval == NULL)
-        mem_free(pixRectP);
-
     return retval;
 }
 
