@@ -28,7 +28,7 @@ const unsigned char *
 pm_buf_buffer(const pm_Buffer * const bufferP);
 
 unsigned int
-buf_length(const pm_Buffer * const bufferP);
+pm_buf_length(const pm_Buffer * const bufferP);
 
 
 #ifdef __cplusplus
