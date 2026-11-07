@@ -583,18 +583,25 @@ loadByteEncoded(FILE *                    const ifP,
 
                 unsigned char const c = beimage[inCursor++];
 
-                if (c == 128) {
-                    unsigned int const count = beimage[inCursor++] + 1;
-                    if (count == 1) {
-                        mdImage[outCursor++] = 128;
+                if (c == 0x80) {
+                    /* It is a complex code */
+                    unsigned int const countFld = beimage[inCursor++];
+                    if (countFld == 0) {
+                        /* It is the complex code for single 0x80 */
+                        mdImage[outCursor++] = 0x80;
                     } else {
+                        /* It is the complex code for a run */
+                        unsigned int  const count = countFld + 1;
                         unsigned char const c = beimage[inCursor++];
                         unsigned int j;
+
                         for (j = 0; j < count; ++j)
                             mdImage[outCursor++] = c;
                     }
-                } else
+                } else {
+                    /* It is the simple single-byte code */
                     mdImage[outCursor++] = c;
+                }
             }
             *failedP = false;
             assert(inCursor == beImageSz);
