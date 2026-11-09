@@ -97,12 +97,9 @@ doRowDepthBits1(const xel *     const xelrow,
     int bitcount;
     unsigned int cursor;
 
-    cursor = 0;
-
-    rastRow[cursor] = 0;
-    bitcount = 7;
-
-    for (col = 0; col < cols; ++col) {
+    for (col = 0, cursor = 0, bitcount = 7; col < cols; ++col) {
+        if (bitcount ==7)
+            rastRow[cursor] = 0;
         switch (PNM_FORMAT_TYPE(format)) {
         case PPM_TYPE: {
             xel adjustedXel;
@@ -131,11 +128,10 @@ doRowDepthBits1(const xel *     const xelrow,
         --bitcount;
         if (bitcount < 0) {
             ++cursor;
-            rastRow[cursor] = 0;
             bitcount = 7;
         }
     }
-    *lenP = cursor;
+    *lenP = (bitcount == 7) ? cursor : cursor + 1;
 }
 
 

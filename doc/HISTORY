@@ -15,6 +15,10 @@ not yet  BJH  Release 11.17.00
               128 sample.  Always broken (predecessors to pnmtorast were in
               primordial Netpbm in 1989)
 
+              pnmtorast: fix memory corruption with bit depth 1 images not a
+              multiple of 8 columns wide.  Always broken (predecessors to
+              rasttopnm and pnmtorast were in primordial Netpbm in 1989).
+
               rasttopnm: fix memory corruption with invalid byte encoded input
               file in which raster is the wrong size.  Always broken
               (predecessors to rasttopnm and pnmtorast were in primordial
