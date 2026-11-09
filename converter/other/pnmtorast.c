@@ -10,9 +10,11 @@
 ** implied warranty.
 */
 
-#include "pnm.h"
-#include "rast.h"
+#include "pm_c_util.h"
 #include "mallocvar.h"
+#include "pnm.h"
+
+#include "rast.h"
 
 #define MAXCOLORS 256
 
@@ -94,44 +96,42 @@ doRowDepthBits1(const xel *     const xelrow,
                 unsigned int *  const lenP) {
 
     unsigned int col;
-    int bitcount;
-    unsigned int cursor;
 
-    for (col = 0, cursor = 0, bitcount = 7; col < cols; ++col) {
-        if (bitcount ==7)
-            rastRow[cursor] = 0;
+    for (col = 0; col < cols; ++col) {
+        unsigned int const byteNum = col / 8;
+        unsigned int const bitNum  = col % 8;
+            /* Bit within byte.  0 is leftmost col and most significant bit */
+        bool isBlack;
+
+        if (bitNum == 0)
+            rastRow[byteNum] = 0;  /* initial value */
+
         switch (PNM_FORMAT_TYPE(format)) {
         case PPM_TYPE: {
             xel adjustedXel;
-            int color;
+            int colorIdx;
             if (maxval != 255)
-                PPM_DEPTH(adjustedXel, xelrow[col], maxval, 255 );
-            color = ppm_lookupcolor(cht, &adjustedXel);
-            if (color == -1)
+                PPM_DEPTH(adjustedXel, xelrow[col], maxval, 255);
+            colorIdx = ppm_lookupcolor(cht, &adjustedXel);
+            if (colorIdx == -1)
                 pm_error("color not found?!?  "
                          "col=%u  r=%u g=%u b=%u",
                          col,
                          PPM_GETR(adjustedXel),
                          PPM_GETG(adjustedXel),
                          PPM_GETB(adjustedXel));
-            if (color)
-                rastRow[cursor] |= 1 << bitcount;
+            isBlack = (colorIdx != 0);
         } break;
 
         default: {
-            int const color = PNM_GET1(xelrow[col]);
-            if (!color)
-                rastRow[cursor] |= 1 << bitcount;
+            isBlack = (PNM_GET1(xelrow[col]) == 0);
             break;
         }
         }
-        --bitcount;
-        if (bitcount < 0) {
-            ++cursor;
-            bitcount = 7;
-        }
+        if (isBlack)
+            rastRow[byteNum] |= 1 << (7-bitNum);
     }
-    *lenP = (bitcount == 7) ? cursor : cursor + 1;
+    *lenP = ROUNDDIVUP(cols, 8);
 }
 
 
