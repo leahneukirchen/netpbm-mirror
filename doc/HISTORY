@@ -4,6 +4,26 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+26.11.09 BJH  Release 11.02.32
+
+              pnmtorast: fix incorrect output whenever image ends with a lone
+              128 sample.  Always broken (predecessors to pnmtorast were in
+              primordial Netpbm in 1989)
+
+              pnmtorast: fix memory corruption with bit depth 1 images not a
+              multiple of 8 columns wide.  Always broken (predecessors to
+              rasttopnm and pnmtorast were in primordial Netpbm in 1989).
+
+              rasttopnm: fix memory corruption with invalid byte encoded input
+              file in which raster is the wrong size.  Always broken
+              (predecessors to rasttopnm and pnmtorast were in primordial
+              Netpbm in 1989).
+
+              rasttopnm, pnmtorast: fix incorrect output and arbitrary memory
+              access with ridiculously large images.  Always broken
+              (predecessors to rasttopnm and pnmtorast were in primordial
+              Netpbm in 1989).
+
 26.10.25 BJH  Release 11.02.31
 
               jbigtopnm: fix bug: fails with bogus error message about

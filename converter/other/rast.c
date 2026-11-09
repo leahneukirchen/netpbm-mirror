@@ -10,6 +10,8 @@
 ** implied warranty.
 */
 
+#include <limits.h>
+
 #include "pnm.h"
 #include "rast.h"
 #include "mallocvar.h"
@@ -164,7 +166,7 @@ pr_dump( p, out, colormap, type, copy_flag )
                 beimage[besize++] = 128;
                 beimage[besize++] = 0;
             }
-            if ( count > 2 || c == 128 )
+            else if ( count > 2 || c == 128 )
             {
                 beimage[besize++] = 128;
                 beimage[besize++] = count - 1;
@@ -307,6 +309,14 @@ pr_load_header(FILE * const ifP, struct rasterfile * const headerP) {
             pm_error("Negative depth in RAST header");
         else
             headerP->ras_depth = depth;
+    }
+    if (headerP->ras_width >
+        ((INT_MAX-15)/headerP->ras_depth/headerP->ras_height)) {
+        pm_error("Image is too large (%lu wide x %lu high x %lu deep) "
+                 "for computations",
+                 headerP->ras_width,
+                 headerP->ras_height,
+                 headerP->ras_depth);
     }
     {
         long length;
@@ -473,15 +483,25 @@ pr_load_image( in, hP, colormap )
             c = *bep++;
             if ( c == 128 )
             {
+                if (bep >= beimage + hP->ras_length)
+                    return NULL;
                 count = ( *bep++ ) + 1;
                 if ( count == 1 )
                 {
+                    if (bp >= p->pr_data->md_image +
+                        p->pr_size.y * p->pr_data->md_linebytes)
+                        return NULL;
                     *bp++ = 128;
                     i += 2;
                 }
                 else
                 {
+                    if (bep >= beimage + hP->ras_length)
+                        return NULL;
                     c = *bep++;
+                    if (bp + count > p->pr_data->md_image +
+                        p->pr_size.y * p->pr_data->md_linebytes)
+                        return NULL;
                     for ( j = 0; j < count; ++j )
                         *bp++ = c;
                     i += 3;
@@ -489,6 +509,9 @@ pr_load_image( in, hP, colormap )
             }
             else
             {
+                if (bp >= p->pr_data->md_image +
+                    p->pr_size.y * p->pr_data->md_linebytes)
+                    return NULL;
                 *bp++ = c;
                 ++i;
             }
