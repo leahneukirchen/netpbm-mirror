@@ -199,18 +199,16 @@ convertRowDepth1(const unsigned char * const rastLine,
                  xel                   const oneXel,
                  xel *                 const xelrow) {
 
-    const unsigned char * byteP;
-     unsigned int col;
+    unsigned int  col;
     unsigned char mask;
+    unsigned int  lineCursor;
 
-    byteP = rastLine;  /* initial value */
-
-    for (col = 0, mask = 0x80; col < cols; ++col) {
+    for (col = 0, mask = 0x80, lineCursor = 0; col < cols; ++col) {
         if (mask == 0x00) {
-            ++byteP;
+            ++lineCursor;
             mask = 0x80;
         }
-        xelrow[col] = (*byteP & mask) ? oneXel : zeroXel;
+        xelrow[col] = (rastLine[lineCursor] & mask) ? oneXel : zeroXel;
         mask = mask >> 1;
     }
 }
@@ -218,7 +216,7 @@ convertRowDepth1(const unsigned char * const rastLine,
 
 
 static void
-convertRowDepth8(const unsigned char * const lineStart,
+convertRowDepth8(const unsigned char * const rastLine,
                  unsigned int          const cols,
                  bool                  const colorMapped,
                  bool                  const useIndexForColor,
@@ -229,8 +227,8 @@ convertRowDepth8(const unsigned char * const lineStart,
    Convert a line of raster data from the RAST input to a row of raster
    data for the PNM output.
 
-   'lineStart' is where the RAST row starts.   'xelrow' is where to put the
-   PNM row.  'cols' is the number of pixels in the row.
+   'rastLine' is the RAST row.  'xelrow' is where to put the PNM row.  'cols'
+   is the number of pixels in the row.
 
    'colorMapped' means the RAST image is colormapped.  If so, 'colorMap'
    is the color map from the RAST file and 'useIndexForColor' means not
@@ -239,31 +237,28 @@ convertRowDepth8(const unsigned char * const lineStart,
 
    'grayscale' means it is a grayscale image; the output is PGM.
 -----------------------------------------------------------------------------*/
-    const unsigned char * byteP;
     unsigned int col;
 
-    byteP = lineStart; /* initial value */
-
     for (col = 0; col < cols; ++col) {
+        unsigned int const index = rastLine[col];
+
         if (colorMapped && !useIndexForColor) {
             if (grayscale)
-                PNM_ASSIGN1(xelrow[col], colorMap.map[0][*byteP]);
+                PNM_ASSIGN1(xelrow[col], colorMap.map[0][index]);
             else
                 PPM_ASSIGN(xelrow[col],
-                           colorMap.map[0][*byteP],
-                           colorMap.map[1][*byteP],
-                           colorMap.map[2][*byteP]);
+                           colorMap.map[0][index],
+                           colorMap.map[1][index],
+                           colorMap.map[2][index]);
         } else
-            PNM_ASSIGN1(xelrow[col], *byteP);
-
-        ++byteP;
+            PNM_ASSIGN1(xelrow[col], index);
     }
 }
 
 
 
 static void
-convertRowRgb(const unsigned char * const lineStart,
+convertRowRgb(const unsigned char * const rastLine,
               unsigned int          const cols,
               unsigned int          const depth,
               long                  const rastType,
@@ -272,24 +267,22 @@ convertRowRgb(const unsigned char * const lineStart,
               colormap_t            const colorMap,
               xel *                 const xelrow) {
 
-    const unsigned char * byteP;
     unsigned int col;
+    unsigned int lineCursor;
 
-    byteP = lineStart; /* initial value */
-
-    for (col = 0; col < cols; ++col) {
-        xelval r, g, b;
+    for (col = 0, lineCursor = 0; col < cols; ++col) {
+        unsigned int r, g, b;
 
         if (depth == 32)
-            ++byteP;
+            ++lineCursor;
         if (rastType == RT_FORMAT_RGB) {
-            r = *byteP++;
-            g = *byteP++;
-            b = *byteP++;
+            r = rastLine[lineCursor++];
+            g = rastLine[lineCursor++];
+            b = rastLine[lineCursor++];
         } else {
-            b = *byteP++;
-            g = *byteP++;
-            r = *byteP++;
+            b = rastLine[lineCursor++];;
+            g = rastLine[lineCursor++];;
+            r = rastLine[lineCursor++];;
         }
         if (colorMapped && !useIndexForColor)
             PPM_ASSIGN(xelrow[col],
