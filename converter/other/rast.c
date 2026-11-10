@@ -258,17 +258,17 @@ writeDump(struct rasterfile     const rasterFile,
             size_t bytesWrittenCt;
 
             bytesWrittenCt =
-                fwrite(colormapP->map[0], 1, colormapP->length,
+                fwrite(colormapP->map[CMX_RED], 1, colormapP->length,
                        ofP);
             if (bytesWrittenCt != colormapP->length)
                 return PIX_ERR;
             bytesWrittenCt =
-                fwrite(colormapP->map[1], 1, colormapP->length,
+                fwrite(colormapP->map[CMX_GRN], 1, colormapP->length,
                        ofP);
             if (bytesWrittenCt != colormapP->length)
                 return PIX_ERR;
             bytesWrittenCt =
-                fwrite(colormapP->map[2], 1, colormapP->length,
+                fwrite(colormapP->map[CMX_BLU], 1, colormapP->length,
                        ofP);
             if (bytesWrittenCt != colormapP->length)
                 return PIX_ERR;
@@ -278,8 +278,7 @@ writeDump(struct rasterfile     const rasterFile,
             size_t bytesWrittenCt;
 
             bytesWrittenCt =
-                fwrite( colormapP->map[0], 1, colormapP->length,
-                        ofP);
+                fwrite(colormapP->map[CMX_RED], 1, colormapP->length, ofP);
             if (bytesWrittenCt != colormapP->length)
                 return PIX_ERR;
         } break;
@@ -479,56 +478,66 @@ pr_load_colormap(FILE *              const ifP,
         colormapP->type = rasterFileP->ras_maptype;
         switch (rasterFileP->ras_maptype) {
         case RMT_EQUAL_RGB: {
-            colormapP->length = rasterFileP->ras_maplength / 3;
-            MALLOCARRAY(colormapP->map[0], colormapP->length);
-            if (!colormapP->map[0])
+            unsigned int const mapLength = rasterFileP->ras_maplength / 3;
+            MALLOCARRAY(colormapP->map[CMX_RED], mapLength);
+            if (!colormapP->map[CMX_RED])
                 retval = PIX_ERR;
             else {
-                MALLOCARRAY(colormapP->map[1], colormapP->length);
-                if (!colormapP->map[1])
+                MALLOCARRAY(colormapP->map[CMX_GRN], mapLength);
+                if (!colormapP->map[CMX_GRN])
                     retval = PIX_ERR;
                 else {
-                    MALLOCARRAY(colormapP->map[2], colormapP->length);
-                    if (!colormapP->map[2])
+                    MALLOCARRAY(colormapP->map[CMX_BLU], mapLength);
+                    if (!colormapP->map[CMX_BLU])
                         retval = PIX_ERR;
                     else {
-                        if (fread(colormapP->map[0], 1, colormapP->length,
-                                  ifP) != colormapP->length ||
-                            fread(colormapP->map[1], 1, colormapP->length,
-                                  ifP) != colormapP->length ||
-                            fread(colormapP->map[2], 1, colormapP->length,
-                                  ifP) != colormapP->length)
-                            retval = PIX_ERR;
-                        else
-                            retval = 0;
+                        unsigned int i;
+                        bool failed;
+                        for (i = CMX_RED, failed = false;
+                             i <= CMX_BLU && !failed;
+                             ++i) {
+                            size_t bytesReadCt;
 
+                            bytesReadCt = fread(colormapP->map[i], 1,
+                                                mapLength, ifP);
+                            failed = (bytesReadCt != mapLength);
+                        }
+                        if (failed)
+                            retval = PIX_ERR;
+                        else {
+                            colormapP->length = mapLength;
+                            retval = 0;
+                        }
                         if (retval == PIX_ERR)
-                            free(colormapP->map[2]);
+                            free(colormapP->map[CMX_BLU]);
                     }
                     if (retval == PIX_ERR)
-                        free(colormapP->map[1]);
+                        free(colormapP->map[CMX_GRN]);
                 }
                 if (retval == PIX_ERR)
-                    free(colormapP->map[0]);
+                    free(colormapP->map[CMX_RED]);
             }
         } break;
 
         case RMT_RAW: {
-            colormapP->length = rasterFileP->ras_maplength;
-            MALLOCARRAY(colormapP->map[0], colormapP->length);
-            if (!colormapP->map[0])
+            MALLOCARRAY(colormapP->map[CMX_RED], rasterFileP->ras_maplength);
+            if (!colormapP->map[CMX_RED])
                 retval = PIX_ERR;
             else {
                 size_t bytesRead;
 
-                colormapP->map[2] = colormapP->map[1] = colormapP->map[0];
-                bytesRead = fread(colormapP->map[0], 1,
+                bytesRead = fread(colormapP->map[CMX_RED], 1,
                                   rasterFileP->ras_maplength, ifP);
                 if (bytesRead != rasterFileP->ras_maplength)
                     retval = PIX_ERR;
-                else
-                    retval = 0;
+                else {
+                    colormapP->map[CMX_GRN] = colormapP->map[CMX_RED];
+                    colormapP->map[CMX_BLU] = colormapP->map[CMX_RED];
 
+                    colormapP->length = rasterFileP->ras_maplength;
+
+                    retval = 0;
+                }
                 if (retval == PIX_ERR)
                     free(colormapP->map[0]);
             }

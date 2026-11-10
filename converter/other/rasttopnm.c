@@ -82,8 +82,8 @@ colorMapIsGrayscale(colormap_t const colorMap) {
     bool grayscale;
 
     for (i = 0, grayscale = true; i < colorMap.length; ++i) {
-        if (colorMap.map[0][i] != colorMap.map[1][i] ||
-            colorMap.map[1][i] != colorMap.map[2][i]) {
+        if (colorMap.map[CMX_RED][i] != colorMap.map[CMX_GRN][i] ||
+            colorMap.map[CMX_GRN][i] != colorMap.map[CMX_BLU][i]) {
             grayscale = false;
         }
     }
@@ -114,21 +114,24 @@ analyzeImage(struct rasterfile const header,
             PNM_ASSIGN1(*zeroP, 1);
             PNM_ASSIGN1(*oneP, 0);
         } else if (header.ras_maptype == RMT_EQUAL_RGB &&
-                   header.ras_maplength == 6) {
+                   header.ras_maplength == 3*2) {
+
             if (grayscale) {
                 *maxvalP = 255;
                 *formatP = PGM_TYPE;
-                PNM_ASSIGN1(*zeroP, colorMap.map[0][0]);
-                PNM_ASSIGN1(*oneP, colorMap.map[0][1]);
+                PNM_ASSIGN1(*zeroP, colorMap.map[CMX_RED][0]);
+                PNM_ASSIGN1(*oneP,  colorMap.map[CMX_RED][1]);
             } else {
                 *maxvalP = 255;
                 *formatP = PPM_TYPE;
-                PPM_ASSIGN(
-                    *zeroP, colorMap.map[0][0], colorMap.map[1][0],
-                    colorMap.map[2][0]);
-                PPM_ASSIGN(
-                    *oneP, colorMap.map[0][1], colorMap.map[1][1],
-                    colorMap.map[2][1]);
+                PPM_ASSIGN(*zeroP,
+                           colorMap.map[CMX_RED][0],
+                           colorMap.map[CMX_GRN][0],
+                           colorMap.map[CMX_BLU][0]);
+                PPM_ASSIGN(*oneP,
+                           colorMap.map[CMX_RED][1],
+                           colorMap.map[CMX_GRN][1],
+                           colorMap.map[CMX_BLU][1]);
             }
         } else
             pm_error(
@@ -154,7 +157,8 @@ analyzeImage(struct rasterfile const header,
     case 24:
     case 32:
         if (header.ras_maptype == RMT_NONE && header.ras_maplength == 0);
-        else if (header.ras_maptype == RMT_RAW || header.ras_maplength == 768);
+        else if (header.ras_maptype == RMT_RAW);
+        else if (header.ras_maplength == 3*256);
         else
             pm_error(
                 "this depth-%ld rasterfile has a non-standard colormap - "
@@ -249,12 +253,12 @@ convertRowDepth8(const unsigned char * const rastLine,
                          index, colorMap.length);
             }
             if (grayscale)
-                PNM_ASSIGN1(xelrow[col], colorMap.map[0][index]);
+                PNM_ASSIGN1(xelrow[col], colorMap.map[CMX_RED][index]);
             else
                 PPM_ASSIGN(xelrow[col],
-                           colorMap.map[0][index],
-                           colorMap.map[1][index],
-                           colorMap.map[2][index]);
+                           colorMap.map[CMX_RED][index],
+                           colorMap.map[CMX_GRN][index],
+                           colorMap.map[CMX_BLU][index]);
         } else
             PNM_ASSIGN1(xelrow[col], index);
     }
@@ -299,9 +303,9 @@ convertRowRgb(const unsigned char * const rastLine,
                          r, g, b, colorMap.length);
             }
             PPM_ASSIGN(xelrow[col],
-                       colorMap.map[0][r],
-                       colorMap.map[1][g],
-                       colorMap.map[2][b]);
+                       colorMap.map[CMX_RED][r],
+                       colorMap.map[CMX_GRN][g],
+                       colorMap.map[CMX_BLU][b]);
         } else
             PPM_ASSIGN(xelrow[col], r, g, b);
     }
@@ -434,11 +438,12 @@ dumpColorMap(colormap_t const colorMap) {
 
     pm_message("color map size = %u", colorMap.length);
 
-    for (i = 0; i < colorMap.length; ++i)
+    for (i = 0; i < colorMap.length; ++i) {
         pm_message("color %u: (%u, %u, %u)", i,
-                   (unsigned char)colorMap.map[0][i],
-                   (unsigned char)colorMap.map[1][i],
-                   (unsigned char)colorMap.map[2][i]);
+                   (unsigned char)colorMap.map[CMX_RED][i],
+                   (unsigned char)colorMap.map[CMX_GRN][i],
+                   (unsigned char)colorMap.map[CMX_BLU][i]);
+    }
 }
 
 
@@ -480,9 +485,11 @@ main(int argc, const char ** const argv) {
 
         if (cmdline.dumpcolormap)
             dumpColorMap(colorMap);
-    } else
-        colorMap.map[0] = colorMap.map[1] = colorMap.map[2] = NULL;
-
+    } else {
+        colorMap.map[CMX_RED] = NULL;
+        colorMap.map[CMX_GRN] = NULL;
+        colorMap.map[CMX_BLU] = NULL;
+    }
     analyzeImage(header, colorMap, &format, &maxval, &grayscale, &zero, &one);
 
     if (cmdline.dumpheader)
@@ -490,7 +497,7 @@ main(int argc, const char ** const argv) {
 
     pr = pr_load_image(ifP, &header, NULL);
     if (pr == NULL )
-        pm_error("unable to read in the image from the rasterfile" );
+        pm_error("unable to read in the image from the rasterfile");
 
     if (cmdline.index && header.ras_maplength == 0)
         pm_error("You requested to use color map indices as colors (-index), "
@@ -502,12 +509,12 @@ main(int argc, const char ** const argv) {
 
     mem_free(pr);
 
-    if (colorMap.map[0])
-        free (colorMap.map[0]);
-    if (colorMap.map[1])
-        free (colorMap.map[1]);
-    if (colorMap.map[2])
-        free (colorMap.map[2]);
+    if (colorMap.map[CMX_RED])
+        free(colorMap.map[CMX_RED]);
+    if (colorMap.map[CMX_GRN])
+        free(colorMap.map[CMX_GRN]);
+    if (colorMap.map[CMX_BLU])
+        free(colorMap.map[CMX_BLU]);
 
     pm_close(ifP);
     pm_close(stdout);

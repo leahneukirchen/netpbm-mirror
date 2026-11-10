@@ -102,10 +102,12 @@ struct mpr_data {
 typedef struct {
     int type;
     int length;
-    unsigned char* map[3];
+    unsigned char * map[3];
+        /* One map each for red, green, and blue.  See enum ColormapIdx */
 } colormap_t;
 
-/* And the routine definitions. */
+enum ColormapIdx {CMX_RED = 0, CMX_GRN = 1, CMX_BLU = 2};
+    /* Indices int colormap_t.map[] */
 
 struct pixrect *
 mem_create(int const w,
