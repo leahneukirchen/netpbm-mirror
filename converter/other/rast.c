@@ -526,6 +526,8 @@ pr_load_colormap(FILE *              const ifP,
                                   rasterFileP->ras_maplength, ifP);
                 if (bytesRead != rasterFileP->ras_maplength)
                     retval = PIX_ERR;
+                else
+                    retval = 0;
 
                 if (retval == PIX_ERR)
                     free(colormapP->map[0]);
@@ -536,7 +538,7 @@ pr_load_colormap(FILE *              const ifP,
             pm_error("unknown colormap type");
         }
     }
-    return 0;
+    return retval;
 }
 
 
