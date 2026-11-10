@@ -24,6 +24,11 @@ not yet  BJH  Release 11.17.00
               (predecessors to rasttopnm and pnmtorast were in primordial
               Netpbm in 1989).
 
+              rasttopnm: fix arbitrary memory access when colormapped image
+              contains a color index not in the color map.    Always broken
+              (predecessors to rasttopnm and pnmtorast were in primordial
+              Netpbm in 1989).
+
               rasttopnm, pnmtorast: fix incorrect output and arbitrary memory
               access with ridiculously large images.  Always broken
               (predecessors to rasttopnm and pnmtorast were in primordial

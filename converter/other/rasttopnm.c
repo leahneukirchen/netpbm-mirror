@@ -243,6 +243,11 @@ convertRowDepth8(const unsigned char * const rastLine,
         unsigned int const index = rastLine[col];
 
         if (colorMapped && !useIndexForColor) {
+            if (index >= colorMap.length) {
+                pm_error("Invalid Sun rasterfile image.  Raster contains "
+                         "color index %u, but color map has only %u entries",
+                         index, colorMap.length);
+            }
             if (grayscale)
                 PNM_ASSIGN1(xelrow[col], colorMap.map[0][index]);
             else
@@ -284,12 +289,20 @@ convertRowRgb(const unsigned char * const rastLine,
             g = rastLine[lineCursor++];;
             r = rastLine[lineCursor++];;
         }
-        if (colorMapped && !useIndexForColor)
+        if (colorMapped && !useIndexForColor) {
+            if (r >= colorMap.length ||
+                g >= colorMap.length ||
+                b >= colorMap.length) {
+                pm_error("Invalid Sun rasterfile image.  Raster contains "
+                         "a pixel with color indices %u, %u, and %u, "
+                         "but color map has only %u entries",
+                         r, g, b, colorMap.length);
+            }
             PPM_ASSIGN(xelrow[col],
                        colorMap.map[0][r],
                        colorMap.map[1][g],
                        colorMap.map[2][b]);
-        else
+        } else
             PPM_ASSIGN(xelrow[col], r, g, b);
     }
 }
