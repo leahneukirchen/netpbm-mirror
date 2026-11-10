@@ -7,12 +7,13 @@
 ** implementation does not do byte-swapping; instead, it reads all
 ** multi-byte values a byte at a time.)
 **
-** After the struct is an optional colormap.  If ras_maptype is RMT_NONE,
-** no map is present; if it's RMT_EQUAL_RGB then the map consists of
-** three unsigned-char arrays ras_maplength long, one each for r g and b.
-** I don't know what RMT_RAW means.  Black and white bitmaps are stored
-** as ras_maptype == RMT_NONE and ras_depth == 1, with the bits stored
-** eight to a byte MSB first.
+** After the struct is an optional colormap.  If ras_maptype is RMT_NONE, no
+** map is present; if it's RMT_EQUAL_RGB then the map consists of three
+** unsigned-char arrays ras_maplength long, one each for r g and b.  RMT_RAW
+** means the colormap is a single unsigned-char array ras_maplength long and
+** contains grayscale values.  I don't know what is "raw" about that.  Black
+** and white bitmaps are stored as ras_maptype == RMT_NONE and ras_depth == 1,
+** with the bits stored eight to a byte MSB first.
 **
 ** Finally comes the image data.  If ras_type is RT_OLD or RT_STANDARD,
 ** the data is just plain old uncompressed bytes, padded out to a multiple
