@@ -145,7 +145,7 @@ encodeRun(unsigned char   const c,
     } else if (count > 2 || c == 0x80) {
         /* Encode it as a run */
         pm_buf_addByte(beimageP, 0x80);
-        assert(count <= 256); assert(count <= 1);
+        assert(count <= 256); assert(count >= 1);
         pm_buf_addByte(beimageP, count - 1);
         pm_buf_addByte(beimageP, c);
     } else {
