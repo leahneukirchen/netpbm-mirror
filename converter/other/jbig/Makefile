@@ -38,16 +38,21 @@ ifeq ($(JBIGLIB),$(INTERNAL_JBIGLIB))
   SUBDIRS += libjbig
 else
   # It's not our internal version; user's on his own to make sure it's built
+  LIBJBIG_ADAPTER_OBJ = libjbig_external.o
 endif
 
-OBJECTS = $(BINARIES:%=%.o)
-MERGE_OBJECTS = $(BINARIES:%=%.o2)
+EXTRA_OBJECTS = $(LIBJBIG_ADAPTER_OBJ)
+
+OBJECTS = $(BINARIES:%=%.o) $(EXTRA_OBJECTS)
+MERGE_OBJECTS = $(BINARIES:%=%.o2) $(EXTRA_OBJECTS)
 
 all: $(BINARIES)
 
 include $(SRCDIR)/common.mk
 
-$(BINARIES): %: %.o $(JBIGLIB_DEP) $(LIBOPT)
+pnmtojbig jbigtopnm: ADDL_OBJECTS = $(LIBJBIG_ADAPTER_OBJ)
+
+$(BINARIES): %: %.o $(LIBJBIG_ADAPTER_OBJ) $(JBIGLIB_DEP) $(LIBOPT)
 $(BINARIES): LDFLAGS_TARGET = $(shell $(LIBOPT) $(JBIGLIB))
 
 $(INTERNAL_JBIGLIB): $(BUILDDIR)/$(SUBDIR)/libjbig FORCE

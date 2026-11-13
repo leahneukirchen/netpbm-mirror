@@ -244,6 +244,9 @@ convertRowDepth8(const unsigned char * const lineStart,
 
     for (col = 0; col < cols; ++col) {
         if (colorMapped && !useIndexForColor) {
+            if (*byteP >= colorMap.length)
+                pm_error("Color index %u exceeds colormap size %u",
+                         *byteP, colorMap.length);
             if (grayscale)
                 PNM_ASSIGN1(xelrow[col], colorMap.map[0][*byteP]);
             else
@@ -289,6 +292,10 @@ convertRowRgb(const unsigned char * const lineStart,
             g = *byteP++;
             r = *byteP++;
         }
+        if (r >= colorMap.length || g >= colorMap.length ||
+            b >= colorMap.length)
+            pm_error("Color index exceeds colormap size %u",
+                     colorMap.length);
         if (colorMapped && !useIndexForColor)
             PPM_ASSIGN(xelrow[col],
                        colorMap.map[0][r],

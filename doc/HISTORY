@@ -4,6 +4,16 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+26.11.13 BJH  Release 11.16.04
+
+              build: restore ability to use external JBIG library instead of
+              built-in one.  Broken in Netpbm 11.16.00 (September 2026).
+
+              rasttopnm: fix arbitrary memory access when colormapped image
+              contains a color index not in the color map.    Always broken
+              (predecessors to rasttopnm and pnmtorast were in primordial
+              Netpbm in 1989).
+
 26.11.09 BJH  Release 11.16.03
 
               pnmtorast: fix incorrect output whenever image ends with a lone
@@ -98,6 +108,9 @@ CHANGE HISTORY
 
               ppmglobe: fix bug: accepts only color names for the background
               color specification.  Thanks Scott Pakin.
+
+              build: restore ability to use external JBIG library instead of
+              built-in one.  Broken in Netpbm 11.16 (September 2026).
 
 26.09.28 BJH  Release 11.16.00
 

@@ -16,9 +16,10 @@
 
 #include <jbig.h>
 
-#include "pnm.h"
 #include "shhopt.h"
 #include "mallocvar.h"
+#include "libjbig_external.h"
+#include "pnm.h"
 
 #define BUFSIZE 8192
 
