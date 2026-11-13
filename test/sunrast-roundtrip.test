@@ -1,7 +1,55 @@
 #! /bin/sh
 # This script tests: pnmtorast rasttopnm
-# Also requires:
+# Also requires: pnmquant pnmcolormap pnmremap ppmpat ppmtopgm pgmtopbm
+
+tmpdir=${tmpdir:-/tmp}
+quant256_ppm=${tmpdir}/quant256.ppm
+gingham_ppm=${tmpdir}/gingham.ppm
+gingham_pgm=${tmpdir}/gingham.pgm
 
 
-# Should produce 1926073387 101484, cksum of testimg.ppm
+echo Test 1. Should produce 1926073387 101484
 pnmtorast testimg.ppm | rasttopnm | cksum
+
+
+echo Test 2. Should produce 1347555924 101484 three times
+pnmquant 256 testimg.ppm | tee ${quant256_ppm} | cksum
+pnmtorast -standard ${quant256_ppm} | rasttopnm | cksum
+pnmtorast -rle ${quant256_ppm} | rasttopnm | cksum
+rm  ${quant256_ppm}
+
+
+echo Test 3 Should produce 3769434795 7513 three times
+RGBDEF=rgbt.txt ppmpat -g2 -color=yellow,cyan -mesh 50 50 | tee ${gingham_ppm} | cksum
+pnmtorast -standard ${gingham_ppm} | rasttopnm | cksum
+pnmtorast -rle ${gingham_ppm} | rasttopnm | cksum
+
+
+echo Test 4. Should produce 1394497416 2513 three times
+ppmtopgm ${gingham_ppm} | tee ${gingham_pgm} | cksum
+pnmtorast -standard ${gingham_pgm} | rasttopnm | cksum
+pnmtorast -rle ${gingham_pgm} | rasttopnm | cksum
+rm  ${gingham_ppm} ${gingham_pgm}
+
+
+echo Test 5. Should produce 2425386270 41 three times
+pnmtorast -standard testgrid.pbm | rasttopnm | cksum
+pamdepth 255 testgrid.pbm | pnmtorast -standard | rasttopnm -index |\
+    pgmtopbm -threshold -v 0.5 | cksum
+pnmtorast -rle testgrid.pbm | rasttopnm | cksum
+
+
+echo Test 6. Should produce 281226646 481 three times
+pnmtorast -standard maze.pbm | rasttopnm | cksum
+pamdepth 15 maze.pbm | pnmtorast -standard | rasttopnm -index |\
+    pgmtopbm -threshold -v 0.5 | cksum  
+pnmtorast -rle maze.pbm | rasttopnm | cksum
+
+
+echo "Test Invalid"
+
+. ./test-invalid.inc
+
+invCmd "pamtorast /dev/null"
+invCmd "rasttopnm /dev/null"
+invCmd "pamtorast -standard -rle maze.pbm"

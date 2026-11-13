@@ -25,6 +25,7 @@ imgtoppm: ok
 infotopam: ok
 jbigtopnm: ok
 jpeg2ktopam: ok
+jpegxltopam: ok
 jpegtopnm: ok
 leaftoppm: ok
 lispmtopgm: ok
@@ -103,6 +104,7 @@ pamtogif: ok
 pamtohdiff: ok
 pamtohtmltbl: ok
 pamtojpeg2k: ok
+pamtojpegxl: ok
 pamtompfont: ok
 pamtooctaveimg: ok
 pamtopam: ok

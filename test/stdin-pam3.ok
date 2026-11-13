@@ -8,6 +8,8 @@ pamtohdiff: 0 0 0 0
 hdifftopam: 0 0 0 0
 pamtojpeg2k: 0 0 0 0
 jpeg2ktopam: 0 0 0 0
+pamtojpegxl: 0 0 0 0
+jpegxltopam: 0 0 0 0
 pamtopdbimg -fixedtime: 0 0 0 0
 pdbimgtopam: 0 0 0 0
 pamtopfm: 0 0 0 0

@@ -2,6 +2,7 @@
 # This script tests: pamtoavs avstopam
 # This script tests: pamtohdiff hdifftopam
 # This script tests: pamtojpeg2k jpeg2ktopam
+# This script tests: pamtojpegxl jpegxltopam
 # This script tests: pamtopdbimg pdbimgtopam
 # This script tests: pamtopfm pfmtopam
 # This script tests: pamtopng pngtopam
@@ -34,6 +35,7 @@ for fmt in \
     avs \
     hdiff \
     jpeg2k \
+    jpegxl \
     pdbimg \
     pfm \
     png \

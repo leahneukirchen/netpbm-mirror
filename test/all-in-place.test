@@ -71,6 +71,7 @@ ordinary_testprogs="\
   infotopam \
   jbigtopnm \
   jpeg2ktopam \
+  jpegxltopam \
   jpegtopnm \
   leaftoppm \
   lispmtopgm \
@@ -149,6 +150,7 @@ ordinary_testprogs="\
   pamtohdiff \
   pamtohtmltbl \
   pamtojpeg2k \
+  pamtojpegxl \
   pamtompfont \
   pamtooctaveimg \
   pamtopam \
@@ -403,7 +405,7 @@ for i in $ordinary_testprogs
     # Programs that aren't built because of a configuration choice are
     # reported as "ok" in all-in-place.out .
 
-    Available-Testprog "$i"
+      grep --quiet $i "${srcdir}"/../checkable-list
       if [ $? = 1 ]; then
       echo "$i: program was not built" 1>&2
       echo "$i: ok"
