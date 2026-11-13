@@ -114,6 +114,9 @@ not yet  BJH  Release 11.17.00
               ppmglobe: fix bug: accepts only color names for the background
               color specification.  Thanks Scott Pakin.
 
+              build: restore ability to use external JBIG library instead of
+              built-in one.  Broken in Netpbm 11.16 (September 2026).
+
 26.09.28 BJH  Release 11.16.00
 
               Add pamnoise.

@@ -45,6 +45,7 @@
 #include "pm_c_util.h"
 #include "mallocvar.h"
 #include "shhopt.h"
+#include "libjbig_external.h"
 #include "pnm.h"
 
 static unsigned long total_length = 0;
