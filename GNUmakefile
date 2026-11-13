@@ -93,6 +93,14 @@ VPATH=.:$(SRCDIR)
 
 include $(BUILDDIR)/config.mk
 
+ifeq ($(DEFAULT_TARGET)x,x)
+  # This happens when config.mk doesn't exist yet, so the include of it above
+  # treats it like an empty file.  You have to run 'configure' to generate
+  # config.mk before running make.
+$(error config.mk does not exist.  Run 'configure' or otherwise \
+create config.mk before running make)
+endif
+
 PROG_SUBDIRS = converter analyzer editor generator other
 PRODUCT_SUBDIRS = lib $(PROG_SUBDIRS)
 SUPPORT_SUBDIRS = urt icon buildtools test
@@ -155,6 +163,11 @@ OMIT_VERSION_H_RULE = 1
 OMIT_INTTYPES_RULE = 1
 include $(SRCDIR)/common.mk
 
+# The following rule works only sometimes, because this make file has already
+# included the existing config.mk (assuming an empty file if config.mk does
+# not exist), so the build/rebuild of config.mk will not affect this make
+# file.  The robust way to build config.mk is to run 'configure' before
+# running any 'make'.
 $(BUILDDIR)/config.mk: $(SRCDIR)/config.mk.in
 	$(SRCDIR)/configure $(SRCDIR)/config.mk.in
 
