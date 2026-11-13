@@ -9,6 +9,9 @@ SUBDIRS =
 
 include $(BUILDDIR)/config.mk
 
+# INTERNAL_JBIGLIB and INTERNAL_JBIGHDR_DIR are for use in config.mk as the
+# value of JBIGLIB and JBIGHDR_DIR.
+
 # INTERNAL_JBIGLIB must be relative to the current directory, because it
 # may end up in MERGE_OBJECTS, which must be relative.
 INTERNAL_JBIGLIB = libjbig/libjbig.a
