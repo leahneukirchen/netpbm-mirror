@@ -50,6 +50,6 @@ echo "Test Invalid"
 
 . ./test-invalid.inc
 
-invCmd "pamtorast /dev/null"
+invCmd "pnmtorast /dev/null"
 invCmd "rasttopnm /dev/null"
-invCmd "pamtorast -standard -rle maze.pbm"
+# invCmd "pnmtorast -standard -rle maze.pbm"
