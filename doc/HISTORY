@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+26.11.15 BJH  Release 11.16.05
+
+              Fix "color index exceeds colormap size" failure introduced
+              in Release 11.16.04
+
 26.11.13 BJH  Release 11.16.04
 
               build: restore ability to use external JBIG library instead of

@@ -292,16 +292,17 @@ convertRowRgb(const unsigned char * const lineStart,
             g = *byteP++;
             r = *byteP++;
         }
-        if (r >= colorMap.length || g >= colorMap.length ||
-            b >= colorMap.length)
-            pm_error("Color index exceeds colormap size %u",
+        if (colorMapped && !useIndexForColor) {
+            if (r >= colorMap.length || g >= colorMap.length ||
+                b >= colorMap.length)
+                pm_error("Color index exceeds colormap size %u",
                      colorMap.length);
-        if (colorMapped && !useIndexForColor)
+
             PPM_ASSIGN(xelrow[col],
                        colorMap.map[0][r],
                        colorMap.map[1][g],
                        colorMap.map[2][b]);
-        else
+        } else
             PPM_ASSIGN(xelrow[col], r, g, b);
     }
 }
