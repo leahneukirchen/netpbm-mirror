@@ -101,8 +101,18 @@ analyzeImage(struct rasterfile const header,
              xel *             const zeroP,
              xel *             const oneP) {
 
-    bool const grayscale =
-        header.ras_maplength == 0 || colorMapIsGrayscale(colorMap);
+    bool grayscale;
+
+    if (header.ras_maplength == 0) {
+        if (header.ras_depth == 24 || header.ras_depth == 32) {
+            /* Assume it's not grayscale just because it would be too hard
+               to look at every pixel to find out if it is.
+            */
+            grayscale = false;
+        } else
+            grayscale = true;
+    } else
+        grayscale = colorMapIsGrayscale(colorMap);
 
     *grayscaleP = grayscale;
 
