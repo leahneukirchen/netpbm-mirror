@@ -320,9 +320,8 @@ main(int argc, const char ** argv) {
         chv = ppm_computecolorhist(xels, cols, rows, MAXCOLORS, &colorCt);
         if (!chv) {
             pm_message(
-                "Too many colors - proceeding to write a 24-bit non-mapped");
-            pm_message(
-                "rasterfile.  If you want 8 bits, try doing a 'pnmquant %d'.",
+                "Too many colors - proceeding to write a 24-bit non-mapped "
+                "rasterfile.  If you want 8 bits, try doing a 'pnmquant %u'.",
                 MAXCOLORS);
             depthBits = 24;
             prType = RT_STANDARD;
