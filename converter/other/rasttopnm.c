@@ -76,7 +76,7 @@ parseCommandLine(int argc, const char ** argv,
 static bool
 colorMapIsGrayscale(colormap_t const colorMap) {
 /*----------------------------------------------------------------------------
-   The color map contains only gray.
+   The color map contains nothing but gray.
 -----------------------------------------------------------------------------*/
     unsigned int i;
     bool grayscale;
@@ -455,6 +455,11 @@ main(int argc, const char ** const argv) {
     FILE * ifP;
     struct rasterfile header;
     colormap_t colorMap;
+        /* The color map from the image.  If there is no color map in the
+           image, it is a null color map.  This is independent of the image's
+           color map type being "none" and its bit depth.  If the map is
+           present, this is its value, and if not it is null.
+        */
     bool grayscale;
     struct pixrect * pr;
     int format;
