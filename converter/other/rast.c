@@ -459,12 +459,30 @@ int
 pr_load_colormap(FILE *              const ifP,
                  struct rasterfile * const rasterFileP,
                  colormap_t *        const colormapP) {
+/*----------------------------------------------------------------------------
+   Read the color map from *ifP.  Return it as *colormapP, unless
+   'colormapP' is null, in which case discard it.
 
+   If *rasterFileP indicates this is a non-color-mapped image, discard the
+   color map and return a null color map.  (I don't know why
+   there would be a color map in the image if it is a non-color-mapped
+   image, but that's how this code has always been).
+
+   *rasterFileP is the properties of the image on *ifP per its header, in
+   particular the type and size of the color map.
+
+   Return value is 0 if we succeed, PIX_ERR if not.
+-----------------------------------------------------------------------------*/
     int retval;
 
     if (!colormapP || rasterFileP->ras_maptype == RMT_NONE) {
         unsigned int i;
 
+        if (colormapP) {
+            colormapP->map[CMX_RED] = NULL;
+            colormapP->map[CMX_GRN] = NULL;
+            colormapP->map[CMX_BLU] = NULL;
+        }
         for (i = 0, retval = 0;
              i < rasterFileP->ras_maplength && retval == 0;
              ++i) {
